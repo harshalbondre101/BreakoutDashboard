@@ -78,6 +78,9 @@ export default function BookingsPage() {
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Booking ID</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer ID</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slot ID</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment ID</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Conversation ID</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Guests</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
@@ -88,6 +91,9 @@ export default function BookingsPage() {
               <tr key={booking.Booking_ID} className="hover:bg-gray-50 cursor-pointer">
                 <td className="px-4 py-3 text-sm font-medium text-gray-900">{booking.Booking_ID}</td>
                 <td className="px-4 py-3 text-sm text-gray-600">{booking.Customer_ID}</td>
+                <td className="px-4 py-3 text-sm text-gray-600">{booking.Slot_ID}</td>
+                <td className="px-4 py-3 text-sm text-gray-600">{booking.Payment_ID}</td>
+                <td className="px-4 py-3 text-sm text-gray-600">{booking.conv_id}</td>
                 <td className="px-4 py-3 text-sm text-gray-600">
                   {new Date(booking.Booking_date).toLocaleString()}
                 </td>
