@@ -2,14 +2,44 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Users, Calendar, TrendingUp, Search, Filter, Download } from 'lucide-react';
-import { customers, leads, events } from '@/lib/data';
-import {CustomerListItem} from '@/lib/types';
+import { Customer, Lead, Event } from '@/lib/types';
 
 type TabType = 'customers' | 'leads' | 'events';
 
 export default function CustomersHubPage() {
   const [activeTab, setActiveTab] = useState<TabType>('customers');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [customersRes, leadsRes, eventsRes] = await Promise.all([
+          fetch('/api/customers'),
+          fetch('/api/leads'),
+          fetch('/api/events'),
+        ]);
+        const [customersData, leadsData, eventsData] = await Promise.all([
+          customersRes.json(),
+          leadsRes.json(),
+          eventsRes.json(),
+        ]);
+        setCustomers(customersData);
+        setLeads(leadsData);
+        setEvents(eventsData);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const filteredCustomers = customers.filter(c =>
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -36,6 +66,12 @@ export default function CustomersHubPage() {
     lost: leads.filter(l => l.status === 'lost').length
   };
   
+  if (loading) {
+    return <div className="flex justify-center items-center h-64">
+      <div className="w-12 h-12 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
+    </div>;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
