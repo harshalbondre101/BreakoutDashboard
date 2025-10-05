@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Users, Calendar, TrendingUp, Search, Filter, Download } from 'lucide-react';
 import { Customer, Lead, Event } from '@/lib/types';
+import { API_BASE_URL } from '@/lib/config';
 
 // Mock data will be used for leads and events until APIs are ready
 import { leads as staticLeads, events as staticEvents } from '@/lib/data';
@@ -26,7 +27,7 @@ export default function CustomersHubPage() {
         setLoading(true);
         setError(null);
         try {
-          const response = await fetch('https://fragrances-independently-conflict-thank.trycloudflare.com/customers/');
+          const response = await fetch(`${API_BASE_URL}/customers/`);
           if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
           }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { BarChart3, Brain, Target, TrendingUp, AlertCircle } from 'lucide-react';
 import { KPIMetric, KpiApiResponse } from '@/lib/types';
+import { API_BASE_URL } from '@/lib/config';
 
 const formatDurationFromSeconds = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
@@ -34,7 +35,7 @@ export default function AnalysisPage() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch('https://fragrances-independently-conflict-thank.trycloudflare.com/compute/kpis');
+        const response = await fetch(`${API_BASE_URL}/compute/kpis`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }

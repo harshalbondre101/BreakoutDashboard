@@ -6,6 +6,7 @@ import { KPICard } from '@/components/kpi-card';
 import { activeCalls, alerts } from '@/lib/data';
 import { KPIMetric, KpiApiResponse, Booking } from '@/lib/types';
 import { DollarSign } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/config';
 
 const formatDurationFromSeconds = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
@@ -54,7 +55,7 @@ export default function DashboardPage() {
       setKpiLoading(true);
       setKpiError(null);
       try {
-        const response = await fetch('https://fragrances-independently-conflict-thank.trycloudflare.com/compute/kpis');
+        const response = await fetch(`${API_BASE_URL}/compute/kpis`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -135,7 +136,7 @@ export default function DashboardPage() {
       setBookingsLoading(true);
       setBookingsError(null);
       try {
-        const response = await fetch('https://fragrances-independently-conflict-thank.trycloudflare.com/bookings/');
+        const response = await fetch(`${API_BASE_URL}/bookings/`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }

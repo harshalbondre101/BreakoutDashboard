@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, Calendar, CreditCard } from 'lucide-react';
 import { Booking } from '@/lib/types';
 import { recentBookings as staticRecentBookings } from '@/lib/data';
+import { API_BASE_URL } from '@/lib/config';
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -15,7 +16,7 @@ export default function BookingsPage() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch('https://fragrances-independently-conflict-thank.trycloudflare.com/bookings/');
+        const response = await fetch(`${API_BASE_URL}/bookings/`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -41,8 +42,8 @@ export default function BookingsPage() {
     : staticRecentBookings.filter(b => b.status === 'confirmed').length;
   
   // Using static data for revenue and avg value as it's not in the API response
-  const totalRevenue = staticRecentBookings.reduce((sum, b) => sum + b.value, 0);
-  const avgBookingValue = totalRevenue / staticRecentBookings.length;
+  const totalRevenue = staticRecentBookings.reduce((sum, b) => sum + (b.value || 0), 0);
+  const avgBookingValue = staticRecentBookings.length > 0 ? totalRevenue / staticRecentBookings.length : 0;
 
   const paymentMethods = {
     credit: staticRecentBookings.filter(b => b.paymentMethod === 'credit').length,
