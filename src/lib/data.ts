@@ -2,10 +2,10 @@ import type { KPIMetric, Call, Booking, Alert, Customer, Lead, Event, Agent, Wha
 import { DollarSign, Zap, Users, Activity, BarChart, Phone, CheckCircle, PieChart, TrendingUp, UserCheck, Clock, Shield, Star, Bot, User, MessageSquare, Palette, HeartHandshake, Settings } from 'lucide-react';
 
 export const kpiMetrics: KPIMetric[] = [
-  { id: 'rev', title: 'Total Revenue', value: '$45,231.89', change: '+20.1%', changeType: 'increase', icon: DollarSign },
-  { id: 'bookings', title: 'Bookings', value: '+2350', change: '+180.1%', changeType: 'increase', icon: Users },
-  { id: 'calls', title: 'Active Calls', value: '573', change: '+19%', changeType: 'increase', icon: Phone },
-  { id: 'csat', title: 'CSAT', value: '92.8%', change: '-1.2%', changeType: 'decrease', icon: Star },
+  { id: 'rev', title: 'Total Revenue', value: '$45,231.89', change: '+20.1%', changeType: 'increase', icon: 'DollarSign' },
+  { id: 'bookings', title: 'Bookings', value: '+2350', change: '+180.1%', changeType: 'increase', icon: 'Users' },
+  { id: 'calls', title: 'Active Calls', value: '573', change: '+19%', changeType: 'increase', icon: 'Phone' },
+  { id: 'csat', title: 'CSAT', value: '92.8%', change: '-1.2%', changeType: 'decrease', icon: 'Star' },
 ];
 
 export const activeCalls: Call[] = [
@@ -42,10 +42,10 @@ export const systemAlerts: Alert[] = [
 ];
 
 export const bookingMetrics: KPIMetric[] = [
-  { id: 'total-bookings', title: 'Total Bookings', value: '1,254', change: '+12.5%', changeType: 'increase', icon: Users },
-  { id: 'confirmed-bookings', title: 'Confirmed Bookings', value: '1,100', change: '+15.2%', changeType: 'increase', icon: CheckCircle },
-  { id: 'total-revenue', title: 'Total Revenue', value: '$1.2M', change: '+22.1%', changeType: 'increase', icon: DollarSign },
-  { id: 'avg-value', title: 'Avg. Booking Value', value: '$980', change: '+3.4%', changeType: 'increase', icon: PieChart },
+  { id: 'total-bookings', title: 'Total Bookings', value: '1,254', change: '+12.5%', changeType: 'increase', icon: 'Users' },
+  { id: 'confirmed-bookings', title: 'Confirmed Bookings', value: '1,100', change: '+15.2%', changeType: 'increase', icon: 'CheckCircle' },
+  { id: 'total-revenue', title: 'Total Revenue', value: '$1.2M', change: '+22.1%', changeType: 'increase', icon: 'DollarSign' },
+  { id: 'avg-value', title: 'Avg. Booking Value', value: '$980', change: '+3.4%', changeType: 'increase', icon: 'PieChart' },
 ];
 
 export const keyBookingMetrics = {
@@ -61,10 +61,10 @@ export const paymentAnalytics = {
 };
 
 export const callsPageMetrics: KPIMetric[] = [
-    { id: 'total-calls', title: 'Total Calls', value: '25,832', change: '+8.2%', changeType: 'increase', icon: Phone },
-    { id: 'avg-duration', title: 'Avg. Duration', value: '4m 32s', change: '-2.1%', changeType: 'decrease', icon: Clock },
-    { id: 'ai-handled', title: 'AI Handled', value: '65%', change: '+5.0%', changeType: 'increase', icon: Bot },
-    { id: 'positive-sentiment', title: 'Positive Sentiment', value: '78%', change: '+1.5%', changeType: 'increase', icon: Star },
+    { id: 'total-calls', title: 'Total Calls', value: '25,832', change: '+8.2%', changeType: 'increase', icon: 'Phone' },
+    { id: 'avg-duration', title: 'Avg. Duration', value: '4m 32s', change: '-2.1%', changeType: 'decrease', icon: 'Clock' },
+    { id: 'ai-handled', title: 'AI Handled', value: '65%', change: '+5.0%', changeType: 'increase', icon: 'Bot' },
+    { id: 'positive-sentiment', title: 'Positive Sentiment', value: '78%', change: '+1.5%', changeType: 'increase', icon: 'Star' },
 ];
 
 export const callList: Call[] = [
@@ -102,9 +102,9 @@ export const liveMonitoringCalls: Call[] = [
 ];
 
 export const agentStatus = {
-    available: { count: 12, icon: UserCheck },
-    busy: { count: 28, icon: Phone },
-    away: { count: 5, icon: Clock },
+    available: { count: 12, icon: 'UserCheck' },
+    busy: { count: 28, icon: 'Phone' },
+    away: { count: 5, icon: 'Clock' },
 };
 
 export const queueStatus = {
@@ -114,10 +114,10 @@ export const queueStatus = {
 };
 
 export const analysisKpis: KPIMetric[] = [
-    { id: 'kpi1', title: 'Intent Recognition Accuracy', value: '96.2%', change: '+0.5%', changeType: 'increase', icon: Bot },
-    { id: 'kpi2', title: 'Conversation Completion Rate', value: '89.7%', change: '-1.2%', changeType: 'decrease', icon: CheckCircle },
-    { id: 'kpi3', title: 'Overall Quality Score', value: '94.5%', change: '+2.1%', changeType: 'increase', icon: Star },
-    { id: 'kpi4', title: 'First Call Resolution (AI)', value: '75.3%', change: '+3.8%', changeType: 'increase', icon: Zap },
+    { id: 'kpi1', title: 'Intent Recognition Accuracy', value: '96.2%', change: '+0.5%', changeType: 'increase', icon: 'Bot' },
+    { id: 'kpi2', title: 'Conversation Completion Rate', value: '89.7%', change: '-1.2%', changeType: 'decrease', icon: 'CheckCircle' },
+    { id: 'kpi3', title: 'Overall Quality Score', value: '94.5%', change: '+2.1%', changeType: 'increase', icon: 'Star' },
+    { id: 'kpi4', title: 'First Call Resolution (AI)', value: '75.3%', change: '+3.8%', changeType: 'increase', icon: 'Zap' },
 ];
 
 export const agentData: Agent[] = [

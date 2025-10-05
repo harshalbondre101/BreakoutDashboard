@@ -6,7 +6,7 @@ export interface KPIMetric {
   value: string;
   change: string;
   changeType: 'increase' | 'decrease' | 'neutral';
-  icon: LucideIcon;
+  icon: string;
 }
 
 export interface Call {

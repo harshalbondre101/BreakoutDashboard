@@ -1,9 +1,10 @@
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Clock } from "lucide-react";
-import { KpiGrid } from "./_components/kpi-grid";
 import { ActiveCalls } from "./_components/active-calls";
 import { RecentBookings } from "./_components/recent-bookings";
+import { KPICard } from "@/components/kpi-card";
+import { kpiMetrics } from "@/lib/data";
 
 export default function DashboardPage() {
   const now = new Date();
@@ -24,7 +25,11 @@ export default function DashboardPage() {
         </div>
       </Header>
       <main className="flex-1 p-4 md:p-6 space-y-6">
-        <KpiGrid />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {kpiMetrics.map((metric) => (
+            <KPICard key={metric.id} metric={metric} />
+          ))}
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <ActiveCalls />
             <RecentBookings />
