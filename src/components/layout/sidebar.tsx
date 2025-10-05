@@ -9,9 +9,8 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem
+  SidebarGroup,
+  SidebarGroupLabel
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
@@ -25,18 +24,33 @@ import {
   BarChart2,
   Settings,
   LogOut,
-  Bot
+  Bot,
+  MessageSquare,
+  Shield,
+  Palette,
+  X
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-const navItems = [
+const analyticsNav = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/bookings', icon: CalendarCheck, label: 'Bookings' },
-  { href: '/calls', icon: Phone, label: 'Calls' },
-  { href: '/customers', icon: Users, label: 'Customers Hub' },
-  { href: '/live-monitoring', icon: Signal, label: 'Live Monitoring' },
   { href: '/analysis', icon: BarChart2, label: 'Analysis' },
-  { href: '/system', icon: Settings, label: 'System' },
-];
+  { href: '/live-monitoring', icon: Signal, label: 'Live Monitoring' },
+]
+
+const operationsNav = [
+  { href: '/customers', icon: Users, label: 'Customers Hub' },
+  { href: '/calls', icon: Phone, label: 'Calls' },
+  { href: '/bookings', icon: CalendarCheck, label: 'Bookings' },
+]
+
+const systemNav = [
+    { href: '/system/whatsapp', icon: MessageSquare, label: 'WhatsApp' },
+    { href: '/system/themes', icon: Palette, label: 'Themes' },
+    { href: '/system/validation', icon: Shield, label: 'Validation' },
+    { href: '/system/agents', icon: Bot, label: 'Agents' },
+    { href: '/system', icon: Settings, label: 'Settings' },
+]
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -45,46 +59,92 @@ export function AppSidebar() {
     <Sidebar
       variant="sidebar"
       collapsible="icon"
-      className="border-r border-sidebar-border"
+      className="border-r border-sidebar-border bg-sidebar text-sidebar-foreground"
     >
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="rounded-full bg-primary/10 hover:bg-primary/20">
+            <div className="p-2 rounded-lg bg-primary/10">
                 <Bot className="text-primary" />
+            </div>
+            <div className="group-data-[collapsible=icon]:hidden">
+                <h2 className="text-lg font-semibold tracking-tighter font-headline text-foreground">
+                    AI Command
+                </h2>
+                <p className="text-xs text-muted-foreground">Sales & Service</p>
+            </div>
+            <Button variant="ghost" size="icon" className="ml-auto group-data-[collapsible=icon]:hidden">
+                <X />
             </Button>
-            <h2 className="text-lg font-semibold tracking-tighter font-headline text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-                Enterprise
-            </h2>
         </div>
       </SidebarHeader>
       <SidebarContent className="p-2">
-        <SidebarMenu>
-          {navItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <Link href={item.href} passHref>
-                <SidebarMenuButton
-                  isActive={pathname === item.href || pathname.startsWith(`${item.href}/`)}
-                  tooltip={item.label}
-                  className="justify-start"
-                >
-                  <item.icon />
-                  <span>{item.label}</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
+        <SidebarGroup>
+            <SidebarGroupLabel>Analytics</SidebarGroupLabel>
+            <SidebarMenu>
+            {analyticsNav.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                <Link href={item.href} passHref>
+                    <SidebarMenuButton
+                    isActive={pathname === item.href || pathname.startsWith(`${item.href}/`)}
+                    tooltip={item.label}
+                    className="justify-start data-[active=true]:bg-primary/10 data-[active=true]:text-primary data-[active=true]:font-semibold"
+                    >
+                    <item.icon className="size-4" />
+                    <span>{item.label}</span>
+                    </SidebarMenuButton>
+                </Link>
+                </SidebarMenuItem>
+            ))}
+            </SidebarMenu>
+        </SidebarGroup>
+        <SidebarGroup>
+            <SidebarGroupLabel>Operations</SidebarGroupLabel>
+            <SidebarMenu>
+            {operationsNav.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                <Link href={item.href} passHref>
+                    <SidebarMenuButton
+                    isActive={pathname === item.href || pathname.startsWith(`${item.href}/`)}
+                    tooltip={item.label}
+                    className="justify-start data-[active=true]:bg-primary/10 data-[active=true]:text-primary data-[active=true]:font-semibold"
+                    >
+                    <item.icon className="size-4" />
+                    <span>{item.label}</span>
+                    </SidebarMenuButton>
+                </Link>
+                </SidebarMenuItem>
+            ))}
+            </SidebarMenu>
+        </SidebarGroup>
+        <SidebarGroup>
+            <SidebarGroupLabel>System</SidebarGroupLabel>
+            <SidebarMenu>
+            {systemNav.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                <Link href={item.href} passHref>
+                    <SidebarMenuButton
+                    isActive={pathname === item.href || (pathname.startsWith('/system') && item.href === '/system')}
+                    tooltip={item.label}
+                    className="justify-start data-[active=true]:bg-primary/10 data-[active=true]:text-primary data-[active=true]:font-semibold"
+                    >
+                    <item.icon className="size-4" />
+                    <span>{item.label}</span>
+                    </SidebarMenuButton>
+                </Link>
+                </SidebarMenuItem>
+            ))}
+            </SidebarMenu>
+        </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="p-4">
         <Separator className="my-2 bg-sidebar-border" />
          <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
             <Avatar className="size-9">
-                <AvatarImage src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="User" />
-                <AvatarFallback>AD</AvatarFallback>
+                <AvatarFallback className="bg-primary/20 text-primary font-semibold">A</AvatarFallback>
             </Avatar>
             <div className="flex-1 group-data-[collapsible=icon]:hidden">
-                <p className="text-sm font-semibold text-sidebar-foreground">Admin User</p>
-                <p className="text-xs text-sidebar-foreground/70">admin@enterprise.com</p>
+                <p className="text-sm font-semibold text-foreground">Admin User</p>
+                <p className="text-xs text-sidebar-foreground/70">admin@example.com</p>
             </div>
             <Button variant="ghost" size="icon" className="group-data-[collapsible=icon]:hidden">
                 <LogOut />

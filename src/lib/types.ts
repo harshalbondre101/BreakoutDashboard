@@ -25,7 +25,7 @@ export interface Call {
   outcome: string;
   timestamp: string;
   type: 'inbound' | 'outbound' | 'missed';
-  status?: 'active' | 'completed';
+  status?: 'active' | 'completed' | 'on-hold';
 }
 
 export interface Booking {
