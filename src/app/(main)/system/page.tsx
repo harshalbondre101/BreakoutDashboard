@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { Bot, User, CheckCircle, AlertTriangle, Shield, Settings as SettingsIcon, Bell } from "lucide-react";
+import { Bot, User, CheckCircle, AlertTriangle, Settings as SettingsIcon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
@@ -106,7 +106,7 @@ export default function SystemPage() {
                                     <span className="text-sm text-muted-foreground">{metric.name}</span>
                                     <span className="text-sm font-bold">{metric.value}</span>
                                 </div>
-                                <Progress value={parseFloat(metric.value)} className={`h-2 [&>div]:${statusColors[metric.status]}`}/>
+                                <Progress value={parseFloat(metric.value)} className={`h-2 [&>div]:${statusColors[metric.status as keyof typeof statusColors]}`}/>
                             </div>
                         ))}
                     </CardContent>
