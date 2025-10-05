@@ -76,28 +76,6 @@ export const kpiMetrics: KPIMetric[] = [
   }
 ];
 
-const firstNames = ['James', 'Mary', 'John', 'Patricia', 'Robert', 'Jennifer', 'Michael', 'Linda', 'William', 'Elizabeth',
-  'David', 'Barbara', 'Richard', 'Susan', 'Joseph', 'Jessica', 'Thomas', 'Sarah', 'Charles', 'Karen',
-  'Christopher', 'Nancy', 'Daniel', 'Lisa', 'Matthew', 'Betty', 'Anthony', 'Margaret', 'Mark', 'Sandra',
-  'Donald', 'Ashley', 'Steven', 'Kimberly', 'Paul', 'Emily', 'Andrew', 'Donna', 'Joshua', 'Michelle'];
-
-const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez',
-  'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin',
-  'Lee', 'Perez', 'Thompson', 'White', 'Harris', 'Sanchez', 'Clark', 'Ramirez', 'Lewis', 'Robinson'];
-
-const companies = ['Tech Corp', 'Global Enterprises', 'Innovation Inc', 'Future Solutions', 'Prime Industries'];
-
-const eventTypes = ['Wedding', 'Corporate Event', 'Birthday Party', 'Conference', 'Product Launch', 'Gala Dinner',
-  'Team Building', 'Anniversary', 'Networking Event', 'Award Ceremony'];
-
-const venues = ['Grand Ballroom', 'Riverside Garden', 'Metropolitan Hall', 'Skyline Terrace', 'Harbor View Center',
-  'Crystal Palace', 'Heritage Mansion', 'Downtown Convention', 'Lakeside Pavilion', 'Plaza Hotel'];
-
-const topics = ['Booking Inquiry', 'Pricing Question', 'Date Availability', 'Menu Options', 'Payment Issue',
-  'Modification Request', 'Cancellation', 'Complaint', 'Follow-up', 'General Question'];
-
-const leadSources = ['Website', 'Referral', 'Social Media', 'Email Campaign', 'Cold Call', 'Trade Show', 'Partner'];
-
 export const activeCalls: ActiveCall[] = [
     {
       id: 'call-1',
@@ -153,175 +131,312 @@ export const activeCalls: ActiveCall[] = [
     },
 ];
 
-export const recentBookings: Booking[] = Array.from({ length: 30 }, (_, i) => {
-  const createdAt = new Date(Date.now() - Math.random() * 86400000 * 7);
-  return {
-    id: `booking-${i + 1}`,
-    customerId: `cust-${Math.floor(Math.random() * 500) + 1}`,
-    customerName: Math.random() > 0.3
-      ? `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`
-      : companies[Math.floor(Math.random() * companies.length)],
-    eventType: eventTypes[Math.floor(Math.random() * eventTypes.length)],
-    eventDate: new Date(Date.now() + Math.random() * 86400000 * 180),
-    guestCount: Math.floor(Math.random() * 300) + 20,
-    value: Math.floor(Math.random() * 5000) + 500,
-    status: ['pending', 'confirmed', 'completed', 'cancelled'][Math.floor(Math.random() * 4)] as any,
-    paymentMethod: ['credit', 'debit', 'wallet', 'bank'][Math.floor(Math.random() * 4)] as any,
-    paymentStatus: ['paid', 'pending', 'failed'][Math.floor(Math.random() * 10) < 9 ? 0 : Math.floor(Math.random() * 2) + 1] as any,
-    createdAt,
-    modifiedAt: Math.random() > 0.7 ? new Date(createdAt.getTime() + Math.random() * 86400000 * 3) : undefined
-  };
-});
-
-export const customers: Customer[] = Array.from({ length: 500 }, (_, i) => ({
-  id: `cust-${i + 1}`,
-  name: Math.random() > 0.3
-    ? `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`
-    : companies[Math.floor(Math.random() * companies.length)],
-  email: `customer${i + 1}@example.com`,
-  phone: `+1-${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
-  type: Math.random() > 0.3 ? 'individual' : 'corporate',
-  status: Math.random() > 0.1 ? 'active' : 'inactive',
-  totalBookings: Math.floor(Math.random() * 10) + 1,
-  totalValue: Math.floor(Math.random() * 20000) + 1000,
-  lifetime: Math.floor(Math.random() * 730) + 30,
-  lastContact: new Date(Date.now() - Math.random() * 86400000 * 90),
-  sentiment: ['positive', 'neutral', 'negative'][Math.floor(Math.random() * 10) < 7 ? 0 : Math.floor(Math.random() * 2) + 1] as any,
-  tags: Array.from({ length: Math.floor(Math.random() * 3) + 1 }, () =>
-    ['VIP', 'Frequent', 'Corporate', 'Referral', 'At-Risk', 'High-Value'][Math.floor(Math.random() * 6)]
-  ),
-  createdAt: new Date(Date.now() - Math.random() * 86400000 * 730)
-}));
-
-export const leads: Lead[] = Array.from({ length: 150 }, (_, i) => ({
-  id: `lead-${i + 1}`,
-  name: `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`,
-  email: `lead${i + 1}@example.com`,
-  phone: `+1-${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
-  source: leadSources[Math.floor(Math.random() * leadSources.length)],
-  status: ['new', 'contacted', 'qualified', 'proposal', 'negotiation', 'won', 'lost'][Math.floor(Math.random() * 7)] as any,
-  score: Math.floor(Math.random() * 100),
-  eventType: eventTypes[Math.floor(Math.random() * eventTypes.length)],
-  expectedValue: Math.floor(Math.random() * 10000) + 500,
-  followUpDate: Math.random() > 0.5 ? new Date(Date.now() + Math.random() * 86400000 * 30) : undefined,
-  assignedAgent: Math.random() > 0.3 ? `agent-${Math.floor(Math.random() * 10) + 1}` : undefined,
-  notes: 'Initial contact made. Interested in premium package.',
-  createdAt: new Date(Date.now() - Math.random() * 86400000 * 60)
-}));
-
-export const events: Event[] = Array.from({ length: 100 }, (_, i) => ({
-  id: `event-${i + 1}`,
-  name: `${eventTypes[Math.floor(Math.random() * eventTypes.length)]} ${i + 1}`,
-  type: eventTypes[Math.floor(Math.random() * eventTypes.length)],
-  venue: venues[Math.floor(Math.random() * venues.length)],
-  date: new Date(Date.now() + Math.random() * 86400000 * 180 - Math.random() * 86400000 * 90),
-  status: ['planned', 'confirmed', 'in-progress', 'completed', 'cancelled'][Math.floor(Math.random() * 5)] as any,
-  capacity: Math.floor(Math.random() * 300) + 50,
-  booked: Math.floor(Math.random() * 250) + 20,
-  revenue: Math.floor(Math.random() * 50000) + 5000,
-  customerId: `cust-${Math.floor(Math.random() * 500) + 1}`,
-  customerName: `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`
-}));
-
-export const calls: Call[] = Array.from({ length: 2000 }, (_, i) => {
-  const startTime = new Date(Date.now() - Math.random() * 86400000 * 180);
-  const duration = Math.floor(Math.random() * 1200) + 60;
-  const isAI = Math.random() > 0.4;
-
-  return {
-    id: `call-${i + 1}`,
-    customerId: `cust-${Math.floor(Math.random() * 500) + 1}`,
-    customerName: `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`,
-    agentId: `agent-${Math.floor(Math.random() * 25) + 1}`,
-    agentName: isAI ? `AI Agent ${Math.floor(Math.random() * 15) + 1}` : `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`,
-    agentType: isAI ? 'ai' : 'human',
-    direction: Math.random() > 0.4 ? 'inbound' : 'outbound',
-    duration,
-    outcome: ['resolved', 'transferred', 'callback', 'abandoned'][Math.floor(Math.random() * 4)] as any,
-    sentiment: ['positive', 'neutral', 'negative'][Math.floor(Math.random() * 10) < 7 ? 0 : Math.floor(Math.random() * 2) + 1] as any,
-    sentimentJourney: Array.from({ length: 10 }, () => Math.random() * 100),
-    topics: Array.from({ length: Math.floor(Math.random() * 3) + 1 }, () =>
-      topics[Math.floor(Math.random() * topics.length)]
-    ),
-    intentRecognized: Math.random() > 0.05,
-    intentAccuracy: Math.random() * 20 + 80,
-    transcript: 'Customer inquired about availability for wedding in June. Discussed package options and pricing. Scheduled follow-up call.',
-    startTime,
-    endTime: new Date(startTime.getTime() + duration * 1000),
-    cost: isAI ? Math.random() * 2 + 0.5 : Math.random() * 8 + 2,
-    qualityScore: Math.random() * 20 + 80
-  };
-});
-
-export const agents: Agent[] = [
-  ...Array.from({ length: 15 }, (_, i) => ({
-    id: `agent-${i + 1}`,
-    name: `AI Agent ${i + 1}`,
-    type: 'ai' as const,
-    status: ['available', 'busy', 'away'][Math.floor(Math.random() * 3)] as any,
-    skills: Array.from({ length: Math.floor(Math.random() * 4) + 2 }, () =>
-      ['Booking', 'Sales', 'Support', 'Technical', 'Complaints'][Math.floor(Math.random() * 5)]
-    ),
-    performanceMetrics: {
-      fcr: Math.random() * 15 + 70,
-      acd: Math.random() * 3 + 4,
-      csat: Math.random() * 15 + 80,
-      qualityScore: Math.random() * 15 + 80,
-      utilization: Math.random() * 20 + 70,
-      callsToday: Math.floor(Math.random() * 50) + 10
-    },
-    currentCall: Math.random() > 0.5 ? `call-${Math.floor(Math.random() * 12) + 1}` : undefined
-  })),
-  ...Array.from({ length: 10 }, (_, i) => ({
-    id: `agent-${i + 16}`,
-    name: `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`,
-    type: 'human' as const,
-    status: ['available', 'busy', 'away', 'offline'][Math.floor(Math.random() * 4)] as any,
-    skills: Array.from({ length: Math.floor(Math.random() * 3) + 2 }, () =>
-      ['Booking', 'Sales', 'Support', 'Technical', 'Complaints'][Math.floor(Math.random() * 5)]
-    ),
-    performanceMetrics: {
-      fcr: Math.random() * 15 + 70,
-      acd: Math.random() * 4 + 5,
-      csat: Math.random() * 15 + 75,
-      qualityScore: Math.random() * 15 + 75,
-      utilization: Math.random() * 20 + 65,
-      callsToday: Math.floor(Math.random() * 40) + 5
-    },
-    currentCall: Math.random() > 0.6 ? `call-${Math.floor(Math.random() * 12) + 1}` : undefined
-  }))
+export const recentBookings: Booking[] = [
+  {
+    id: 'booking-1',
+    customerId: 'cust-1',
+    customerName: 'Linda Robinson',
+    eventType: 'Wedding',
+    eventDate: new Date('2024-12-15T14:00:00Z'),
+    guestCount: 150,
+    value: 12500,
+    status: 'confirmed',
+    paymentMethod: 'credit',
+    paymentStatus: 'paid',
+    createdAt: new Date('2024-07-20T10:30:00Z'),
+  },
+  {
+    id: 'booking-2',
+    customerId: 'cust-2',
+    customerName: 'Tech Corp',
+    eventType: 'Conference',
+    eventDate: new Date('2024-11-20T09:00:00Z'),
+    guestCount: 300,
+    value: 25000,
+    status: 'pending',
+    paymentMethod: 'bank',
+    paymentStatus: 'pending',
+    createdAt: new Date('2024-07-18T15:00:00Z'),
+  },
+  {
+    id: 'booking-3',
+    customerId: 'cust-3',
+    customerName: 'Global Enterprises',
+    eventType: 'Product Launch',
+    eventDate: new Date('2024-10-05T18:00:00Z'),
+    guestCount: 200,
+    value: 8500,
+    status: 'confirmed',
+    paymentMethod: 'credit',
+    paymentStatus: 'paid',
+    createdAt: new Date('2024-07-15T11:45:00Z'),
+  },
+  {
+    id: 'booking-4',
+    customerId: 'cust-4',
+    customerName: 'Emily Martin',
+    eventType: 'Birthday Party',
+    eventDate: new Date('2024-09-30T19:00:00Z'),
+    guestCount: 50,
+    value: 3500,
+    status: 'confirmed',
+    paymentMethod: 'wallet',
+    paymentStatus: 'paid',
+    createdAt: new Date('2024-07-12T09:20:00Z'),
+  },
+  {
+    id: 'booking-5',
+    customerId: 'cust-5',
+    customerName: 'Future Solutions',
+    eventType: 'Gala Dinner',
+    eventDate: new Date('2025-01-20T20:00:00Z'),
+    guestCount: 250,
+    value: 18000,
+    status: 'cancelled',
+    paymentMethod: 'credit',
+    paymentStatus: 'refunded',
+    createdAt: new Date('2024-07-10T16:00:00Z'),
+  },
 ];
 
-export const whatsappTemplates: WhatsAppTemplate[] = Array.from({ length: 20 }, (_, i) => ({
-  id: `template-${i + 1}`,
-  name: `Template ${i + 1}`,
-  category: ['Marketing', 'Transactional', 'Authentication', 'Utility'][Math.floor(Math.random() * 4)],
-  content: 'Hello {{name}}, your booking for {{event}} on {{date}} is confirmed!',
-  status: ['active', 'pending', 'rejected'][Math.floor(Math.random() * 10) < 8 ? 0 : Math.floor(Math.random() * 2) + 1] as any,
-  language: 'en',
-  metrics: {
-    sent: Math.floor(Math.random() * 10000) + 100,
-    delivered: Math.floor(Math.random() * 9600) + 96,
-    read: Math.floor(Math.random() * 8900) + 85,
-    clicked: Math.floor(Math.random() * 1280) + 10,
-    converted: Math.floor(Math.random() * 450) + 5
+export const customers: Customer[] = [
+  {
+    id: 'cust-1',
+    name: 'Linda Robinson',
+    email: 'linda.robinson@example.com',
+    phone: '+1-555-0101',
+    type: 'individual',
+    status: 'active',
+    totalBookings: 3,
+    totalValue: 28000,
+    lifetime: 365,
+    lastContact: new Date('2024-07-20T10:30:00Z'),
+    sentiment: 'positive',
+    tags: ['VIP', 'Frequent'],
+    createdAt: new Date('2023-07-31T10:00:00Z'),
   },
-  createdAt: new Date(Date.now() - Math.random() * 86400000 * 90)
-}));
+  {
+    id: 'cust-2',
+    name: 'Tech Corp',
+    email: 'contact@techcorp.com',
+    phone: '+1-555-0102',
+    type: 'corporate',
+    status: 'active',
+    totalBookings: 5,
+    totalValue: 120000,
+    lifetime: 730,
+    lastContact: new Date('2024-07-18T15:00:00Z'),
+    sentiment: 'neutral',
+    tags: ['Corporate', 'High-Value'],
+    createdAt: new Date('2022-07-31T11:00:00Z'),
+  },
+  {
+    id: 'cust-3',
+    name: 'Global Enterprises',
+    email: 'events@globalenterprises.com',
+    phone: '+1-555-0103',
+    type: 'corporate',
+    status: 'inactive',
+    totalBookings: 1,
+    totalValue: 8500,
+    lifetime: 180,
+    lastContact: new Date('2024-01-15T11:45:00Z'),
+    sentiment: 'neutral',
+    tags: ['At-Risk'],
+    createdAt: new Date('2024-02-02T12:00:00Z'),
+  },
+];
 
-export const themes: Theme[] = Array.from({ length: 25 }, (_, i) => ({
-  id: `theme-${i + 1}`,
-  name: `${['Classic', 'Modern', 'Luxury', 'Rustic', 'Garden', 'Beach', 'Urban', 'Vintage'][Math.floor(Math.random() * 8)]} Package ${i + 1}`,
-  description: 'Complete event package with venue, catering, and decoration',
-  basePrice: Math.floor(Math.random() * 5000) + 1000,
-  category: ['Wedding', 'Corporate', 'Birthday', 'Conference'][Math.floor(Math.random() * 4)],
-  features: ['Venue', 'Catering', 'Decoration', 'Photography', 'Entertainment'],
-  status: Math.random() > 0.1 ? 'active' : 'inactive',
-  popularity: Math.random() * 100,
-  bookings: Math.floor(Math.random() * 50) + 1,
-  revenue: Math.floor(Math.random() * 100000) + 5000,
-  seasonalMultiplier: Math.random() > 0.5 ? Math.random() * 0.5 + 1 : undefined
-}));
+export const leads: Lead[] = [
+    {
+      id: 'lead-1',
+      name: 'John Smith',
+      email: 'john.smith@example.com',
+      phone: '+1-555-0104',
+      source: 'Website',
+      status: 'new',
+      score: 85,
+      eventType: 'Wedding',
+      expectedValue: 15000,
+      notes: 'Initial inquiry, high interest.',
+      createdAt: new Date('2024-07-30T10:00:00Z'),
+    },
+    {
+      id: 'lead-2',
+      name: 'Mary Garcia',
+      email: 'mary.garcia@example.com',
+      phone: '+1-555-0105',
+      source: 'Referral',
+      status: 'qualified',
+      score: 95,
+      eventType: 'Corporate Event',
+      expectedValue: 30000,
+      followUpDate: new Date('2024-08-05T10:00:00Z'),
+      notes: 'Referred by Tech Corp. Proposal sent.',
+      createdAt: new Date('2024-07-28T14:30:00Z'),
+    }
+];
+
+export const events: Event[] = [
+    {
+      id: 'event-1',
+      name: 'Tech Corp Annual Conference',
+      type: 'Conference',
+      venue: 'Grand Ballroom',
+      date: new Date('2024-11-20T09:00:00Z'),
+      status: 'confirmed',
+      capacity: 300,
+      booked: 280,
+      revenue: 25000,
+      customerId: 'cust-2',
+      customerName: 'Tech Corp',
+    },
+    {
+      id: 'event-2',
+      name: 'Linda & John\'s Wedding',
+      type: 'Wedding',
+      venue: 'Riverside Garden',
+      date: new Date('2024-12-15T14:00:00Z'),
+      status: 'confirmed',
+      capacity: 150,
+      booked: 150,
+      revenue: 12500,
+      customerId: 'cust-1',
+      customerName: 'Linda Robinson',
+    },
+];
+
+export const calls: Call[] = [
+    {
+        id: 'call-101',
+        customerId: 'cust-123',
+        customerName: 'Jennifer Williams',
+        agentId: 'agent-7',
+        agentName: 'AI Agent 7',
+        agentType: 'ai',
+        direction: 'inbound',
+        duration: 320,
+        outcome: 'resolved',
+        sentiment: 'positive',
+        sentimentJourney: [20, 40, 60, 80, 75, 85, 90, 80, 70, 95],
+        topics: ['Booking Inquiry', 'Pricing'],
+        intentRecognized: true,
+        intentAccuracy: 95,
+        transcript: 'Customer inquired about booking a wedding in December. AI provided package details and pricing. Customer was satisfied.',
+        startTime: new Date('2024-07-31T14:25:00Z'),
+        endTime: new Date('2024-07-31T14:30:20Z'),
+        cost: 1.50,
+        qualityScore: 98,
+    },
+    {
+        id: 'call-102',
+        customerId: 'cust-789',
+        customerName: 'Jessica Davis',
+        agentId: 'agent-18',
+        agentName: 'Sarah Clark',
+        agentType: 'human',
+        direction: 'inbound',
+        duration: 550,
+        outcome: 'transferred',
+        sentiment: 'negative',
+        sentimentJourney: [60, 50, 40, 30, 20, 15, 10, 25, 30, 20],
+        topics: ['Complaint', 'Payment Issue'],
+        intentRecognized: false,
+        intentAccuracy: 0,
+        transcript: 'Customer was unhappy about a payment issue. Call was escalated to a senior agent for resolution.',
+        startTime: new Date('2024-07-31T14:20:00Z'),
+        endTime: new Date('2024-07-31T14:29:10Z'),
+        cost: 7.20,
+        qualityScore: 75,
+    }
+];
+
+export const agents: Agent[] = [
+  {
+    id: 'agent-1',
+    name: 'AI Agent 1',
+    type: 'ai' as const,
+    status: 'available',
+    skills: ['Booking', 'Sales'],
+    performanceMetrics: { fcr: 85, acd: 5.5, csat: 92, qualityScore: 95, utilization: 80, callsToday: 45 },
+  },
+  {
+    id: 'agent-2',
+    name: 'AI Agent 2',
+    type: 'ai' as const,
+    status: 'busy',
+    skills: ['Support', 'Technical'],
+    performanceMetrics: { fcr: 78, acd: 7.2, csat: 88, qualityScore: 91, utilization: 85, callsToday: 52 },
+    currentCall: 'call-2',
+  },
+  {
+    id: 'agent-16',
+    name: 'Sarah Clark',
+    type: 'human' as const,
+    status: 'busy',
+    skills: ['Support', 'Complaints'],
+    performanceMetrics: { fcr: 75, acd: 8.1, csat: 85, qualityScore: 88, utilization: 70, callsToday: 35 },
+    currentCall: 'call-3',
+  },
+  {
+    id: 'agent-17',
+    name: 'John Doe',
+    type: 'human' as const,
+    status: 'available',
+    skills: ['Sales', 'Booking'],
+    performanceMetrics: { fcr: 82, acd: 6.5, csat: 90, qualityScore: 92, utilization: 75, callsToday: 41 },
+  },
+];
+
+export const whatsappTemplates: WhatsAppTemplate[] = [
+    {
+        id: 'template-1',
+        name: 'Booking Confirmation',
+        category: 'Transactional',
+        content: 'Hello {{name}}, your booking for {{event}} on {{date}} is confirmed!',
+        status: 'active',
+        language: 'en',
+        metrics: { sent: 5230, delivered: 5180, read: 4950, clicked: 850, converted: 210 },
+        createdAt: new Date('2024-06-01T10:00:00Z'),
+    },
+    {
+        id: 'template-2',
+        name: 'Special Offer',
+        category: 'Marketing',
+        content: 'Hi {{name}}, get 20% off your next event booking with us! Use code: EVENT20',
+        status: 'active',
+        language: 'en',
+        metrics: { sent: 10500, delivered: 10300, read: 8500, clicked: 1500, converted: 350 },
+        createdAt: new Date('2024-07-01T11:00:00Z'),
+    },
+];
+
+export const themes: Theme[] = [
+    {
+        id: 'theme-1',
+        name: 'Classic Wedding',
+        description: 'Timeless elegance for your special day.',
+        basePrice: 5000,
+        category: 'Wedding',
+        features: ['Venue', 'Catering', 'Decoration'],
+        status: 'active',
+        popularity: 85,
+        bookings: 120,
+        revenue: 600000,
+    },
+    {
+        id: 'theme-2',
+        name: 'Modern Corporate',
+        description: 'Sleek and professional for business events.',
+        basePrice: 7500,
+        category: 'Corporate',
+        features: ['Venue', 'AV Equipment', 'Catering'],
+        status: 'active',
+        popularity: 92,
+        bookings: 85,
+        revenue: 637500,
+    },
+];
 
 export const alerts: Alert[] = [
   {
