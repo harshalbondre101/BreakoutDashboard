@@ -1,14 +1,14 @@
 import { Header } from "@/components/layout/header";
 import { KPICard } from "@/components/kpi-card";
-import { kpiMetrics, activeCalls, callVolumeData, sentimentDistributionData, recentBookings, systemAlerts } from "@/lib/data";
+import { kpiMetrics, activeCalls, recentBookings, systemAlerts } from "@/lib/data";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { PieChart, Pie, Cell, Legend, ResponsiveContainer as PieResponsiveContainer } from 'recharts';
 import { AlertTriangle, CheckCircle, Info, Bell, Activity, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CallVolumeChart } from "./_components/call-volume-chart";
+import { SentimentDistributionChart } from "./_components/sentiment-distribution-chart";
 
 const sentimentIcons = {
   positive: <ArrowUp className="w-4 h-4 text-emerald-500" />,
@@ -90,15 +90,7 @@ export default function DashboardPage() {
                 <CardTitle>Call Volume (24h)</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={150}>
-                  <BarChart data={callVolumeData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <Tooltip cursor={{fill: 'hsl(var(--accent) / 0.2)'}} contentStyle={{backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)'}}/>
-                    <Bar dataKey="calls" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                <CallVolumeChart />
               </CardContent>
             </Card>
             <Card>
@@ -106,17 +98,7 @@ export default function DashboardPage() {
                 <CardTitle>Sentiment Distribution</CardTitle>
               </CardHeader>
               <CardContent>
-                 <PieResponsiveContainer width="100%" height={150}>
-                    <PieChart>
-                        <Pie data={sentimentDistributionData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} label>
-                            {sentimentDistributionData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.fill} />
-                            ))}
-                        </Pie>
-                        <Tooltip contentStyle={{backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)'}}/>
-                        <Legend iconSize={10} wrapperStyle={{fontSize: '12px'}}/>
-                    </PieChart>
-                </PieResponsiveContainer>
+                 <SentimentDistributionChart />
               </CardContent>
             </Card>
           </div>
