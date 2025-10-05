@@ -1,11 +1,21 @@
 
 'use client';
+import { useState, useEffect } from 'react';
 import { Phone, AlertTriangle } from 'lucide-react';
 import { KPICard } from '@/components/kpi-card';
 import { kpiMetrics, activeCalls, recentBookings, alerts } from '@/lib/data';
 import { DollarSign } from 'lucide-react';
 
 export default function DashboardPage() {
+  const [time, setTime] = useState('');
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTime(new Date().toLocaleTimeString());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -46,7 +56,7 @@ export default function DashboardPage() {
             System Online
           </div>
           <div className="px-4 py-2 bg-white border border-gray-200 rounded-lg">
-            {new Date().toLocaleTimeString()}
+            {time}
           </div>
         </div>
       </div>
