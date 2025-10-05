@@ -98,19 +98,60 @@ const topics = ['Booking Inquiry', 'Pricing Question', 'Date Availability', 'Men
 
 const leadSources = ['Website', 'Referral', 'Social Media', 'Email Campaign', 'Cold Call', 'Trade Show', 'Partner'];
 
-export const activeCalls: ActiveCall[] = Array.from({ length: 12 }, (_, i) => ({
-  id: `call-${i + 1}`,
-  customerId: `cust-${Math.floor(Math.random() * 500) + 1}`,
-  customerName: `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`,
-  agentId: `agent-${Math.floor(Math.random() * 25) + 1}`,
-  agentName: Math.random() > 0.4 ? `AI Agent ${Math.floor(Math.random() * 15) + 1}` : `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`,
-  duration: Math.floor(Math.random() * 600) + 30,
-  sentiment: ['positive', 'neutral', 'negative'][Math.floor(Math.random() * 3)] as 'positive' | 'neutral' | 'negative',
-  sentimentScore: Math.random() * 100,
-  topic: topics[Math.floor(Math.random() * topics.length)],
-  status: ['active', 'on-hold', 'transferring'][Math.floor(Math.random() * 3)] as 'active' | 'on-hold' | 'transferring',
-  startTime: new Date(Date.now() - Math.random() * 600000)
-}));
+export const activeCalls: ActiveCall[] = [
+    {
+      id: 'call-1',
+      customerId: 'cust-123',
+      customerName: 'Jennifer Williams',
+      agentId: 'agent-7',
+      agentName: 'AI Agent 7',
+      duration: 320,
+      sentiment: 'positive',
+      sentimentScore: 85,
+      topic: 'Booking Inquiry',
+      status: 'active',
+      startTime: new Date('2024-07-31T14:25:00Z'),
+    },
+    {
+      id: 'call-2',
+      customerId: 'cust-456',
+      customerName: 'Michael Brown',
+      agentId: 'agent-2',
+      agentName: 'AI Agent 2',
+      duration: 150,
+      sentiment: 'neutral',
+      sentimentScore: 55,
+      topic: 'Pricing Question',
+      status: 'on-hold',
+      startTime: new Date('2024-07-31T14:28:00Z'),
+    },
+    {
+      id: 'call-3',
+      customerId: 'cust-789',
+      customerName: 'Jessica Davis',
+      agentId: 'agent-18',
+      agentName: 'Sarah Clark',
+      duration: 550,
+      sentiment: 'negative',
+      sentimentScore: 25,
+      topic: 'Complaint',
+      status: 'active',
+      startTime: new Date('2024-07-31T14:20:00Z'),
+    },
+    {
+        id: 'call-4',
+        customerId: 'cust-101',
+        customerName: 'David Martinez',
+        agentId: 'agent-5',
+        agentName: 'AI Agent 5',
+        duration: 210,
+        sentiment: 'positive',
+        sentimentScore: 92,
+        topic: 'Modification Request',
+        status: 'transferring',
+        startTime: new Date('2024-07-31T14:26:00Z'),
+    },
+];
 
 export const recentBookings: Booking[] = Array.from({ length: 30 }, (_, i) => {
   const createdAt = new Date(Date.now() - Math.random() * 86400000 * 7);
