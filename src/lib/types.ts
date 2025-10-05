@@ -24,19 +24,23 @@ export interface ActiveCall {
 }
 
 export interface Booking {
-  id: string;
-  customerId: string;
-  customerName: string;
-  eventType: string;
-  eventDate: Date;
-  guestCount: number;
-  value: number;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
-  paymentMethod: 'credit' | 'debit' | 'wallet' | 'bank';
-  paymentStatus: 'paid' | 'pending' | 'failed' | 'refunded';
-  createdAt: Date;
-  modifiedAt?: Date;
+  Booking_ID: number;
+  Booking_date: string;
+  Slot_ID: number;
+  Customer_ID: number;
+  Booking_status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  Payment_ID: number;
+  conv_id: string;
+  guest_count: number;
+  // Fields that are not in the new API but were in the old mock data.
+  // We can keep them optional or remove them if they are not needed.
+  customerName?: string;
+  eventType?: string;
+  value?: number;
+  paymentMethod?: 'credit' | 'debit' | 'wallet' | 'bank';
+  paymentStatus?: 'paid' | 'pending' | 'failed' | 'refunded';
 }
+
 
 export interface Customer {
   Customer_ID: number;
