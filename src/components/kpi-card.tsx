@@ -1,51 +1,55 @@
+
 'use client';
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { KPIMetric } from '../lib/types';
 
-import { Card } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import type { KPIMetric } from "@/lib/types";
-import { Bot, CheckCircle, Star, Zap, DollarSign, Users, Phone, PieChart, Clock, Shield, TrendingUp, UserCheck } from "lucide-react";
-import type { LucideIcon } from 'lucide-react';
-
-const iconMap: { [key: string]: LucideIcon } = {
-  Bot,
-  CheckCircle,
-  Star,
-  Zap,
-  DollarSign,
-  Users,
-  Phone,
-  PieChart,
-  Clock,
-  Shield,
-  TrendingUp,
-  UserCheck
-};
-
-
-interface KPICardProps extends React.HTMLAttributes<HTMLDivElement> {
-  metric: Omit<KPIMetric, 'icon'> & { icon: string };
+interface KPICardProps {
+  metric: KPIMetric;
+  onClick?: () => void;
 }
 
-export function KPICard({ metric, className, ...props }: KPICardProps) {
-  const Icon = iconMap[metric.icon as keyof typeof iconMap];
+export function KPICard({ metric, onClick }: KPICardProps) {
+  const statusColors = {
+    good: 'border-emerald-500 bg-emerald-50',
+    warning: 'border-amber-500 bg-amber-50',
+    critical: 'border-red-500 bg-red-50'
+  };
 
-  const changeColor =
-    metric.changeType === 'increase'
-      ? 'text-emerald-500'
-      : metric.changeType === 'decrease'
-      ? 'text-red-500'
-      : 'text-muted-foreground';
+  const trendIcons = {
+    up: <TrendingUp className="w-4 h-4" />,
+    down: <TrendingDown className="w-4 h-4" />,
+    stable: <Minus className="w-4 h-4" />
+  };
 
   return (
-    <Card className={cn("p-4 flex flex-col", className)} {...props}>
-        <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-muted-foreground">{metric.title}</h3>
-            {Icon && <Icon className="w-5 h-5 text-muted-foreground" />}
+    <div
+      onClick={onClick}
+      className={`p-4 border-l-4 ${statusColors[metric.status]} bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer`}
+    >
+      <div className="flex justify-between items-start mb-2">
+        <h3 className="text-sm font-medium text-gray-600">{metric.label}</h3>
+        <span className={`${metric.trend === 'up' ? 'text-emerald-600' : metric.trend === 'down' ? 'text-blue-600' : 'text-gray-500'}`}>
+          {trendIcons[metric.trend]}
+        </span>
+      </div>
+      <div className="flex items-end justify-between">
+        <div>
+          <p className="text-3xl font-bold text-gray-900">{metric.value}</p>
+          <p className="text-xs text-gray-500 mt-1">Target: {metric.target}</p>
         </div>
-        <div className="mt-2">
-            <p className="text-3xl font-bold">{metric.value}</p>
-            <p className={cn("text-xs", changeColor)}>{metric.change}</p>
+        <div className="w-16 h-8">
+          <svg viewBox="0 0 100 30" className="w-full h-full">
+            <polyline
+              fill="none"
+              stroke={metric.status === 'good' ? '#10b981' : metric.status === 'warning' ? '#f59e0b' : '#ef4444'}
+              strokeWidth="2"
+              points={metric.sparklineData
+                .map((val, i) => `${(i / (metric.sparklineData.length - 1)) * 100},${30 - (val / Math.max(...metric.sparklineData)) * 25}`)
+                .join(' ')}
+            />
+          </svg>
         </div>
-    </Card>
+      </div>
+    </div>
   );
 }
