@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { Users, Calendar, TrendingUp, Search, Filter, Download } from 'lucide-react';
 import { Customer, Lead, Event } from '@/lib/types';
 
-// Mock data will be used until APIs are ready
-import { customers as staticCustomers, leads as staticLeads, events as staticEvents } from '@/lib/data';
+// Mock data will be used for leads and events until APIs are ready
+import { leads as staticLeads, events as staticEvents } from '@/lib/data';
 
 
 type TabType = 'customers' | 'leads' | 'events';
@@ -14,17 +14,44 @@ export default function CustomersHubPage() {
   const [activeTab, setActiveTab] = useState<TabType>('customers');
   const [searchTerm, setSearchTerm] = useState('');
   
-  // State is initialized with static data
-  const [customers, setCustomers] = useState<Customer[]>(staticCustomers);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [leads, setLeads] = useState<Lead[]>(staticLeads);
   const [events, setEvents] = useState<Event[]>(staticEvents);
-  const [loading, setLoading] = useState(false); // No loading state needed for static data
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (activeTab === 'customers') {
+      const fetchCustomers = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+          const response = await fetch('https://fragrances-independently-conflict-thank.trycloudflare.com/customers/');
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          const data = await response.json();
+          setCustomers(data);
+        } catch (err) {
+          if (err instanceof Error) {
+            setError(err.message);
+          } else {
+            setError('An unexpected error occurred');
+          }
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchCustomers();
+    }
+  }, [activeTab]);
 
 
   const filteredCustomers = customers.filter(c =>
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.email.toLowerCase().includes(searchTerm.toLowerCase())
-  ).slice(0, 50);
+    c.Name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.Email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const filteredLeads = leads.filter(l =>
     l.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -46,10 +73,52 @@ export default function CustomersHubPage() {
     lost: leads.filter(l => l.status === 'lost').length
   };
   
-  if (loading) {
-    return <div className="flex justify-center items-center h-64">
-      <div className="w-12 h-12 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
-    </div>;
+  const renderCustomerContent = () => {
+    if (loading) {
+      return (
+        <div className="flex justify-center items-center h-64">
+          <div className="w-12 h-12 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
+        </div>
+      );
+    }
+
+    if (error) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <div className="text-red-500 text-center">
+                    <p>Failed to load customer data.</p>
+                    <p className="text-sm">{error}</p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Registered Date</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {filteredCustomers.map((customer) => (
+              <tr key={customer.Customer_ID} className="hover:bg-gray-50 cursor-pointer">
+                <td className="px-4 py-3">
+                  <p className="font-medium text-gray-900">{customer.Name}</p>
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-600">{customer.Email}</td>
+                <td className="px-4 py-3 text-sm text-gray-600">{customer.Phone_number}</td>
+                <td className="px-4 py-3 text-sm">{new Date(customer.Registered_date).toLocaleDateString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
   }
 
   return (
@@ -122,58 +191,7 @@ export default function CustomersHubPage() {
             </button>
           </div>
 
-          {activeTab === 'customers' && (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bookings</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Value</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sentiment</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Registered Date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {filteredCustomers.map((customer) => (
-                    <tr key={customer.id} className="hover:bg-gray-50 cursor-pointer">
-                      <td className="px-4 py-3">
-                        <p className="font-medium text-gray-900">{customer.name}</p>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-600 capitalize">{customer.type}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{customer.email}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{customer.phone}</td>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">{customer.totalBookings}</td>
-                      <td className="px-4 py-3 text-sm font-bold text-emerald-600">
-                        ${customer.totalValue.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          customer.sentiment === 'positive' ? 'bg-emerald-100 text-emerald-800' :
-                          customer.sentiment === 'negative' ? 'bg-red-100 text-red-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {customer.sentiment}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          customer.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {customer.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm">{new Date(customer.createdAt).toLocaleDateString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          {activeTab === 'customers' && renderCustomerContent()}
 
           {activeTab === 'leads' && (
             <div>

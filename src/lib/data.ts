@@ -1,4 +1,4 @@
-import { KPIMetric, ActiveCall, Booking, Customer, Lead, Event, Call, Agent, WhatsAppTemplate, Theme, Alert } from './types';
+import { KPIMetric, ActiveCall, Booking, Lead, Event, Call, Agent, WhatsAppTemplate, Theme, Alert } from './types';
 
 export const kpiMetrics: KPIMetric[] = [
   {
@@ -132,20 +132,20 @@ export const activeCalls: ActiveCall[] = [
 
 
 export const recentBookings: Booking[] = Array.from({ length: 30 }, (_, i) => {
-  const createdAt = new Date(Date.now() - Math.random() * 86400000 * 7);
+  const createdAt = new Date(Date.now() - (i * 86400000 * 1.5));
   return {
     id: `booking-${i + 1}`,
-    customerId: `cust-${Math.floor(Math.random() * 500) + 1}`,
-    customerName: 'Linda Robinson',
-    eventType: 'Wedding',
-    eventDate: new Date(Date.now() + Math.random() * 86400000 * 180),
-    guestCount: 150,
-    value: 12500,
+    customerId: `cust-${(i % 20) + 1}`,
+    customerName: ['Linda Robinson', 'John Doe', 'Mary Smith'][i % 3],
+    eventType: ['Wedding', 'Conference', 'Birthday Party'][i % 3],
+    eventDate: new Date(Date.now() + (i * 86400000 * 5)),
+    guestCount: 50 + (i * 5),
+    value: 5000 + (i * 1500),
     status: i % 4 === 0 ? 'cancelled' : i % 3 === 0 ? 'pending' : 'confirmed',
     paymentMethod: i % 2 === 0 ? 'credit' : 'bank',
     paymentStatus: i % 3 === 0 ? 'pending' : 'paid',
     createdAt,
-    modifiedAt: Math.random() > 0.7 ? new Date(createdAt.getTime() + Math.random() * 86400000 * 3) : undefined
+    modifiedAt: i % 5 === 0 ? new Date(createdAt.getTime() + 86400000 * 2) : undefined
   };
 });
 
@@ -157,22 +157,6 @@ const venues = ['Grand Ballroom', 'Riverside Garden', 'Metropolitan Hall', 'Skyl
 const topics = ['Booking Inquiry', 'Pricing Question', 'Date Availability', 'Menu Options', 'Payment Issue'];
 const leadSources = ['Website', 'Referral', 'Social Media', 'Email Campaign', 'Cold Call'];
 
-
-export const customers: Customer[] = Array.from({ length: 500 }, (_, i) => ({
-  id: `cust-${i + 1}`,
-  name: i % 5 === 0 ? companies[i % companies.length] : `${firstNames[i % firstNames.length]} ${lastNames[i % lastNames.length]}`,
-  email: `customer${i + 1}@example.com`,
-  phone: `+1-555-010${i.toString().padStart(2, '0')}`,
-  type: i % 5 === 0 ? 'corporate' : 'individual',
-  status: i % 10 === 0 ? 'inactive' : 'active',
-  totalBookings: Math.floor(i / 50) + 1,
-  totalValue: (Math.floor(i / 50) + 1) * 5000 + i * 100,
-  lifetime: 30 + i * 2,
-  lastContact: new Date(Date.now() - (i * 86400000 * 2)),
-  sentiment: i % 7 === 0 ? 'negative' : 'positive',
-  tags: i % 3 === 0 ? ['VIP', 'Frequent'] : ['New'],
-  createdAt: new Date(Date.now() - (i * 86400000 * 5))
-}));
 
 export const leads: Lead[] = Array.from({ length: 150 }, (_, i) => ({
   id: `lead-${i + 1}`,

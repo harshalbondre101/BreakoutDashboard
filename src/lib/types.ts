@@ -39,19 +39,11 @@ export interface Booking {
 }
 
 export interface Customer {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  type: 'individual' | 'corporate';
-  status: 'active' | 'inactive';
-  totalBookings: number;
-  totalValue: number;
-  lifetime: number;
-  lastContact: Date;
-  sentiment: 'positive' | 'neutral' | 'negative';
-  tags: string[];
-  createdAt: Date;
+  Customer_ID: number;
+  Name: string;
+  Email: string;
+  Phone_number: string;
+  Registered_date: string;
 }
 
 export interface CustomerListItem {
