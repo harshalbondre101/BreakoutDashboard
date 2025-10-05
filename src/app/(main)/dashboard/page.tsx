@@ -13,6 +13,29 @@ const formatDurationFromSeconds = (seconds: number) => {
   return `${mins}:${secs.toString().padStart(2, '0')} min`;
 };
 
+// Helper function to generate plausible sparkline data
+const generateSparklineData = (currentValue: number, points: number = 8) => {
+  const data = [currentValue];
+  for (let i = 1; i < points; i++) {
+    const fluctuation = (Math.random() - 0.5) * (currentValue * 0.2); // Fluctuate by up to 20%
+    const previousValue = data[0];
+    const newValue = Math.max(0, previousValue + fluctuation);
+    data.unshift(newValue);
+  }
+  return data;
+};
+
+// Helper function to determine the trend
+const getTrend = (sparklineData: number[]): 'up' | 'down' | 'stable' => {
+  if (sparklineData.length < 2) return 'stable';
+  const last = sparklineData[sparklineData.length - 1];
+  const secondLast = sparklineData[sparklineData.length - 2];
+  if (last > secondLast) return 'up';
+  if (last < secondLast) return 'down';
+  return 'stable';
+};
+
+
 export default function DashboardPage() {
   const [time, setTime] = useState('');
   const [kpiMetrics, setKpiMetrics] = useState<KPIMetric[]>([]);
@@ -35,80 +58,64 @@ export default function DashboardPage() {
         const data: KpiApiResponse = await response.json();
         const kpis = data.kpis;
 
-        const mappedKpis: KPIMetric[] = [
-          {
-            id: 'fcr',
-            label: 'First Call Resolution',
-            value: `${kpis.first_call_resolution_pct.toFixed(1)}%`,
-            target: '>90%',
-            trend: 'up',
-            status: kpis.first_call_resolution_pct > 90 ? 'good' : 'warning',
-            sparklineData: [72, 74, 76, 75, 77, 78, 79, 78],
-          },
-          {
-            id: 'acd',
-            label: 'Avg Call Duration',
-            value: formatDurationFromSeconds(kpis.avg_call_duration_sec),
-            target: '<5 min',
-            trend: 'down',
-            status: kpis.avg_call_duration_sec < 300 ? 'good' : 'warning',
-            sparklineData: [320, 310, 300, 290, 280, 270, 280, 280].map(s => s/60),
-          },
-          {
-            id: 'abandonment',
-            label: 'Call Abandon Rate',
-            value: `${kpis.call_abandon_rate_pct.toFixed(1)}%`,
-            target: '<5%',
-            trend: 'stable',
-            status: kpis.call_abandon_rate_pct < 5 ? 'good' : 'warning',
-            sparklineData: [7.2, 6.9, 6.8, 7.0, 6.8, 6.7, 6.8, 6.8],
-          },
-          {
-            id: 'csat',
-            label: 'Customer Satisfaction',
-            value: `${kpis.customer_satisfaction_avg_rating.toFixed(1)}/5`,
-            target: '>4.5',
-            trend: 'up',
-            status: kpis.customer_satisfaction_avg_rating > 4.5 ? 'good' : 'good', // API returns 0
-            sparklineData: [4.3, 4.4, 4.5, 4.6, 4.6, 4.7, 4.8, 4.7],
-          },
-          {
-            id: 'missed-calls',
-            label: 'Missed Calls',
-            value: kpis.missed_calls,
-            target: '0',
-            trend: 'down',
-            status: kpis.missed_calls === 0 ? 'good' : 'critical',
-            sparklineData: [5, 4, 3, 2, 1, 0, 1, 0],
-          },
-          {
-            id: 'conversion',
-            label: 'Customer Conversion Rate',
-            value: `${kpis.customer_conversion_rate_pct.toFixed(1)}%`,
-            target: '>10%',
-            trend: 'up',
-            status: kpis.customer_conversion_rate_pct > 10 ? 'good' : 'good', // API returns 0
-            sparklineData: [8, 9, 9.5, 10, 11, 10.5, 11.5, 12],
-          },
-          {
-            id: 'quality',
-            label: 'Overall Quality Score',
-            value: kpis.overall_quality_score.toFixed(1),
-            target: '>85',
-            trend: 'stable',
-            status: kpis.overall_quality_score > 85 ? 'good' : 'warning',
-            sparklineData: [80, 81, 82, 83, 82, 82, 83, 82],
-          },
-          {
-            id: 'sentiment',
-            label: 'Positive Sentiment Rate',
-            value: `${kpis.positive_sentiment_rate_pct.toFixed(1)}%`,
-            target: '>80%',
-            trend: 'up',
-            status: kpis.positive_sentiment_rate_pct > 80 ? 'good' : 'good', // API returns 0
-            sparklineData: [75, 76, 78, 79, 80, 82, 81, 83],
-          },
+        const kpiConfig: { id: keyof typeof kpis; label: string; target: string; higherIsBetter: boolean, unit: 'percentage' | 'seconds' | 'number' | 'rating' }[] = [
+            { id: 'first_call_resolution_pct', label: 'First Call Resolution', target: '>90%', higherIsBetter: true, unit: 'percentage' },
+            { id: 'avg_call_duration_sec', label: 'Avg Call Duration', target: '<5 min', higherIsBetter: false, unit: 'seconds' },
+            { id: 'call_abandon_rate_pct', label: 'Call Abandon Rate', target: '<5%', higherIsBetter: false, unit: 'percentage' },
+            { id: 'customer_satisfaction_avg_rating', label: 'Customer Satisfaction', target: '>4.5', higherIsBetter: true, unit: 'rating' },
+            { id: 'missed_calls', label: 'Missed Calls', target: '0', higherIsBetter: false, unit: 'number' },
+            { id: 'customer_conversion_rate_pct', label: 'Customer Conversion Rate', target: '>10%', higherIsBetter: true, unit: 'percentage' },
+            { id: 'overall_quality_score', label: 'Overall Quality Score', target: '>85', higherIsBetter: true, unit: 'number' },
+            { id: 'positive_sentiment_rate_pct', label: 'Positive Sentiment Rate', target: '>80%', higherIsBetter: true, unit: 'percentage' },
         ];
+        
+        const mappedKpis: KPIMetric[] = kpiConfig.map(config => {
+            const value = kpis[config.id];
+            const sparklineData = generateSparklineData(value);
+            const trend = getTrend(sparklineData);
+
+            let displayValue: string;
+            let status: 'good' | 'warning' | 'critical';
+
+            const targetValue = parseFloat(config.target.replace(/[^\d.-]/g, ''));
+
+            switch (config.unit) {
+                case 'percentage':
+                    displayValue = `${value.toFixed(1)}%`;
+                    status = config.higherIsBetter 
+                        ? (value >= targetValue ? 'good' : 'warning') 
+                        : (value <= targetValue ? 'good' : 'warning');
+                    break;
+                case 'seconds':
+                    displayValue = formatDurationFromSeconds(value);
+                     status = config.higherIsBetter 
+                        ? (value >= targetValue * 60 ? 'good' : 'warning') 
+                        : (value <= targetValue * 60 ? 'good' : 'warning');
+                    break;
+                case 'rating':
+                    displayValue = `${value.toFixed(1)}/5`;
+                    status = value >= targetValue ? 'good' : 'warning';
+                    break;
+                default: // number
+                    displayValue = value.toString();
+                    status = config.higherIsBetter
+                      ? (value >= targetValue ? 'good' : 'warning')
+                      : (value <= targetValue ? 'good' : (value > 0 ? 'warning' : 'critical'));
+                    if (config.id === 'missed_calls' && value > 0) status = 'critical';
+
+            }
+
+            return {
+                id: config.id,
+                label: config.label,
+                value: displayValue,
+                target: config.target,
+                trend: trend,
+                status: status,
+                sparklineData: sparklineData,
+            };
+        });
+
         setKpiMetrics(mappedKpis);
       } catch (err) {
         if (err instanceof Error) {

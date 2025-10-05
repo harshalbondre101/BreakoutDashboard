@@ -41,80 +41,60 @@ export default function AnalysisPage() {
         const data: KpiApiResponse = await response.json();
         const kpis = data.kpis;
 
-        const mappedKpis: KPIMetric[] = [
-          {
-            id: 'fcr',
-            label: 'First Call Resolution',
-            value: `${kpis.first_call_resolution_pct.toFixed(1)}%`,
-            target: '>90%',
-            trend: 'up',
-            status: kpis.first_call_resolution_pct > 90 ? 'good' : 'warning',
-            sparklineData: [],
-          },
-          {
-            id: 'acd',
-            label: 'Avg Call Duration',
-            value: formatDurationFromSeconds(kpis.avg_call_duration_sec),
-            target: '<5 min',
-            trend: 'down',
-            status: kpis.avg_call_duration_sec < 300 ? 'good' : 'warning',
-            sparklineData: [],
-          },
-          {
-            id: 'abandonment',
-            label: 'Call Abandon Rate',
-            value: `${kpis.call_abandon_rate_pct.toFixed(1)}%`,
-            target: '<5%',
-            trend: 'stable',
-            status: kpis.call_abandon_rate_pct < 5 ? 'good' : 'warning',
-            sparklineData: [],
-          },
-          {
-            id: 'csat',
-            label: 'Customer Satisfaction',
-            value: `${kpis.customer_satisfaction_avg_rating.toFixed(1)}/5`,
-            target: '>4.5',
-            trend: 'up',
-            status: kpis.customer_satisfaction_avg_rating > 4.5 ? 'good' : 'good',
-            sparklineData: [],
-          },
-           {
-            id: 'missed-calls',
-            label: 'Missed Calls',
-            value: kpis.missed_calls,
-            target: '0',
-            trend: 'down',
-            status: kpis.missed_calls === 0 ? 'good' : 'critical',
-            sparklineData: [],
-          },
-          {
-            id: 'conversion',
-            label: 'Customer Conversion Rate',
-            value: `${kpis.customer_conversion_rate_pct.toFixed(1)}%`,
-            target: '>10%',
-            trend: 'up',
-            status: kpis.customer_conversion_rate_pct > 10 ? 'good' : 'good',
-            sparklineData: [],
-          },
-          {
-            id: 'quality',
-            label: 'Overall Quality Score',
-            value: kpis.overall_quality_score.toFixed(1),
-            target: '>85',
-            trend: 'stable',
-            status: kpis.overall_quality_score > 85 ? 'good' : 'warning',
-            sparklineData: [],
-          },
-          {
-            id: 'sentiment',
-            label: 'Positive Sentiment Rate',
-            value: `${kpis.positive_sentiment_rate_pct.toFixed(1)}%`,
-            target: '>80%',
-            trend: 'up',
-            status: kpis.positive_sentiment_rate_pct > 80 ? 'good' : 'good',
-            sparklineData: [],
-          },
+        const kpiConfig: { id: keyof typeof kpis; label: string; target: string; higherIsBetter: boolean, unit: 'percentage' | 'seconds' | 'number' | 'rating' }[] = [
+            { id: 'first_call_resolution_pct', label: 'First Call Resolution', target: '>90%', higherIsBetter: true, unit: 'percentage' },
+            { id: 'avg_call_duration_sec', label: 'Avg Call Duration', target: '<5 min', higherIsBetter: false, unit: 'seconds' },
+            { id: 'call_abandon_rate_pct', label: 'Call Abandon Rate', target: '<5%', higherIsBetter: false, unit: 'percentage' },
+            { id: 'customer_satisfaction_avg_rating', label: 'Customer Satisfaction', target: '>4.5', higherIsBetter: true, unit: 'rating' },
+            { id: 'missed_calls', label: 'Missed Calls', target: '0', higherIsBetter: false, unit: 'number' },
+            { id: 'customer_conversion_rate_pct', label: 'Customer Conversion Rate', target: '>10%', higherIsBetter: true, unit: 'percentage' },
+            { id: 'overall_quality_score', label: 'Overall Quality Score', target: '>85', higherIsBetter: true, unit: 'number' },
+            { id: 'positive_sentiment_rate_pct', label: 'Positive Sentiment Rate', target: '>80%', higherIsBetter: true, unit: 'percentage' },
         ];
+        
+        const mappedKpis: KPIMetric[] = kpiConfig.map(config => {
+            const value = kpis[config.id];
+            let displayValue: string;
+            let status: 'good' | 'warning' | 'critical';
+
+            const targetValue = parseFloat(config.target.replace(/[^\d.-]/g, ''));
+
+            switch (config.unit) {
+                case 'percentage':
+                    displayValue = `${value.toFixed(1)}%`;
+                    status = config.higherIsBetter 
+                        ? (value >= targetValue ? 'good' : 'warning') 
+                        : (value <= targetValue ? 'good' : 'warning');
+                    break;
+                case 'seconds':
+                    displayValue = formatDurationFromSeconds(value);
+                     status = config.higherIsBetter 
+                        ? (value >= targetValue * 60 ? 'good' : 'warning') 
+                        : (value <= targetValue * 60 ? 'good' : 'warning');
+                    break;
+                case 'rating':
+                    displayValue = `${value.toFixed(1)}/5`;
+                    status = value >= targetValue ? 'good' : 'warning';
+                    break;
+                default: // number
+                    displayValue = value.toString();
+                     status = config.higherIsBetter
+                      ? (value >= targetValue ? 'good' : 'warning')
+                      : (value <= targetValue ? 'good' : (value > 0 ? 'warning' : 'critical'));
+                    if (config.id === 'missed_calls' && value > 0) status = 'critical';
+            }
+
+            return {
+                id: config.id,
+                label: config.label,
+                value: displayValue,
+                target: config.target,
+                trend: 'stable', // Placeholder, will be updated if we have historical data
+                status: status,
+                sparklineData: [], // Placeholder
+            };
+        });
+
         setKpiMetrics(mappedKpis);
       } catch (err) {
         if (err instanceof Error) {
