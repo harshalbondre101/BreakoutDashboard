@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Phone, AlertTriangle } from 'lucide-react';
 import { KPICard } from '@/components/kpi-card';
-import { activeCalls, recentBookings, alerts } from '@/lib/data';
-import { KPIMetric, KpiApiResponse } from '@/lib/types';
+import { activeCalls, alerts } from '@/lib/data';
+import { KPIMetric, KpiApiResponse, Booking } from '@/lib/types';
 import { DollarSign } from 'lucide-react';
 
 const formatDurationFromSeconds = (seconds: number) => {
@@ -39,8 +39,11 @@ const getTrend = (sparklineData: number[]): 'up' | 'down' | 'stable' => {
 export default function DashboardPage() {
   const [time, setTime] = useState('');
   const [kpiMetrics, setKpiMetrics] = useState<KPIMetric[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
+  const [kpiLoading, setKpiLoading] = useState(true);
+  const [bookingsLoading, setBookingsLoading] = useState(true);
+  const [kpiError, setKpiError] = useState<string | null>(null);
+  const [bookingsError, setBookingsError] = useState<string | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -48,8 +51,8 @@ export default function DashboardPage() {
     }, 1000);
 
     const fetchKpis = async () => {
-      setLoading(true);
-      setError(null);
+      setKpiLoading(true);
+      setKpiError(null);
       try {
         const response = await fetch('https://fragrances-independently-conflict-thank.trycloudflare.com/compute/kpis');
         if (!response.ok) {
@@ -119,16 +122,38 @@ export default function DashboardPage() {
         setKpiMetrics(mappedKpis);
       } catch (err) {
         if (err instanceof Error) {
-          setError(err.message);
+          setKpiError(err.message);
         } else {
-          setError('An unexpected error occurred');
+          setKpiError('An unexpected error occurred');
         }
       } finally {
-        setLoading(false);
+        setKpiLoading(false);
       }
     };
     
+    const fetchBookings = async () => {
+      setBookingsLoading(true);
+      setBookingsError(null);
+      try {
+        const response = await fetch('https://fragrances-independently-conflict-thank.trycloudflare.com/bookings/');
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data: Booking[] = await response.json();
+        setRecentBookings(data);
+      } catch (err) {
+        if (err instanceof Error) {
+          setBookingsError(err.message);
+        } else {
+          setBookingsError('An unexpected error occurred');
+        }
+      } finally {
+        setBookingsLoading(false);
+      }
+    };
+
     fetchKpis();
+    fetchBookings();
     
     return () => clearInterval(interval);
   }, []);
@@ -162,7 +187,7 @@ export default function DashboardPage() {
   const missedCalls = 4;
 
   const renderKpiGrid = () => {
-    if (loading) {
+    if (kpiLoading) {
       return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, index) => (
@@ -172,11 +197,11 @@ export default function DashboardPage() {
       );
     }
 
-    if (error) {
+    if (kpiError) {
       return (
         <div className="col-span-full bg-red-50 text-red-700 p-4 rounded-lg text-center">
           <p>Failed to load KPI data.</p>
-          <p className="text-sm">{error}</p>
+          <p className="text-sm">{kpiError}</p>
         </div>
       );
     }
@@ -189,6 +214,50 @@ export default function DashboardPage() {
       </div>
     );
   }
+
+  const renderRecentBookings = () => {
+    if (bookingsLoading) {
+      return (
+        <div className="space-y-3 max-h-96 overflow-y-auto">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="p-3 border border-gray-200 rounded-lg h-24 animate-pulse bg-gray-50" />
+          ))}
+        </div>
+      );
+    }
+
+    if (bookingsError) {
+      return (
+        <div className="max-h-96 flex items-center justify-center bg-gray-50 rounded-lg">
+          <div className="text-red-500 text-center">
+            <p>Failed to load bookings.</p>
+            <p className="text-sm">{bookingsError}</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-3 max-h-96 overflow-y-auto">
+        {recentBookings.slice(0, 10).map((booking) => (
+          <div key={booking.Booking_ID} className="p-3 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors cursor-pointer">
+            <div className="flex justify-between items-start mb-2">
+              <p className="font-semibold text-gray-900 text-sm">Booking #{booking.Booking_ID}</p>
+              <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(booking.Booking_status)}`}>
+                {booking.Booking_status}
+              </span>
+            </div>
+            <p className="text-xs text-gray-600">Customer ID: {booking.Customer_ID}</p>
+            <div className="flex justify-between items-center mt-2">
+              <p className="text-sm font-bold text-gray-800">Guests: {booking.guest_count}</p>
+              <p className="text-xs text-gray-500">{new Date(booking.Booking_date).toLocaleString()}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
 
   return (
     <div className="space-y-6">
@@ -338,26 +407,7 @@ export default function DashboardPage() {
               <DollarSign className="w-6 h-6 text-emerald-600" />
               Recent Bookings
             </h2>
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {recentBookings.slice(0, 10).map((booking) => (
-                <div key={booking.id} className="p-3 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors cursor-pointer">
-                  <div className="flex justify-between items-start mb-2">
-                    <p className="font-semibold text-gray-900 text-sm">{booking.customerName}</p>
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(booking.status)}`}>
-                      {booking.status}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-600">{booking.eventType}</p>
-                  <div className="flex justify-between items-center mt-2">
-                    <p className="text-lg font-bold text-emerald-600">${booking.value.toLocaleString()}</p>
-                    <p className="text-xs text-gray-500">{booking.paymentMethod}</p>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {new Date(booking.createdAt).toLocaleString()}
-                  </p>
-                </div>
-              ))}
-            </div>
+            {renderRecentBookings()}
           </div>
 
           <div className="bg-white rounded-lg shadow-sm p-6">
