@@ -1,4 +1,5 @@
 
+
 export interface KPIMetric {
   id: string;
   label: string;
@@ -7,6 +8,22 @@ export interface KPIMetric {
   trend: 'up' | 'down' | 'stable';
   status: 'good' | 'warning' | 'critical';
   sparklineData: number[];
+}
+
+export interface KpiApiResponse {
+  status: string;
+  kpis: {
+    total_calls: number;
+    analyzed_calls: number;
+    first_call_resolution_pct: number;
+    avg_call_duration_sec: number;
+    positive_sentiment_rate_pct: number;
+    call_abandon_rate_pct: number;
+    missed_calls: number;
+    customer_conversion_rate_pct: number;
+    overall_quality_score: number;
+    customer_satisfaction_avg_rating: number;
+  };
 }
 
 export interface ActiveCall {

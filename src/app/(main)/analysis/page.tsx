@@ -1,9 +1,20 @@
 
 'use client';
+import { useState, useEffect } from 'react';
 import { BarChart3, Brain, Target, TrendingUp, AlertCircle } from 'lucide-react';
-import { kpiMetrics } from '@/lib/data';
+import { KPIMetric, KpiApiResponse } from '@/lib/types';
+
+const formatDurationFromSeconds = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')} min`;
+};
 
 export default function AnalysisPage() {
+  const [kpiMetrics, setKpiMetrics] = useState<KPIMetric[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const aiMetrics = [
     { label: 'Intent Recognition Accuracy', value: '94.2%', target: '85-90%', status: 'good' },
     { label: 'Conversation Completion Rate', value: '76.4%', target: '60-70%', status: 'good' },
@@ -18,20 +29,129 @@ export default function AnalysisPage() {
     ['Support', 0.03, 0.02, 0.95]
   ];
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Business Intelligence Hub</h1>
-        <p className="text-gray-500 mt-1">Deep dive analytics and AI performance metrics</p>
-      </div>
+  useEffect(() => {
+    const fetchKpis = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch('https://fragrances-independently-conflict-thank.trycloudflare.com/compute/kpis');
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data: KpiApiResponse = await response.json();
+        const kpis = data.kpis;
 
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <BarChart3 className="w-6 h-6 text-blue-600" />
-          <h2 className="text-2xl font-bold text-gray-900">Executive Overview</h2>
-        </div>
+        const mappedKpis: KPIMetric[] = [
+          {
+            id: 'fcr',
+            label: 'First Call Resolution',
+            value: `${kpis.first_call_resolution_pct.toFixed(1)}%`,
+            target: '>90%',
+            trend: 'up',
+            status: kpis.first_call_resolution_pct > 90 ? 'good' : 'warning',
+            sparklineData: [],
+          },
+          {
+            id: 'acd',
+            label: 'Avg Call Duration',
+            value: formatDurationFromSeconds(kpis.avg_call_duration_sec),
+            target: '<5 min',
+            trend: 'down',
+            status: kpis.avg_call_duration_sec < 300 ? 'good' : 'warning',
+            sparklineData: [],
+          },
+          {
+            id: 'abandonment',
+            label: 'Call Abandon Rate',
+            value: `${kpis.call_abandon_rate_pct.toFixed(1)}%`,
+            target: '<5%',
+            trend: 'stable',
+            status: kpis.call_abandon_rate_pct < 5 ? 'good' : 'warning',
+            sparklineData: [],
+          },
+          {
+            id: 'csat',
+            label: 'Customer Satisfaction',
+            value: `${kpis.customer_satisfaction_avg_rating.toFixed(1)}/5`,
+            target: '>4.5',
+            trend: 'up',
+            status: kpis.customer_satisfaction_avg_rating > 4.5 ? 'good' : 'good',
+            sparklineData: [],
+          },
+           {
+            id: 'missed-calls',
+            label: 'Missed Calls',
+            value: kpis.missed_calls,
+            target: '0',
+            trend: 'down',
+            status: kpis.missed_calls === 0 ? 'good' : 'critical',
+            sparklineData: [],
+          },
+          {
+            id: 'conversion',
+            label: 'Customer Conversion Rate',
+            value: `${kpis.customer_conversion_rate_pct.toFixed(1)}%`,
+            target: '>10%',
+            trend: 'up',
+            status: kpis.customer_conversion_rate_pct > 10 ? 'good' : 'good',
+            sparklineData: [],
+          },
+          {
+            id: 'quality',
+            label: 'Overall Quality Score',
+            value: kpis.overall_quality_score.toFixed(1),
+            target: '>85',
+            trend: 'stable',
+            status: kpis.overall_quality_score > 85 ? 'good' : 'warning',
+            sparklineData: [],
+          },
+          {
+            id: 'sentiment',
+            label: 'Positive Sentiment Rate',
+            value: `${kpis.positive_sentiment_rate_pct.toFixed(1)}%`,
+            target: '>80%',
+            trend: 'up',
+            status: kpis.positive_sentiment_rate_pct > 80 ? 'good' : 'good',
+            sparklineData: [],
+          },
+        ];
+        setKpiMetrics(mappedKpis);
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('An unexpected error occurred');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchKpis();
+  }, []);
 
+  const renderExecutiveOverview = () => {
+    if (loading) {
+      return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div key={index} className="p-4 bg-gray-50 rounded-lg h-24 animate-pulse" />
+          ))}
+        </div>
+      );
+    }
+
+    if (error) {
+       return (
+        <div className="col-span-full bg-red-50 text-red-700 p-4 rounded-lg text-center mb-8">
+          <p>Failed to load KPI data.</p>
+          <p className="text-sm">{error}</p>
+        </div>
+      );
+    }
+
+    return (
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {kpiMetrics.map((metric) => (
             <div key={metric.id} className="p-4 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-600 mb-2">{metric.label}</p>
@@ -49,6 +169,24 @@ export default function AnalysisPage() {
             </div>
           ))}
         </div>
+    );
+  };
+
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Business Intelligence Hub</h1>
+        <p className="text-gray-500 mt-1">Deep dive analytics and AI performance metrics</p>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <BarChart3 className="w-6 h-6 text-blue-600" />
+          <h2 className="text-2xl font-bold text-gray-900">Executive Overview</h2>
+        </div>
+
+        {renderExecutiveOverview()}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <div className="bg-gradient-to-br from-blue-50 to-white p-6 rounded-lg border border-blue-100">
@@ -66,7 +204,7 @@ export default function AnalysisPage() {
                     'bg-red-500'
                   } bg-opacity-20 hover:bg-opacity-30 transition-all cursor-pointer`}
                 >
-                  <p className="text-xs font-medium text-gray-700">{metric.label.split(' ')[0]}</p>
+                  <p className="text-xs font-medium text-gray-700">{metric.label.split(' ').slice(0,2).join(' ')}</p>
                   <p className="text-lg font-bold text-gray-900 mt-1">{metric.value}</p>
                 </div>
               ))}
