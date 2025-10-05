@@ -4,42 +4,22 @@ import { useState, useEffect } from 'react';
 import { Users, Calendar, TrendingUp, Search, Filter, Download } from 'lucide-react';
 import { Customer, Lead, Event } from '@/lib/types';
 
+// Mock data will be used until APIs are ready
+import { customers as staticCustomers, leads as staticLeads, events as staticEvents } from '@/lib/data';
+
+
 type TabType = 'customers' | 'leads' | 'events';
 
 export default function CustomersHubPage() {
   const [activeTab, setActiveTab] = useState<TabType>('customers');
   const [searchTerm, setSearchTerm] = useState('');
   
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
+  // State is initialized with static data
+  const [customers, setCustomers] = useState<Customer[]>(staticCustomers);
+  const [leads, setLeads] = useState<Lead[]>(staticLeads);
+  const [events, setEvents] = useState<Event[]>(staticEvents);
+  const [loading, setLoading] = useState(false); // No loading state needed for static data
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [customersRes, leadsRes, eventsRes] = await Promise.all([
-          fetch('/api/customers'),
-          fetch('/api/leads'),
-          fetch('/api/events'),
-        ]);
-        const [customersData, leadsData, eventsData] = await Promise.all([
-          customersRes.json(),
-          leadsRes.json(),
-          eventsRes.json(),
-        ]);
-        setCustomers(customersData);
-        setLeads(leadsData);
-        setEvents(eventsData);
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
 
   const filteredCustomers = customers.filter(c =>
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

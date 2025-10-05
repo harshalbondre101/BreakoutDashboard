@@ -1,20 +1,327 @@
+import { KPIMetric, ActiveCall, Booking, Customer, Lead, Event, Call, Agent, WhatsAppTemplate, Theme, Alert } from './types';
 
-import { KPIMetric, ActiveCall, Booking, Customer, Lead, Event, Call, Agent, WhatsAppTemplate, Theme, Alert, CustomerListItem } from './types';
+export const kpiMetrics: KPIMetric[] = [
+  {
+    id: 'fcr',
+    label: 'First Call Resolution',
+    value: '78%',
+    target: '75-85%',
+    trend: 'up',
+    status: 'good',
+    sparklineData: [72, 74, 76, 75, 77, 78, 79, 78]
+  },
+  {
+    id: 'acd',
+    label: 'Avg Call Duration',
+    value: '6.2 min',
+    target: '4-8 min',
+    trend: 'down',
+    status: 'good',
+    sparklineData: [6.8, 6.5, 6.4, 6.3, 6.2, 6.1, 6.2, 6.2]
+  },
+  {
+    id: 'abandonment',
+    label: 'Abandonment Rate',
+    value: '6.8%',
+    target: '<8%',
+    trend: 'stable',
+    status: 'warning',
+    sparklineData: [7.2, 6.9, 6.8, 7.0, 6.8, 6.7, 6.8, 6.8]
+  },
+  {
+    id: 'csat',
+    label: 'Customer Satisfaction',
+    value: '87%',
+    target: '>85%',
+    trend: 'up',
+    status: 'good',
+    sparklineData: [83, 84, 85, 86, 86, 87, 88, 87]
+  },
+  {
+    id: 'ces',
+    label: 'Customer Effort Score',
+    value: '2.3',
+    target: '<3.0',
+    trend: 'down',
+    status: 'good',
+    sparklineData: [2.8, 2.7, 2.6, 2.5, 2.4, 2.3, 2.2, 2.3]
+  },
+  {
+    id: 'sentiment',
+    label: 'Live Positive Sentiment',
+    value: '68%',
+    target: '≥65%',
+    trend: 'up',
+    status: 'good',
+    sparklineData: [64, 65, 66, 67, 68, 69, 68, 68]
+  },
+  {
+    id: 'cost',
+    label: 'Cost per Contact',
+    value: '$4.20',
+    target: '<$5.60',
+    trend: 'down',
+    status: 'good',
+    sparklineData: [4.8, 4.7, 4.6, 4.5, 4.3, 4.2, 4.1, 4.2]
+  },
+  {
+    id: 'utilization',
+    label: 'Agent Utilization',
+    value: '82.4%',
+    target: '75-85%',
+    trend: 'stable',
+    status: 'good',
+    sparklineData: [80, 81, 82, 83, 82, 82, 83, 82]
+  }
+];
 
-// This file is now primarily for type definitions and can be removed or repurposed
-// if all data fetching is handled via APIs. For now, we'll keep the types.
-// The actual data is now served from the /api routes.
+export const activeCalls: ActiveCall[] = [
+  {
+    id: 'call-1',
+    customerId: 'cust-123',
+    customerName: 'Jennifer Williams',
+    agentId: 'agent-5',
+    agentName: 'AI Agent 5',
+    duration: 345,
+    sentiment: 'positive',
+    sentimentScore: 88,
+    topic: 'Booking Inquiry',
+    status: 'active',
+    startTime: new Date('2024-05-21T10:05:00Z')
+  },
+  {
+    id: 'call-2',
+    customerId: 'cust-456',
+    customerName: 'Michael Brown',
+    agentId: 'agent-human-2',
+    agentName: 'Jessica Davis',
+    duration: 521,
+    sentiment: 'neutral',
+    sentimentScore: 55,
+    topic: 'Pricing Question',
+    status: 'on-hold',
+    startTime: new Date('2024-05-21T10:02:00Z')
+  },
+  {
+    id: 'call-3',
+    customerId: 'cust-789',
+    customerName: 'Linda Martinez',
+    agentId: 'agent-8',
+    agentName: 'AI Agent 8',
+    duration: 123,
+    sentiment: 'negative',
+    sentimentScore: 23,
+    topic: 'Complaint',
+    status: 'active',
+    startTime: new Date('2024-05-21T10:08:00Z')
+  },
+    {
+    id: 'call-4',
+    customerId: 'cust-234',
+    customerName: 'Robert Jones',
+    agentId: 'agent-2',
+    agentName: 'AI Agent 2',
+    duration: 276,
+    sentiment: 'positive',
+    sentimentScore: 92,
+    topic: 'Date Availability',
+    status: 'transferring',
+    startTime: new Date('2024-05-21T10:06:00Z')
+  }
+];
 
-// Example of empty arrays to prevent breaking imports if any remain.
-export const kpiMetrics: KPIMetric[] = [];
-export const activeCalls: ActiveCall[] = [];
-export const recentBookings: Booking[] = [];
-export const customers: Customer[] = [];
-export const customerList: CustomerListItem[] = [];
-export const leads: Lead[] = [];
-export const events: Event[] = [];
-export const calls: Call[] = [];
-export const agents: Agent[] = [];
-export const whatsappTemplates: WhatsAppTemplate[] = [];
-export const themes: Theme[] = [];
-export const alerts: Alert[] = [];
+
+export const recentBookings: Booking[] = Array.from({ length: 30 }, (_, i) => {
+  const createdAt = new Date(Date.now() - Math.random() * 86400000 * 7);
+  return {
+    id: `booking-${i + 1}`,
+    customerId: `cust-${Math.floor(Math.random() * 500) + 1}`,
+    customerName: 'Linda Robinson',
+    eventType: 'Wedding',
+    eventDate: new Date(Date.now() + Math.random() * 86400000 * 180),
+    guestCount: 150,
+    value: 12500,
+    status: i % 4 === 0 ? 'cancelled' : i % 3 === 0 ? 'pending' : 'confirmed',
+    paymentMethod: i % 2 === 0 ? 'credit' : 'bank',
+    paymentStatus: i % 3 === 0 ? 'pending' : 'paid',
+    createdAt,
+    modifiedAt: Math.random() > 0.7 ? new Date(createdAt.getTime() + Math.random() * 86400000 * 3) : undefined
+  };
+});
+
+const firstNames = ['James', 'Mary', 'John', 'Patricia', 'Robert', 'Jennifer', 'Michael', 'Linda', 'William', 'Elizabeth'];
+const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'];
+const companies = ['Tech Corp', 'Global Enterprises', 'Innovation Inc', 'Future Solutions', 'Prime Industries'];
+const eventTypes = ['Wedding', 'Corporate Event', 'Birthday Party', 'Conference', 'Product Launch', 'Gala Dinner'];
+const venues = ['Grand Ballroom', 'Riverside Garden', 'Metropolitan Hall', 'Skyline Terrace', 'Harbor View Center'];
+const topics = ['Booking Inquiry', 'Pricing Question', 'Date Availability', 'Menu Options', 'Payment Issue'];
+const leadSources = ['Website', 'Referral', 'Social Media', 'Email Campaign', 'Cold Call'];
+
+
+export const customers: Customer[] = Array.from({ length: 500 }, (_, i) => ({
+  id: `cust-${i + 1}`,
+  name: i % 5 === 0 ? companies[i % companies.length] : `${firstNames[i % firstNames.length]} ${lastNames[i % lastNames.length]}`,
+  email: `customer${i + 1}@example.com`,
+  phone: `+1-555-010${i.toString().padStart(2, '0')}`,
+  type: i % 5 === 0 ? 'corporate' : 'individual',
+  status: i % 10 === 0 ? 'inactive' : 'active',
+  totalBookings: Math.floor(i / 50) + 1,
+  totalValue: (Math.floor(i / 50) + 1) * 5000 + i * 100,
+  lifetime: 30 + i * 2,
+  lastContact: new Date(Date.now() - (i * 86400000 * 2)),
+  sentiment: i % 7 === 0 ? 'negative' : 'positive',
+  tags: i % 3 === 0 ? ['VIP', 'Frequent'] : ['New'],
+  createdAt: new Date(Date.now() - (i * 86400000 * 5))
+}));
+
+export const leads: Lead[] = Array.from({ length: 150 }, (_, i) => ({
+  id: `lead-${i + 1}`,
+  name: `${firstNames[i % firstNames.length]} ${lastNames[i % lastNames.length]}`,
+  email: `lead${i + 1}@example.com`,
+  phone: `+1-555-020${i.toString().padStart(2, '0')}`,
+  source: leadSources[i % leadSources.length],
+  status: ['new', 'contacted', 'qualified', 'proposal', 'negotiation', 'won', 'lost'][i % 7] as any,
+  score: 30 + (i % 70),
+  eventType: eventTypes[i % eventTypes.length],
+  expectedValue: 500 + (i % 20) * 500,
+  followUpDate: i % 3 === 0 ? new Date(Date.now() + i * 86400000) : undefined,
+  assignedAgent: i % 4 !== 0 ? `agent-${(i % 10) + 1}` : undefined,
+  notes: 'Initial contact made. Interested in premium package.',
+  createdAt: new Date(Date.now() - i * 86400000)
+}));
+
+export const events: Event[] = Array.from({ length: 100 }, (_, i) => ({
+  id: `event-${i + 1}`,
+  name: `${eventTypes[i % eventTypes.length]} ${i + 1}`,
+  type: eventTypes[i % eventTypes.length],
+  venue: venues[i % venues.length],
+  date: new Date(Date.now() + (i * 86400000 * 2)),
+  status: ['planned', 'confirmed', 'in-progress', 'completed', 'cancelled'][i % 5] as any,
+  capacity: 50 + (i % 10) * 20,
+  booked: 20 + (i % 10) * 15,
+  revenue: 5000 + (i % 20) * 2500,
+  customerId: `cust-${i + 1}`,
+  customerName: `${firstNames[i % firstNames.length]} ${lastNames[i % lastNames.length]}`
+}));
+
+export const calls: Call[] = Array.from({ length: 2000 }, (_, i) => {
+  const startTime = new Date(Date.now() - i * 3600000);
+  const duration = 60 + (i % 1140);
+  const isAI = i % 3 !== 0;
+
+  return {
+    id: `call-${i + 1}`,
+    customerId: `cust-${(i % 500) + 1}`,
+    customerName: `${firstNames[i % firstNames.length]} ${lastNames[i % lastNames.length]}`,
+    agentId: `agent-${(i % 25) + 1}`,
+    agentName: isAI ? `AI Agent ${(i % 15) + 1}` : `${firstNames[(i+5) % firstNames.length]} ${lastNames[(i+5) % lastNames.length]}`,
+    agentType: isAI ? 'ai' : 'human',
+    direction: i % 2 === 0 ? 'inbound' : 'outbound',
+    duration,
+    outcome: ['resolved', 'transferred', 'callback', 'abandoned'][i % 4] as any,
+    sentiment: i % 5 === 0 ? 'negative' : i % 2 === 0 ? 'neutral' : 'positive',
+    sentimentJourney: Array.from({ length: 10 }, (_, j) => 50 + Math.sin(i + j) * 40 + (i%10)),
+    topics: [topics[i % topics.length], topics[(i+1) % topics.length]],
+    intentRecognized: i % 10 !== 0,
+    intentAccuracy: 80 + (i % 20),
+    transcript: 'Customer inquired about availability for wedding in June. Discussed package options and pricing. Scheduled follow-up call.',
+    startTime,
+    endTime: new Date(startTime.getTime() + duration * 1000),
+    cost: isAI ? 0.5 + (i % 10) * 0.15 : 2 + (i % 20) * 0.3,
+    qualityScore: 80 + (i % 20)
+  };
+});
+
+
+export const agents: Agent[] = [
+  ...Array.from({ length: 15 }, (_, i) => ({
+    id: `agent-${i + 1}`,
+    name: `AI Agent ${i + 1}`,
+    type: 'ai' as const,
+    status: ['available', 'busy', 'away'][i % 3] as any,
+    skills: ['Booking', 'Sales', 'Support', 'Technical', 'Complaints'].slice(i%3, i%3 + 3),
+    performanceMetrics: {
+      fcr: 70 + (i % 15),
+      acd: 4 + (i % 3),
+      csat: 80 + (i % 15),
+      qualityScore: 80 + (i % 15),
+      utilization: 70 + (i % 20),
+      callsToday: 10 + (i % 40)
+    },
+    currentCall: i % 3 === 1 ? `call-${i*2 + 1}` : undefined
+  })),
+  ...Array.from({ length: 10 }, (_, i) => ({
+    id: `agent-${i + 16}`,
+    name: `${firstNames[i % firstNames.length]} ${lastNames[i % lastNames.length]}`,
+    type: 'human' as const,
+    status: ['available', 'busy', 'away', 'offline'][i % 4] as any,
+    skills: ['Booking', 'Sales', 'Support'].slice(i%2, i%2 + 2),
+    performanceMetrics: {
+      fcr: 70 + (i % 15),
+      acd: 5 + (i % 4),
+      csat: 75 + (i % 15),
+      qualityScore: 75 + (i % 15),
+      utilization: 65 + (i % 20),
+      callsToday: 5 + (i % 35)
+    },
+    currentCall: i % 4 === 1 ? `call-${i*3 + 1}` : undefined
+  }))
+];
+
+export const whatsappTemplates: WhatsAppTemplate[] = Array.from({ length: 20 }, (_, i) => ({
+  id: `template-${i + 1}`,
+  name: `Template ${i + 1}`,
+  category: ['Marketing', 'Transactional', 'Authentication', 'Utility'][i % 4],
+  content: 'Hello {{name}}, your booking for {{event}} on {{date}} is confirmed!',
+  status: i % 10 < 8 ? 'active' : (i % 2 === 0 ? 'pending' : 'rejected'),
+  language: 'en',
+  metrics: {
+    sent: 100 + i * 500,
+    delivered: 96 + i * 480,
+    read: 85 + i * 445,
+    clicked: 10 + i * 64,
+    converted: 5 + i * 22
+  },
+  createdAt: new Date(Date.now() - i * 86400000 * 4.5)
+}));
+
+export const themes: Theme[] = Array.from({ length: 25 }, (_, i) => ({
+  id: `theme-${i + 1}`,
+  name: `${['Classic', 'Modern', 'Luxury', 'Rustic', 'Garden', 'Beach', 'Urban', 'Vintage'][i % 8]} Package ${i + 1}`,
+  description: 'Complete event package with venue, catering, and decoration',
+  basePrice: 1000 + (i % 10) * 500,
+  category: ['Wedding', 'Corporate', 'Birthday', 'Conference'][i % 4],
+  features: ['Venue', 'Catering', 'Decoration', 'Photography', 'Entertainment'],
+  status: i % 10 !== 0 ? 'active' : 'inactive',
+  popularity: 10 + (i % 90),
+  bookings: 1 + (i % 50),
+  revenue: 5000 + (i % 20) * 5000,
+  seasonalMultiplier: i % 3 === 0 ? 1 + (i % 5) * 0.1 : undefined
+}));
+
+export const alerts: Alert[] = [
+  {
+    id: 'alert-1',
+    type: 'critical',
+    title: 'Queue Wait Time Exceeded',
+    message: 'Average wait time is now 8 minutes, exceeding the 5-minute threshold',
+    timestamp: new Date(Date.now() - 300000),
+    read: false
+  },
+  {
+    id: 'alert-2',
+    type: 'warning',
+    title: 'High Call Volume',
+    message: '15% increase in call volume compared to last hour',
+    timestamp: new Date(Date.now() - 600000),
+    read: false
+  },
+  {
+    id: 'alert-3',
+    type: 'info',
+    title: 'Agent Shift Change',
+    message: '3 agents going on break in 10 minutes',
+    timestamp: new Date(Date.now() - 900000),
+    read: true
+  }
+];
