@@ -120,7 +120,7 @@ export function AppSidebar() {
             <SidebarGroupLabel className="text-xs font-semibold text-gray-400 uppercase mb-2 px-3">System</SidebarGroupLabel>
             <SidebarMenu>
             {systemNav.map((item) => (
-                <SidebarMenuItem key={item.href}>
+                <SidebarMenuItem key={item.label}>
                 <Link href={item.href} passHref>
                     <SidebarMenuButton
                     isActive={pathname === item.href}
