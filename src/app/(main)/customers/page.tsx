@@ -5,8 +5,8 @@ import { Users, Calendar, TrendingUp, Search, Filter, Download } from 'lucide-re
 import { Customer, Lead, Event } from '@/lib/types';
 import { API_BASE_URL } from '@/lib/config';
 
-// Mock data will be used for leads and events until APIs are ready
-import { leads as staticLeads, events as staticEvents } from '@/lib/data';
+// Mock data will be used for events until APIs are ready
+import { events as staticEvents } from '@/lib/data';
 
 
 type TabType = 'customers' | 'leads' | 'events';
@@ -16,36 +16,50 @@ export default function CustomersHubPage() {
   const [searchTerm, setSearchTerm] = useState('');
   
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [leads, setLeads] = useState<Lead[]>(staticLeads);
+  const [leads, setLeads] = useState<Lead[]>([]);
   const [events, setEvents] = useState<Event[]>(staticEvents);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (activeTab === 'customers') {
-      const fetchCustomers = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-          const response = await fetch(`${API_BASE_URL}/customers/`);
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-          const data = await response.json();
-          setCustomers(data);
-        } catch (err) {
-          if (err instanceof Error) {
-            setError(err.message);
-          } else {
-            setError('An unexpected error occurred');
-          }
-        } finally {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        let response;
+        if (activeTab === 'customers') {
+          response = await fetch(`${API_BASE_URL}/customers/`);
+        } else if (activeTab === 'leads') {
+          response = await fetch(`${API_BASE_URL}/leads/`);
+        } else {
           setLoading(false);
+          return;
         }
-      };
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
 
-      fetchCustomers();
-    }
+        if (activeTab === 'customers') {
+          setCustomers(data);
+        } else if (activeTab === 'leads') {
+          setLeads(data);
+        }
+
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('An unexpected error occurred');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [activeTab]);
 
 
@@ -55,26 +69,16 @@ export default function CustomersHubPage() {
   );
 
   const filteredLeads = leads.filter(l =>
-    l.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    l.email.toLowerCase().includes(searchTerm.toLowerCase())
-  ).slice(0, 50);
+    l.Name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    l.Email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const filteredEvents = events.filter(e =>
     e.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     e.customerName.toLowerCase().includes(searchTerm.toLowerCase())
   ).slice(0, 50);
-
-  const leadsByStatus = {
-    new: leads.filter(l => l.status === 'new').length,
-    contacted: leads.filter(l => l.status === 'contacted').length,
-    qualified: leads.filter(l => l.status === 'qualified').length,
-    proposal: leads.filter(l => l.status === 'proposal').length,
-    negotiation: leads.filter(l => l.status === 'negotiation').length,
-    won: leads.filter(l => l.status === 'won').length,
-    lost: leads.filter(l => l.status === 'lost').length
-  };
   
-  const renderCustomerContent = () => {
+  const renderContent = () => {
     if (loading) {
       return (
         <div className="flex justify-center items-center h-64">
@@ -87,39 +91,158 @@ export default function CustomersHubPage() {
         return (
             <div className="flex justify-center items-center h-64">
                 <div className="text-red-500 text-center">
-                    <p>Failed to load customer data.</p>
+                    <p>Failed to load data for {activeTab}.</p>
                     <p className="text-sm">{error}</p>
                 </div>
             </div>
         );
     }
 
-    return (
-        <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Registered Date</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {filteredCustomers.map((customer) => (
-              <tr key={customer.Customer_ID} className="hover:bg-gray-50 cursor-pointer">
-                <td className="px-4 py-3">
-                  <p className="font-medium text-gray-900">{customer.Name}</p>
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-600">{customer.Email}</td>
-                <td className="px-4 py-3 text-sm text-gray-600">{customer.Phone_number}</td>
-                <td className="px-4 py-3 text-sm">{new Date(customer.Registered_date).toLocaleDateString()}</td>
+    if (activeTab === 'customers') {
+      return (
+          <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Registered Date</th>
               </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {filteredCustomers.map((customer) => (
+                <tr key={customer.Customer_ID} className="hover:bg-gray-50 cursor-pointer">
+                  <td className="px-4 py-3">
+                    <p className="font-medium text-gray-900">{customer.Name}</p>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{customer.Email}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{customer.Phone_number}</td>
+                  <td className="px-4 py-3 text-sm">{new Date(customer.Registered_date).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+
+    if (activeTab === 'leads') {
+      const leadsByStatus = leads.reduce((acc, lead) => {
+        acc[lead.Status] = (acc[lead.Status] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      return (
+        <div>
+          <div className="grid grid-cols-4 gap-4 mb-6">
+            {Object.entries(leadsByStatus).map(([status, count]) => (
+              <div key={status} className="p-4 bg-gray-50 rounded-lg text-center">
+                <p className="text-2xl font-bold text-gray-900">{count}</p>
+                <p className="text-xs text-gray-600 mt-1 capitalize">{status}</p>
+              </div>
             ))}
-          </tbody>
-        </table>
-      </div>
-    )
+          </div>
+           <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lead Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {filteredLeads.map((lead) => (
+                    <tr key={lead.Lead_ID} className="hover:bg-gray-50 cursor-pointer">
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-gray-900">{lead.Name}</p>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        <div>
+                          <p>{lead.Email}</p>
+                          <p className="text-xs text-gray-500">{lead.PhoneNumber}</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{lead.Source}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{lead.LeadType}</td>
+                       <td className="px-4 py-3 text-sm text-gray-600">{lead.Priority}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${
+                          lead.Status === 'won' ? 'bg-emerald-100 text-emerald-800' :
+                          lead.Status === 'lost' ? 'bg-red-100 text-red-800' :
+                          'bg-blue-100 text-blue-800'
+                        }`}>
+                          {lead.Status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+        </div>
+      );
+    }
+    
+    if (activeTab === 'events') {
+      return (
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Event Name</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Venue</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Capacity</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Revenue</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {filteredEvents.map((event) => (
+                <tr key={event.id} className="hover:bg-gray-50 cursor-pointer">
+                  <td className="px-4 py-3 font-medium text-gray-900">{event.name}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{event.type}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{event.venue}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {new Date(event.date).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{event.customerName}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {event.booked} / {event.capacity}
+                    <div className="mt-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-blue-600"
+                        style={{ width: `${(event.booked / event.capacity) * 100}%` }}
+                      />
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm font-bold text-emerald-600">
+                    ${event.revenue.toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      event.status === 'completed' ? 'bg-emerald-100 text-emerald-800' :
+                      event.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
+                      event.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {event.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
   }
 
   return (
@@ -191,136 +314,10 @@ export default function CustomersHubPage() {
               Filters
             </button>
           </div>
-
-          {activeTab === 'customers' && renderCustomerContent()}
-
-          {activeTab === 'leads' && (
-            <div>
-              <div className="grid grid-cols-7 gap-4 mb-6">
-                {Object.entries(leadsByStatus).map(([status, count]) => (
-                  <div key={status} className="p-4 bg-gray-50 rounded-lg text-center">
-                    <p className="text-2xl font-bold text-gray-900">{count}</p>
-                    <p className="text-xs text-gray-600 mt-1 capitalize">{status}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Event Type</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Score</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expected Value</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {filteredLeads.map((lead) => (
-                      <tr key={lead.id} className="hover:bg-gray-50 cursor-pointer">
-                        <td className="px-4 py-3">
-                          <p className="font-medium text-gray-900">{lead.name}</p>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">
-                          <div>
-                            <p>{lead.email}</p>
-                            <p className="text-xs text-gray-500">{lead.phone}</p>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">{lead.source}</td>
-                        <td className="px-4 py-3 text-sm text-gray-600">{lead.eventType}</td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                              <div
-                                className={`h-full ${
-                                  lead.score > 70 ? 'bg-emerald-500' :
-                                  lead.score > 40 ? 'bg-amber-500' : 'bg-red-500'
-                                }`}
-                                style={{ width: `${lead.score}%` }}
-                              />
-                            </div>
-                            <span className="text-sm font-medium text-gray-900">{lead.score}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-sm font-bold text-emerald-600">
-                          ${lead.expectedValue.toLocaleString()}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            lead.status === 'won' ? 'bg-emerald-100 text-emerald-800' :
-                            lead.status === 'lost' ? 'bg-red-100 text-red-800' :
-                            'bg-blue-100 text-blue-800'
-                          }`}>
-                            {lead.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'events' && (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Event Name</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Venue</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Capacity</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Revenue</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {filteredEvents.map((event) => (
-                    <tr key={event.id} className="hover:bg-gray-50 cursor-pointer">
-                      <td className="px-4 py-3 font-medium text-gray-900">{event.name}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{event.type}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{event.venue}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
-                        {new Date(event.date).toLocaleDateString()}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{event.customerName}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
-                        {event.booked} / {event.capacity}
-                        <div className="mt-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-blue-600"
-                            style={{ width: `${(event.booked / event.capacity) * 100}%` }}
-                          />
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm font-bold text-emerald-600">
-                        ${event.revenue.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          event.status === 'completed' ? 'bg-emerald-100 text-emerald-800' :
-                          event.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
-                          event.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {event.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          {renderContent()}
         </div>
       </div>
     </div>
   );
 }
+

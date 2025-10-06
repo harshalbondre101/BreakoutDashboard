@@ -1,5 +1,6 @@
 
 
+
 export interface KPIMetric {
   id: string;
   label: string;
@@ -49,13 +50,6 @@ export interface Booking {
   Payment_ID: number;
   conv_id: string;
   guest_count: number;
-  // Fields that are not in the new API but were in the old mock data.
-  // We can keep them optional or remove them if they are not needed.
-  customerName?: string;
-  eventType?: string;
-  value?: number;
-  paymentMethod?: 'credit' | 'debit' | 'wallet' | 'bank';
-  paymentStatus?: 'paid' | 'pending' | 'failed' | 'refunded';
 }
 
 
@@ -76,19 +70,17 @@ export interface CustomerListItem {
 }
 
 export interface Lead {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  source: string;
-  status: 'new' | 'contacted' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost';
-  score: number;
-  eventType: string;
-  expectedValue: number;
-  followUpDate?: Date;
-  assignedAgent?: string;
-  notes: string;
-  createdAt: Date;
+  Name: string;
+  Email: string;
+  PhoneNumber: string;
+  Status: string;
+  LeadType: string;
+  Priority: string;
+  Source: string;
+  Notes: string | null;
+  LastNotified: string | null;
+  Lead_ID: number;
+  CreatedAt: string;
 }
 
 export interface Event {
