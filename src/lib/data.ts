@@ -1,5 +1,5 @@
 
-import { KPIMetric, ActiveCall, Booking, Lead, Event, Call, Agent, WhatsAppTemplate, Theme, Alert } from './types';
+import { KPIMetric, ActiveCall, Lead, Event, Call, Agent, WhatsAppTemplate, Theme, Alert } from './types';
 
 export const kpiMetrics: KPIMetric[] = [
   {
@@ -132,7 +132,7 @@ export const activeCalls: ActiveCall[] = [
 ];
 
 
-export const recentBookings: Booking[] = Array.from({ length: 30 }, (_, i) => {
+export const recentBookings = Array.from({ length: 30 }, (_, i) => {
   const createdAt = new Date(Date.now() - (i * 86400000 * 1.5));
   return {
     id: `booking-${i + 1}`,

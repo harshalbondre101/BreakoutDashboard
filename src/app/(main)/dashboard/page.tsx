@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Phone, AlertTriangle } from 'lucide-react';
 import { KPICard } from '@/components/kpi-card';
-import { alerts } from '@/lib/data';
-import { KPIMetric, KpiApiResponse, Booking, ApiCall as Call } from '@/lib/types';
+import { KPIMetric, KpiApiResponse, Booking, ApiCall as Call, Alert } from '@/lib/types';
 import { IndianRupee } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/config';
 
@@ -43,6 +42,7 @@ export default function DashboardPage() {
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
   const [activeCalls, setActiveCalls] = useState<Call[]>([]);
   const [callVolume, setCallVolume] = useState<number[]>(Array(24).fill(0));
+  const [alerts, setAlerts] = useState<Alert[]>([]);
   
   const [kpiLoading, setKpiLoading] = useState(true);
   const [bookingsLoading, setBookingsLoading] = useState(true);
@@ -127,6 +127,51 @@ export default function DashboardPage() {
         });
 
         setKpiMetrics(mappedKpis);
+
+        // Generate dynamic alerts
+        const newAlerts: Alert[] = [];
+        if (kpis.missed_calls > 0) {
+            newAlerts.push({
+                id: 'alert-missed-calls',
+                type: 'critical',
+                title: 'Missed Calls Detected',
+                message: `${kpis.missed_calls} call(s) were missed. Review agent availability.`,
+                timestamp: new Date(),
+                read: false,
+            });
+        }
+        if (kpis.call_abandon_rate_pct > 5) {
+            newAlerts.push({
+                id: 'alert-abandon-rate',
+                type: 'warning',
+                title: 'High Abandonment Rate',
+                message: `Call abandonment is at ${kpis.call_abandon_rate_pct.toFixed(1)}%, exceeding the 5% target.`,
+                timestamp: new Date(),
+                read: false,
+            });
+        }
+        if (kpis.first_call_resolution_pct < 90) {
+             newAlerts.push({
+                id: 'alert-fcr',
+                type: 'warning',
+                title: 'Low First Call Resolution',
+                message: `FCR is at ${kpis.first_call_resolution_pct.toFixed(1)}%, below the 90% target.`,
+                timestamp: new Date(),
+                read: false,
+            });
+        }
+         if (newAlerts.length === 0) {
+            newAlerts.push({
+                id: 'alert-all-good',
+                type: 'info',
+                title: 'System Nominal',
+                message: 'All key performance indicators are within their target ranges.',
+                timestamp: new Date(),
+                read: true,
+            });
+        }
+        setAlerts(newAlerts);
+
       } catch (err) {
         if (err instanceof Error) {
           setKpiError(err.message);
@@ -220,7 +265,7 @@ export default function DashboardPage() {
   const queueWaitTime = '3.2 min';
   const activeCallsCount = activeCalls.length;
   const availableAgents = 18;
-  const missedCalls = 4;
+  const missedCalls = kpiMetrics.find(k => k.id === 'missed_calls')?.value || 0;
 
   const renderKpiGrid = () => {
     if (kpiLoading) {
@@ -338,6 +383,44 @@ export default function DashboardPage() {
           </div>
         ))}
       </div>
+    );
+  };
+
+    const renderAlerts = () => {
+    if (kpiLoading) {
+      return (
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="p-3 rounded-lg h-20 animate-pulse bg-gray-50" />
+          ))}
+        </div>
+      );
+    }
+    
+    return (
+        <div className="space-y-3">
+            {alerts.map((alert) => (
+                <div
+                key={alert.id}
+                className={`p-3 rounded-lg border-l-4 ${
+                    alert.type === 'critical' ? 'bg-red-50 border-red-500' :
+                    alert.type === 'warning' ? 'bg-amber-50 border-amber-500' :
+                    'bg-blue-50 border-blue-500'
+                }`}
+                >
+                <div className="flex justify-between items-start mb-1">
+                    <p className="font-semibold text-gray-900 text-sm">{alert.title}</p>
+                    {!alert.read && (
+                    <div className="w-2 h-2 bg-blue-600 rounded-full" />
+                    )}
+                </div>
+                <p className="text-xs text-gray-600">{alert.message}</p>
+                <p className="text-xs text-gray-500 mt-2">
+                    {new Date(alert.timestamp).toLocaleTimeString()}
+                </p>
+                </div>
+            ))}
+            </div>
     );
   };
 
@@ -475,29 +558,7 @@ export default function DashboardPage() {
               <AlertTriangle className="w-6 h-6 text-amber-600" />
               System Alerts
             </h2>
-            <div className="space-y-3">
-              {alerts.map((alert) => (
-                <div
-                  key={alert.id}
-                  className={`p-3 rounded-lg border-l-4 ${
-                    alert.type === 'critical' ? 'bg-red-50 border-red-500' :
-                    alert.type === 'warning' ? 'bg-amber-50 border-amber-500' :
-                    'bg-blue-50 border-blue-500'
-                  }`}
-                >
-                  <div className="flex justify-between items-start mb-1">
-                    <p className="font-semibold text-gray-900 text-sm">{alert.title}</p>
-                    {!alert.read && (
-                      <div className="w-2 h-2 bg-blue-600 rounded-full" />
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-600">{alert.message}</p>
-                  <p className="text-xs text-gray-500 mt-2">
-                    {new Date(alert.timestamp).toLocaleTimeString()}
-                  </p>
-                </div>
-              ))}
-            </div>
+            {renderAlerts()}
           </div>
         </div>
       </div>
