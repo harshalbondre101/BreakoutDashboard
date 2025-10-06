@@ -1,6 +1,7 @@
 
 
 
+
 export interface ApiCall {
   Customer_ID: number;
   Transcript: string;
@@ -65,11 +66,12 @@ export interface Booking {
 
 
 export interface Customer {
-  Customer_ID: number;
   Name: string;
   Email: string;
-  Phone_number: string;
-  Registered_date: string;
+  PhoneNumber: string;
+  Original_Lead_ID: number;
+  Customer_ID: number;
+  CustomerSince: string;
 }
 
 export interface CustomerListItem {

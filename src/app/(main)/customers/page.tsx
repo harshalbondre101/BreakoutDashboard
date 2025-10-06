@@ -107,7 +107,7 @@ export default function CustomersHubPage() {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Registered Date</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer Since</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -117,8 +117,8 @@ export default function CustomersHubPage() {
                     <p className="font-medium text-gray-900">{customer.Name}</p>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">{customer.Email}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{customer.Phone_number}</td>
-                  <td className="px-4 py-3 text-sm">{new Date(customer.Registered_date).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{customer.PhoneNumber}</td>
+                  <td className="px-4 py-3 text-sm">{new Date(customer.CustomerSince).toLocaleDateString()}</td>
                 </tr>
               ))}
             </tbody>
@@ -320,4 +320,3 @@ export default function CustomersHubPage() {
     </div>
   );
 }
-
