@@ -1,5 +1,15 @@
 
 
+export interface ApiCall {
+  Customer_ID: number;
+  Transcript: string;
+  Date_time: string;
+  Duration: number;
+  Call_intent: string;
+  Credits_consumed: number;
+  Conv_ID: string;
+}
+
 
 export interface KPIMetric {
   id: string;
