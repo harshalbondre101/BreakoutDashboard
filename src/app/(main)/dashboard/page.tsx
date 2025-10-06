@@ -42,6 +42,7 @@ export default function DashboardPage() {
   const [kpiMetrics, setKpiMetrics] = useState<KPIMetric[]>([]);
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
   const [activeCalls, setActiveCalls] = useState<Call[]>([]);
+  const [callVolume, setCallVolume] = useState<number[]>(Array(24).fill(0));
   
   const [kpiLoading, setKpiLoading] = useState(true);
   const [bookingsLoading, setBookingsLoading] = useState(true);
@@ -168,6 +169,20 @@ export default function DashboardPage() {
         }
         const data: Call[] = await response.json();
         setActiveCalls(data.slice(-5));
+        
+        const now = new Date();
+        const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        const hourlyCounts = Array(24).fill(0);
+
+        data.forEach(call => {
+          const callDate = new Date(call.Date_time);
+          if (callDate >= twentyFourHoursAgo) {
+            const hour = callDate.getHours();
+            hourlyCounts[hour]++;
+          }
+        });
+
+        setCallVolume(hourlyCounts);
       } catch (err) {
         if (err instanceof Error) {
           setCallsError(err.message);
@@ -382,8 +397,9 @@ export default function DashboardPage() {
                 Call Volume (24h)
               </h3>
               <div className="h-48 flex items-end justify-between gap-1">
-                {Array.from({ length: 24 }, (_, i) => {
-                  const height = Math.random() * 80 + 20;
+                {callVolume.map((count, i) => {
+                  const maxCount = Math.max(...callVolume);
+                  const height = maxCount > 0 ? (count / maxCount) * 100 : 0;
                   const current = new Date().getHours() === i;
                   return (
                     <div key={i} className="flex-1 flex flex-col items-center">
