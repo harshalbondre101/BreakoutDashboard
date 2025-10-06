@@ -19,34 +19,34 @@ export default function CustomersHubPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [events, setEvents] = useState<Event[]>(staticEvents);
 
-  const [loading, setLoading] = useState(true);
+  const [loadingCustomers, setLoadingCustomers] = useState(true);
+  const [loadingLeads, setLoadingLeads] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
+      setLoadingCustomers(true);
+      setLoadingLeads(true);
       setError(null);
       try {
-        let response;
-        if (activeTab === 'customers') {
-          response = await fetch(`${API_BASE_URL}/customers/`);
-        } else if (activeTab === 'leads') {
-          response = await fetch(`${API_BASE_URL}/leads/`);
-        } else {
-          setLoading(false);
-          return;
-        }
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data = await response.json();
+        const [customersResponse, leadsResponse] = await Promise.all([
+          fetch(`${API_BASE_URL}/customers/`),
+          fetch(`${API_BASE_URL}/leads/`)
+        ]);
 
-        if (activeTab === 'customers') {
-          setCustomers(data);
-        } else if (activeTab === 'leads') {
-          setLeads(data);
+        if (!customersResponse.ok) {
+          throw new Error(`HTTP error! Status: ${customersResponse.status} on customers`);
         }
+        const customersData = await customersResponse.json();
+        setCustomers(customersData);
+        setLoadingCustomers(false);
+        
+        if (!leadsResponse.ok) {
+          throw new Error(`HTTP error! Status: ${leadsResponse.status} on leads`);
+        }
+        const leadsData = await leadsResponse.json();
+        setLeads(leadsData);
+        setLoadingLeads(false);
 
       } catch (err) {
         if (err instanceof Error) {
@@ -54,13 +54,13 @@ export default function CustomersHubPage() {
         } else {
           setError('An unexpected error occurred');
         }
-      } finally {
-        setLoading(false);
+        setLoadingCustomers(false);
+        setLoadingLeads(false);
       }
     };
 
     fetchData();
-  }, [activeTab]);
+  }, []);
 
 
   const filteredCustomers = customers.filter(c =>
@@ -79,6 +79,8 @@ export default function CustomersHubPage() {
   ).slice(0, 50);
   
   const renderContent = () => {
+    const loading = activeTab === 'customers' ? loadingCustomers : activeTab === 'leads' ? loadingLeads : false;
+
     if (loading) {
       return (
         <div className="flex justify-center items-center h-64">
@@ -91,7 +93,7 @@ export default function CustomersHubPage() {
         return (
             <div className="flex justify-center items-center h-64">
                 <div className="text-red-500 text-center">
-                    <p>Failed to load data for {activeTab}.</p>
+                    <p>Failed to load data.</p>
                     <p className="text-sm">{error}</p>
                 </div>
             </div>
