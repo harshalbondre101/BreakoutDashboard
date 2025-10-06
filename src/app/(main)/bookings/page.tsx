@@ -1,7 +1,7 @@
 
 'use client';
 import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, Calendar, CreditCard } from 'lucide-react';
+import { IndianRupee, TrendingUp, Calendar, CreditCard } from 'lucide-react';
 import { Booking } from '@/lib/types';
 import { recentBookings as staticRecentBookings } from '@/lib/data';
 import { API_BASE_URL } from '@/lib/config';
@@ -154,18 +154,18 @@ export default function BookingsPage() {
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm text-gray-600">Total Revenue</p>
-            <DollarSign className="w-5 h-5 text-emerald-600" />
+            <IndianRupee className="w-5 h-5 text-emerald-600" />
           </div>
-          <p className="text-3xl font-bold text-emerald-600">${totalRevenue.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-emerald-600">₹{totalRevenue.toLocaleString()}</p>
           <p className="text-xs text-gray-500 mt-2">Last 30 days (mock)</p>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm text-gray-600">Avg Booking Value</p>
-            <DollarSign className="w-5 h-5 text-blue-600" />
+            <IndianRupee className="w-5 h-5 text-blue-600" />
           </div>
-          <p className="text-3xl font-bold text-gray-900">${Math.round(avgBookingValue).toLocaleString()}</p>
+          <p className="text-3xl font-bold text-gray-900">₹{Math.round(avgBookingValue).toLocaleString()}</p>
           <p className="text-xs text-emerald-600 mt-2">+15% vs target (mock)</p>
         </div>
       </div>

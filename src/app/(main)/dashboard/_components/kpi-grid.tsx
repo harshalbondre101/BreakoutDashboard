@@ -1,3 +1,4 @@
+
 'use client';
 import { KPICard } from "@/components/kpi-card";
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from "recharts";
@@ -11,7 +12,7 @@ const kpiData = [
   { name: 'Customer Satisfaction', value: '87%', target: '>85%', change: 'increase' as const, chartData: [{ v: 10 }, { v: 30 }, { v: 20 }, { v: 50 }, { v_80: 80 }] },
   { name: 'Customer Effort Score', value: '2.3', target: '<3.0', change: 'decrease' as const, chartData: [{ v: 60 }, { v: 50 }, { v: 40 }, { v: 30 }, { v: 20 }] },
   { name: 'Live Positive Sentiment', value: '68%', target: '≥65%', change: 'increase' as const, chartData: [{ v: 20 }, { v: 40 }, { v_30: 30 }, { v: 60 }, { v: 70 }] },
-  { name: 'Cost per Contact', value: '$4.20', target: '<$5.60', change: 'decrease' as const, chartData: [{ v: 70 }, { v: 60 }, { v: 50 }, { v: 40 }, { v: 30 }] },
+  { name: 'Cost per Contact', value: '₹4.20', target: '<₹5.60', change: 'decrease' as const, chartData: [{ v: 70 }, { v: 60 }, { v: 50 }, { v: 40 }, { v: 30 }] },
   { name: 'Agent Utilization', value: '82.4%', target: '75-85%', change: 'neutral' as const, chartData: [{ v: 40 }, { v: 50 }, { v: 45 }, { v: 55 }, { v: 50 }] },
 ];
 

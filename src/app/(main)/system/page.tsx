@@ -1,3 +1,4 @@
+
 import { Header } from "@/components/layout/header";
 import { agentData, whatsAppTemplates, eventThemes, systemHealth, recentAudits } from "@/lib/data";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -83,9 +84,9 @@ export default function SystemPage() {
                     {eventThemes.map(theme => (
                       <TableRow key={theme.id}>
                         <TableCell className="font-medium">{theme.name}</TableCell>
-                        <TableCell>${theme.basePrice.toLocaleString()}</TableCell>
+                        <TableCell>₹{theme.basePrice.toLocaleString()}</TableCell>
                         <TableCell>{theme.bookings}</TableCell>
-                        <TableCell>${theme.revenue.toLocaleString()}</TableCell>
+                        <TableCell>₹{theme.revenue.toLocaleString()}</TableCell>
                         <TableCell><Badge variant="outline">{theme.popularity}</Badge></TableCell>
                       </TableRow>
                     ))}

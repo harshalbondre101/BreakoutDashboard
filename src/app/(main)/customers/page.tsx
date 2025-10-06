@@ -224,7 +224,7 @@ export default function CustomersHubPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-sm font-bold text-emerald-600">
-                    ${event.revenue.toLocaleString()}
+                    ₹{event.revenue.toLocaleString()}
                   </td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 rounded text-xs font-medium ${

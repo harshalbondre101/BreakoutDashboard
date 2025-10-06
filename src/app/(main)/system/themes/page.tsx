@@ -69,7 +69,7 @@ export default function ThemesPage() {
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Price per Person</span>
-                  <span className="font-bold text-gray-900">${theme.Price_per_person.toLocaleString()}</span>
+                  <span className="font-bold text-gray-900">₹{theme.Price_per_person.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Duration</span>

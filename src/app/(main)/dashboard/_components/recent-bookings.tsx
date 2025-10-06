@@ -1,16 +1,17 @@
+
 'use client';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { DollarSign } from "lucide-react";
+import { IndianRupee } from "lucide-react";
 
 const recentBookingsData = [
     {
       id: 1,
       company: "Future Solutions",
       event: "Anniversary",
-      amount: "$2,316",
+      amount: "₹2,316",
       status: "confirmed",
       date: "10/4/2025, 2:02:35 AM",
       paymentMethod: "bank"
@@ -19,7 +20,7 @@ const recentBookingsData = [
       id: 2,
       company: "Prime Industries",
       event: "Conference",
-      amount: "$5,361",
+      amount: "₹5,361",
       status: "cancelled",
       date: "10/3/2025, 5:15:52 PM",
       paymentMethod: "bank"
@@ -28,7 +29,7 @@ const recentBookingsData = [
       id: 3,
       company: "Innovate Co.",
       event: "Product Launch",
-      amount: "$7,820",
+      amount: "₹7,820",
       status: "confirmed",
       date: "9/28/2025, 11:30:00 AM",
       paymentMethod: "card"
@@ -49,7 +50,7 @@ export function RecentBookings() {
         <Card className="col-span-1">
             <CardHeader className="flex-row items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <DollarSign className="w-5 h-5 text-primary" />
+                    <IndianRupee className="w-5 h-5 text-primary" />
                     <CardTitle className="text-lg">Recent Bookings</CardTitle>
                 </div>
             </CardHeader>

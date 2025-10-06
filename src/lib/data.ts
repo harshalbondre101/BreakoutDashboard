@@ -1,3 +1,4 @@
+
 import { KPIMetric, ActiveCall, Booking, Lead, Event, Call, Agent, WhatsAppTemplate, Theme, Alert } from './types';
 
 export const kpiMetrics: KPIMetric[] = [
@@ -58,8 +59,8 @@ export const kpiMetrics: KPIMetric[] = [
   {
     id: 'cost',
     label: 'Cost per Contact',
-    value: '$4.20',
-    target: '<$5.60',
+    value: '₹4.20',
+    target: '<₹5.60',
     trend: 'down',
     status: 'good',
     sparklineData: [4.8, 4.7, 4.6, 4.5, 4.3, 4.2, 4.1, 4.2]
@@ -308,4 +309,49 @@ export const alerts: Alert[] = [
     timestamp: new Date(Date.now() - 900000),
     read: true
   }
+];
+
+export const callVolumeData = [
+    { name: '12am', calls: 30 },
+    { name: '3am', calls: 45 },
+    { name: '6am', calls: 60 },
+    { name: '9am', calls: 80 },
+    { name: '12pm', calls: 100 },
+    { name: '3pm', calls: 85 },
+    { name: '6pm', calls: 65 },
+    { name: '9pm', calls: 40 },
+];
+  
+export const sentimentDistributionData = [
+    { name: 'Positive', value: 68, fill: 'hsl(var(--color-emerald))' },
+    { name: 'Neutral', value: 22, fill: 'hsl(var(--color-gray))' },
+    { name: 'Negative', value: 10, fill: 'hsl(var(--color-red))' },
+];
+
+export const agentData = [
+  { id: 1, name: 'AI Agent 1', isAI: true, status: 'online', fcr: 92, csat: 88, callsToday: 42, avatar: ''},
+  { id: 2, name: 'Sarah Miller', isAI: false, status: 'busy', fcr: 85, csat: 91, callsToday: 28, avatar: '/avatars/01.png' },
+  { id: 3, name: 'AI Agent 2', isAI: true, status: 'online', fcr: 94, csat: 89, callsToday: 51, avatar: '' },
+  { id: 4, name: 'David Chen', isAI: false, status: 'offline', fcr: 88, csat: 93, callsToday: 31, avatar: '/avatars/02.png' },
+];
+
+export const eventThemes = [
+  { id: 1, name: 'Vintage Wedding', basePrice: 15000, bookings: 42, revenue: 630000, popularity: 'High' },
+  { id: 2, name: 'Tech Conference', basePrice: 25000, bookings: 18, revenue: 450000, popularity: 'Medium' },
+  { id: 3, name: 'Garden Party', basePrice: 8000, bookings: 65, revenue: 520000, popularity: 'High' },
+  { id: 4, name: 'Product Launch', basePrice: 30000, bookings: 12, revenue: 360000, popularity: 'Low' },
+];
+
+export const systemHealth = [
+    {id: 1, name: 'API Latency', value: '52ms', status: 'healthy'},
+    {id: 2, name: 'Database CPU', value: '48%', status: 'healthy'},
+    {id: 3, name: 'AI Model Accuracy', value: '94.2%', status: 'healthy'},
+    {id: 4, name: 'Error Rate', value: '1.3%', status: 'warning'},
+];
+
+export const recentAudits = [
+    {id: 1, area: 'PCI Compliance', result: 'passed', timestamp: '2024-05-20T10:00:00Z'},
+    {id: 2, area: 'GDPR Data Check', result: 'passed', timestamp: '2024-05-18T14:30:00Z'},
+    {id: 3, area: 'Security Pen-test', result: 'failed', timestamp: '2024-05-15T09:00:00Z'},
+    {id: 4, area: 'Agent Script Adh', result: 'passed', timestamp: '2024-05-12T11:00:00Z'},
 ];

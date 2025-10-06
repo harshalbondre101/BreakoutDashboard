@@ -5,7 +5,7 @@ import { Phone, AlertTriangle } from 'lucide-react';
 import { KPICard } from '@/components/kpi-card';
 import { activeCalls, alerts } from '@/lib/data';
 import { KPIMetric, KpiApiResponse, Booking } from '@/lib/types';
-import { DollarSign } from 'lucide-react';
+import { IndianRupee } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/config';
 
 const formatDurationFromSeconds = (seconds: number) => {
@@ -405,7 +405,7 @@ export default function DashboardPage() {
         <div className="space-y-6">
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <DollarSign className="w-6 h-6 text-emerald-600" />
+              <IndianRupee className="w-6 h-6 text-emerald-600" />
               Recent Bookings
             </h2>
             {renderRecentBookings()}
