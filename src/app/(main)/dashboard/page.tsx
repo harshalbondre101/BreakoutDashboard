@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Phone, AlertTriangle } from 'lucide-react';
 import { KPICard } from '@/components/kpi-card';
-import { activeCalls, alerts } from '@/lib/data';
-import { KPIMetric, KpiApiResponse, Booking } from '@/lib/types';
+import { alerts } from '@/lib/data';
+import { KPIMetric, KpiApiResponse, Booking, ApiCall as Call } from '@/lib/types';
 import { IndianRupee } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/config';
 
@@ -41,10 +41,15 @@ export default function DashboardPage() {
   const [time, setTime] = useState('');
   const [kpiMetrics, setKpiMetrics] = useState<KPIMetric[]>([]);
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
+  const [activeCalls, setActiveCalls] = useState<Call[]>([]);
+  
   const [kpiLoading, setKpiLoading] = useState(true);
   const [bookingsLoading, setBookingsLoading] = useState(true);
+  const [callsLoading, setCallsLoading] = useState(true);
+
   const [kpiError, setKpiError] = useState<string | null>(null);
   const [bookingsError, setBookingsError] = useState<string | null>(null);
+  const [callsError, setCallsError] = useState<string | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -152,9 +157,32 @@ export default function DashboardPage() {
         setBookingsLoading(false);
       }
     };
+    
+    const fetchCalls = async () => {
+      setCallsLoading(true);
+      setCallsError(null);
+      try {
+        const response = await fetch(`${API_BASE_URL}/calls/`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data: Call[] = await response.json();
+        setActiveCalls(data.slice(-5));
+      } catch (err) {
+        if (err instanceof Error) {
+          setCallsError(err.message);
+        } else {
+          setCallsError('An unexpected error occurred');
+        }
+      } finally {
+        setCallsLoading(false);
+      }
+    };
+
 
     fetchKpis();
     fetchBookings();
+    fetchCalls();
     
     return () => clearInterval(interval);
   }, []);
@@ -163,14 +191,6 @@ export default function DashboardPage() {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const getSentimentColor = (sentiment: string) => {
-    switch (sentiment) {
-      case 'positive': return 'text-emerald-600 bg-emerald-100';
-      case 'negative': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
   };
 
   const getStatusColor = (status: string) => {
@@ -258,6 +278,53 @@ export default function DashboardPage() {
       </div>
     );
   };
+  
+  const renderActiveCalls = () => {
+    if (callsLoading) {
+      return (
+        <div className="space-y-3 max-h-96 overflow-y-auto">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="p-4 bg-gray-50 rounded-lg h-24 animate-pulse" />
+          ))}
+        </div>
+      );
+    }
+
+    if (callsError) {
+      return (
+        <div className="max-h-96 flex items-center justify-center bg-gray-50 rounded-lg">
+          <div className="text-red-500 text-center">
+            <p>Failed to load active calls.</p>
+            <p className="text-sm">{callsError}</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+       <div className="space-y-3 max-h-96 overflow-y-auto">
+        {activeCalls.map((call) => (
+          <div key={call.Conv_ID} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+            <div className="flex-1">
+              <div className="flex items-center gap-3">
+                <div className={`px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800`}>
+                  {call.Call_intent}
+                </div>
+                <p className="font-semibold text-gray-900">Conv: {call.Conv_ID}</p>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">Customer: {call.Customer_ID}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-bold text-gray-900">{formatDuration(call.Duration)}</p>
+              <p className={`text-xs font-medium mt-1 text-emerald-600`}>
+                ACTIVE
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
 
   return (
@@ -306,31 +373,7 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {activeCalls.map((call) => (
-                <div key={call.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <div className={`px-2 py-1 rounded text-xs font-medium ${getSentimentColor(call.sentiment)}`}>
-                        {call.sentiment}
-                      </div>
-                      <p className="font-semibold text-gray-900">{call.customerName}</p>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">Agent: {call.agentName}</p>
-                    <p className="text-xs text-gray-500 mt-1">{call.topic}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-gray-900">{formatDuration(call.duration)}</p>
-                    <p className={`text-xs font-medium mt-1 ${
-                      call.status === 'active' ? 'text-emerald-600' :
-                      call.status === 'on-hold' ? 'text-amber-600' : 'text-blue-600'
-                    }`}>
-                      {call.status.toUpperCase()}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            {renderActiveCalls()}
           </div>
 
           <div className="grid grid-cols-2 gap-6">
