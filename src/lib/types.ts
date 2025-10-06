@@ -1,5 +1,6 @@
 
 
+
 export interface ApiCall {
   Customer_ID: number;
   Transcript: string;
@@ -14,7 +15,7 @@ export interface ApiCall {
 export interface KPIMetric {
   id: string;
   label: string;
-  value: string | number;
+  value: string;
   target: string;
   trend: 'up' | 'down' | 'stable';
   status: 'good' | 'warning' | 'critical';
@@ -166,17 +167,13 @@ export interface WhatsAppTemplate {
 }
 
 export interface Theme {
-  id: string;
-  name: string;
-  description: string;
-  basePrice: number;
-  category: string;
-  features: string[];
-  status: 'active' | 'inactive';
-  popularity: number;
-  bookings: number;
-  revenue: number;
-  seasonalMultiplier?: number;
+    Name: string;
+    Description: string;
+    Duration: number;
+    Minimum_players: number;
+    Trailers: string | null;
+    Price_per_person: number;
+    Theme_ID: number;
 }
 
 export interface Alert {

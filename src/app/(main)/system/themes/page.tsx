@@ -1,8 +1,93 @@
 
 'use client';
-import { themes } from '@/lib/data';
+import { useState, useEffect } from 'react';
+import { Theme } from '@/lib/types';
+import { API_BASE_URL } from '@/lib/config';
 
 export default function ThemesPage() {
+  const [themes, setThemes] = useState<Theme[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchThemes = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(`${API_BASE_URL}/themes/`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data: Theme[] = await response.json();
+        setThemes(data);
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('An unexpected error occurred');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchThemes();
+  }, []);
+
+  const renderThemes = () => {
+    if (loading) {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-lg shadow-sm h-64 animate-pulse" />
+          ))}
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="col-span-full bg-red-50 text-red-700 p-4 rounded-lg text-center">
+          <p>Failed to load theme data.</p>
+          <p className="text-sm">{error}</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {themes.map((theme) => (
+          <div key={theme.Theme_ID} className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div className="h-32 bg-gradient-to-br from-blue-500 to-purple-600"></div>
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-3">
+                <h3 className="font-bold text-gray-900">{theme.Name}</h3>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-4 h-20 overflow-hidden">{theme.Description}</p>
+
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Price per Person</span>
+                  <span className="font-bold text-gray-900">${theme.Price_per_person.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Duration</span>
+                  <span className="font-bold text-gray-900">{theme.Duration} min</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Min. Players</span>
+                  <span className="font-bold text-gray-900">{theme.Minimum_players}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -14,59 +99,7 @@ export default function ThemesPage() {
           + Create Theme
         </button>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {themes.slice(0, 12).map((theme) => (
-          <div key={theme.id} className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-            <div className="h-32 bg-gradient-to-br from-blue-500 to-purple-600"></div>
-            <div className="p-6">
-              <div className="flex items-start justify-between mb-3">
-                <h3 className="font-bold text-gray-900">{theme.name}</h3>
-                <span className={`px-2 py-1 rounded text-xs font-medium ${
-                  theme.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {theme.status}
-                </span>
-              </div>
-
-              <p className="text-sm text-gray-600 mb-4">{theme.description}</p>
-
-              <div className="space-y-2 mb-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Base Price</span>
-                  <span className="font-bold text-gray-900">${theme.basePrice.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Bookings</span>
-                  <span className="font-bold text-gray-900">{theme.bookings}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Revenue</span>
-                  <span className="font-bold text-emerald-600">${theme.revenue.toLocaleString()}</span>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-1 mb-4">
-                {theme.features.slice(0, 3).map((feature, i) => (
-                  <span key={i} className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded">
-                    {feature}
-                  </span>
-                ))}
-              </div>
-
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-gray-600">Popularity</span>
-                  <span className="font-medium">{Math.round(theme.popularity)}%</span>
-                </div>
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-600" style={{ width: `${theme.popularity}%` }} />
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+      {renderThemes()}
     </div>
   );
 }
