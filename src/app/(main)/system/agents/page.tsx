@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AgentsTab } from './_components/agents-tab';
 import { KnowledgeBaseTab } from './_components/knowledge-base-tab';
 import { CreateAgentDialog } from './_components/create-agent-dialog';
+import { PhoneNumbersTab } from './_components/phone-numbers-tab';
+import { WorkspaceSettingsTab } from './_components/workspace-settings-tab';
 
 export default function AgentsPage() {
     const [isCreateAgentOpen, setCreateAgentOpen] = useState(false);
@@ -37,11 +39,11 @@ export default function AgentsPage() {
                         <Book className="mr-2 h-4 w-4" />
                         Knowledge Base
                     </TabsTrigger>
-                    <TabsTrigger value="phone-numbers" disabled>
+                    <TabsTrigger value="phone-numbers">
                         <Phone className="mr-2 h-4 w-4" />
                         Phone Numbers
                     </TabsTrigger>
-                    <TabsTrigger value="settings" disabled>
+                    <TabsTrigger value="settings">
                         <Settings className="mr-2 h-4 w-4" />
                         Workspace Settings
                     </TabsTrigger>
@@ -54,10 +56,10 @@ export default function AgentsPage() {
                     <KnowledgeBaseTab />
                 </TabsContent>
                  <TabsContent value="phone-numbers">
-                    <div className="p-10 text-center text-gray-500">Phone number management coming soon.</div>
+                    <PhoneNumbersTab />
                 </TabsContent>
                  <TabsContent value="settings">
-                     <div className="p-10 text-center text-gray-500">Workspace settings coming soon.</div>
+                     <WorkspaceSettingsTab />
                 </TabsContent>
             </Tabs>
             
