@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { KeyRound, Trash2, Eye, EyeOff, PlusCircle } from 'lucide-react';
+import { KeyRound, Trash2, Eye, EyeOff, PlusCircle, Check } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/config';
 
 interface Secret {
