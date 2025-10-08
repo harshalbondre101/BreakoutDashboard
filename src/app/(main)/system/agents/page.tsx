@@ -18,13 +18,13 @@ export default function AgentsPage() {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Agent & Knowledge Hub</h1>
-                    <p className="text-gray-500 mt-1">Manage agents, knowledge bases, and system configurations.</p>
+                    <h1 className="text-3xl font-bold text-gray-900">ElevenLabs Voice Agents</h1>
+                    <p className="text-gray-500 mt-1">Manage voice agents, knowledge bases, and system configurations.</p>
                 </div>
                 {activeTab === 'agents' && (
                     <Button onClick={() => setCreateAgentOpen(true)}>
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        Create Agent
+                        Create Voice Agent
                     </Button>
                 )}
             </div>

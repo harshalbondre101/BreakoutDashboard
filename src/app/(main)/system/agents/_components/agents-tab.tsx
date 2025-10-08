@@ -1,7 +1,7 @@
 
 'use client';
 import { useState, useEffect } from 'react';
-import { Search, MoreVertical, Edit, Copy, Trash2, Bot, User, Share2, FlaskConical, BarChart, Check } from 'lucide-react';
+import { Search, MoreVertical, Edit, Copy, Trash2, Bot, User, Share2, FlaskConical, BarChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -44,9 +44,9 @@ export function AgentsTab() {
              const staticAgents: Agent[] = [
                 ...Array.from({ length: 8 }, (_, i) => ({
                     id: `ai-agent-${i + 1}`,
-                    name: `AI Agent ${i + 1}`,
+                    name: `AI Voice Agent ${i + 1}`,
                     type: 'ai' as const,
-                    description: 'Handles customer inquiries via chat and voice.',
+                    description: 'ElevenLabs voice agent for customer interaction.',
                     status: ['available', 'busy', 'offline'][i % 3] as any,
                     createdAt: new Date(Date.now() - (i * 86400000 * 2)).toISOString()
                 })),
@@ -74,13 +74,13 @@ export function AgentsTab() {
     }, []);
 
     const handleDuplicate = async (agentId: string) => {
-        toast({ title: "Success", description: "Agent duplicated successfully." });
+        toast({ title: "Success", description: "Voice agent duplicated successfully." });
     };
     
     const handleDelete = async () => {
         if (!selectedAgent) return;
         setAgents(prev => prev.filter(a => a.id !== selectedAgent.id));
-        toast({ title: "Success", description: "Agent deleted successfully." });
+        toast({ title: "Success", description: "Voice agent deleted successfully." });
         setDeleteOpen(false);
         setSelectedAgent(null);
     }
@@ -105,7 +105,7 @@ export function AgentsTab() {
         }
 
         if (filteredAgents.length === 0) {
-            return <div className="text-gray-500 text-center py-10">No agents found.</div>;
+            return <div className="text-gray-500 text-center py-10">No voice agents found.</div>;
         }
 
         return (
@@ -180,7 +180,7 @@ export function AgentsTab() {
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <Input
-                        placeholder="Search agents..."
+                        placeholder="Search voice agents..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"

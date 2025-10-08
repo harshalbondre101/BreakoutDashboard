@@ -49,7 +49,7 @@ export function CreateAgentDialog({ open, onOpenChange, agent, onSuccess }: Crea
             
             toast({
                 title: 'Success!',
-                description: `Agent ${name} has been ${agent ? 'updated' : 'created'}.`,
+                description: `Voice Agent ${name} has been ${agent ? 'updated' : 'created'}.`,
             });
             onSuccess?.();
             onOpenChange(false);
@@ -69,9 +69,9 @@ export function CreateAgentDialog({ open, onOpenChange, agent, onSuccess }: Crea
             <DialogContent className="sm:max-w-[425px]">
                 <form onSubmit={handleSubmit}>
                     <DialogHeader>
-                        <DialogTitle>{agent ? 'Edit Agent' : 'Create Agent'}</DialogTitle>
+                        <DialogTitle>{agent ? 'Edit Voice Agent' : 'Create Voice Agent'}</DialogTitle>
                         <DialogDescription>
-                            {agent ? 'Update the details for your agent.' : 'Fill in the details to create a new agent.'}
+                            {agent ? 'Update the details for your voice agent.' : 'Fill in the details to create a new voice agent.'}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -90,7 +90,7 @@ export function CreateAgentDialog({ open, onOpenChange, agent, onSuccess }: Crea
                                     <SelectValue placeholder="Select a type" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="ai">AI Agent</SelectItem>
+                                    <SelectItem value="ai">AI Voice Agent</SelectItem>
                                     <SelectItem value="human">Human Agent</SelectItem>
                                 </SelectContent>
                             </Select>

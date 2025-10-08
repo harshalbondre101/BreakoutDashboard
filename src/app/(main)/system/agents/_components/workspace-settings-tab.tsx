@@ -27,8 +27,7 @@ export function WorkspaceSettingsTab() {
         setLoading(true);
         // Mocking secrets fetch
         const staticSecrets: Secret[] = [
-            { id: 'sec-1', key: 'OPENAI_API_KEY', value: 'sk-********************************', createdAt: new Date().toISOString() },
-            { id: 'sec-2', key: 'TWILIO_AUTH_TOKEN', value: '**********************************', createdAt: new Date(Date.now() - 86400000).toISOString() },
+            { id: 'sec-1', key: 'ELEVENLABS_API_KEY', value: 'sk-********************************', createdAt: new Date().toISOString() },
         ];
         setSecrets(staticSecrets);
         setLoading(false);
@@ -65,12 +64,12 @@ export function WorkspaceSettingsTab() {
                 <Card>
                     <CardHeader>
                         <CardTitle>General Settings</CardTitle>
-                        <CardDescription>Global configurations for your workspace.</CardDescription>
+                        <CardDescription>Global configurations for your voice agents.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="workspace-name">Workspace Name</Label>
-                            <Input id="workspace-name" defaultValue="My AI Command Center" />
+                            <Input id="workspace-name" defaultValue="ElevenLabs Voice Agents" />
                         </div>
                         <div className="flex items-center justify-between rounded-lg border p-3">
                             <div className="space-y-0.5">
@@ -87,7 +86,7 @@ export function WorkspaceSettingsTab() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Secrets Management</CardTitle>
-                        <CardDescription>Securely store API keys and other credentials.</CardDescription>
+                        <CardDescription>Securely store API keys for ElevenLabs and other services.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
@@ -96,7 +95,7 @@ export function WorkspaceSettingsTab() {
                                      <div className="flex items-center gap-2">
                                         <KeyRound className="w-4 h-4 text-muted-foreground" />
                                         <Input 
-                                            placeholder="Secret Key (e.g., OPENAI_API_KEY)" 
+                                            placeholder="Secret Key (e.g., ELEVENLABS_API_KEY)" 
                                             value={secret.key}
                                             onChange={(e) => handleSecretChange(secret.id, 'key', e.target.value)}
                                             className="font-mono text-xs"
