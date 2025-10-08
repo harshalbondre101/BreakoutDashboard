@@ -1,5 +1,13 @@
 
 
+export interface Agent {
+    id: string;
+    name: string;
+    type: 'ai' | 'human';
+    status: 'available' | 'busy' | 'offline';
+    description?: string;
+    createdAt?: string;
+}
 
 
 export interface ApiCall {
@@ -133,23 +141,7 @@ export interface Call {
   qualityScore: number;
 }
 
-export interface Agent {
-  id: string;
-  name: string;
-  type: 'ai' | 'human';
-  status: 'available' | 'busy' | 'away' | 'offline';
-  skills: string[];
-  performanceMetrics: {
-    fcr: number;
-    acd: number;
-    csat: number;
-    qualityScore: number;
-    utilization: number;
-    callsToday: number;
-  };
-  currentCall?: string;
-  avatar?: string;
-}
+// Duplicated Agent type is removed. The one in this file is now the source of truth.
 
 export interface WhatsAppTemplate {
   id: string;
