@@ -14,12 +14,17 @@ export default function AgentsPage() {
     const [isCreateAgentOpen, setCreateAgentOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('agents');
 
+    const handleSuccess = () => {
+        // This could be used to refresh data across tabs if needed
+        console.log("Operation successful");
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">ElevenLabs Voice Agents</h1>
-                    <p className="text-gray-500 mt-1">Manage voice agents, knowledge bases, and system configurations.</p>
+                    <h1 className="text-3xl font-bold text-gray-900">Agent & Knowledge Hub</h1>
+                    <p className="text-gray-500 mt-1">Manage voice agents, knowledge bases, and system configurations for ElevenLabs.</p>
                 </div>
                 {activeTab === 'agents' && (
                     <Button onClick={() => setCreateAgentOpen(true)}>
@@ -33,7 +38,7 @@ export default function AgentsPage() {
                 <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="agents">
                         <Bot className="mr-2 h-4 w-4" />
-                        Agents
+                        Voice Agents
                     </TabsTrigger>
                     <TabsTrigger value="knowledge-base">
                         <Book className="mr-2 h-4 w-4" />
@@ -63,7 +68,7 @@ export default function AgentsPage() {
                 </TabsContent>
             </Tabs>
             
-            <CreateAgentDialog open={isCreateAgentOpen} onOpenChange={setCreateAgentOpen} />
+            <CreateAgentDialog open={isCreateAgentOpen} onOpenChange={setCreateAgentOpen} onSuccess={handleSuccess} />
         </div>
     );
 }

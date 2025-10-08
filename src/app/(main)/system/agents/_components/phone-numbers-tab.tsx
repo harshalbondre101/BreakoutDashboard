@@ -1,7 +1,7 @@
 
 'use client';
 import { useState, useEffect } from 'react';
-import { Search, MoreVertical, Edit, Trash2, Phone, PlusCircle, Check, Copy } from 'lucide-react';
+import { Search, MoreVertical, Edit, Trash2, Phone, PlusCircle, Check, Copy, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -9,6 +9,9 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { CreatePhoneNumberDialog } from './create-phone-number-dialog';
 import { API_BASE_URL } from '@/lib/config';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 export interface PhoneNumber {
     id: string;
@@ -25,6 +28,7 @@ export function PhoneNumbersTab() {
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [isCreateOpen, setCreateOpen] = useState(false);
+    const [isImportOpen, setImportOpen] = useState(false);
     const [isEditOpen, setEditOpen] = useState(false);
     const [isDeleteOpen, setDeleteOpen] = useState(false);
     const [selectedNumber, setSelectedNumber] = useState<PhoneNumber | null>(null);
@@ -34,10 +38,7 @@ export function PhoneNumbersTab() {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_BASE_URL}/phone-numbers`);
-            if (!response.ok) throw new Error('Failed to fetch phone numbers.');
-            
-            // Using mock data as API endpoint might not be ready
+            // Mocking API call
             const staticNumbers: PhoneNumber[] = [
                 {id: 'pn-1', number: '+1 (555) 123-4567', assignedTo: 'AI Agent 1', capabilities: ['voice', 'sms'], status: 'active', createdAt: new Date().toISOString()},
                 {id: 'pn-2', number: '+1 (555) 765-4321', assignedTo: null, capabilities: ['voice', 'sms', 'mms'], status: 'inactive', createdAt: new Date(Date.now() - 86400000).toISOString()},
@@ -72,7 +73,7 @@ export function PhoneNumbersTab() {
 
     const filteredNumbers = phoneNumbers.filter(num =>
         num.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        num.assignedTo?.toLowerCase().includes(searchTerm.toLowerCase())
+        (num.assignedTo || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const renderNumberList = () => {
@@ -131,7 +132,10 @@ export function PhoneNumbersTab() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <Input placeholder="Search numbers..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
                 </div>
-                <Button onClick={() => setCreateOpen(true)}><PlusCircle className="mr-2 h-4 w-4" /> Add Number</Button>
+                <div className='flex items-center gap-2'>
+                    <Button variant="outline" onClick={() => setImportOpen(true)}><Upload className="mr-2 h-4 w-4" /> Import Numbers</Button>
+                    <Button onClick={() => setCreateOpen(true)}><PlusCircle className="mr-2 h-4 w-4" /> Add Number</Button>
+                </div>
             </div>
             
             {renderNumberList()}
@@ -144,6 +148,12 @@ export function PhoneNumbersTab() {
                     setSelectedNumber(null);
                 }}
                 phoneNumber={selectedNumber}
+            />
+
+            <ImportNumbersDialog
+                open={isImportOpen}
+                onOpenChange={setImportOpen}
+                onSuccess={fetchNumbers}
             />
 
             <AlertDialog open={isDeleteOpen} onOpenChange={setDeleteOpen}>
@@ -163,3 +173,77 @@ export function PhoneNumbersTab() {
         </div>
     );
 }
+
+function ImportNumbersDialog({ open, onOpenChange, onSuccess }: { open: boolean, onOpenChange: (open: boolean) => void, onSuccess: () => void }) {
+    const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [availableNumbers, setAvailableNumbers] = useState<any[]>([]);
+    const [selectedNumbers, setSelectedNumbers] = useState<Record<string, boolean>>({});
+    const { toast } = useToast();
+
+    useEffect(() => {
+        if (open) {
+            setLoading(true);
+            // Simulate fetching from a number provider
+            setTimeout(() => {
+                setAvailableNumbers([
+                    { number: '+1 (555) 222-3333', location: 'San Francisco, CA' },
+                    { number: '+1 (555) 444-5555', location: 'New York, NY' },
+                    { number: '+1 (555) 666-7777', location: 'Chicago, IL' },
+                ]);
+                setLoading(false);
+            }, 1000);
+        }
+    }, [open]);
+
+    const handleImport = async () => {
+        setIsSubmitting(true);
+        // Mock API call to import numbers
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        toast({
+            title: 'Import Successful',
+            description: `${Object.keys(selectedNumbers).length} numbers have been added to your workspace.`,
+        });
+        setIsSubmitting(false);
+        onSuccess();
+        onOpenChange(false);
+    };
+
+    const numSelected = Object.values(selectedNumbers).filter(Boolean).length;
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Import from Number Provider</DialogTitle>
+                    <DialogDescription>
+                        Select available numbers from your provider to import into this workspace.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-3 max-h-80 overflow-y-auto">
+                    {loading ? <p>Fetching available numbers...</p> : 
+                        availableNumbers.map(num => (
+                            <div key={num.number} className='flex items-center gap-3 p-3 border rounded-md'>
+                                <Checkbox 
+                                    id={num.number} 
+                                    onCheckedChange={(checked) => setSelectedNumbers(s => ({...s, [num.number]: !!checked}))}
+                                />
+                                <Label htmlFor={num.number} className='flex-1'>
+                                    <p className='font-mono'>{num.number}</p>
+                                    <p className='text-xs text-muted-foreground'>{num.location}</p>
+                                </Label>
+                            </div>
+                        ))
+                    }
+                </div>
+                <DialogFooter>
+                    <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+                    <Button onClick={handleImport} disabled={isSubmitting || numSelected === 0}>
+                        {isSubmitting ? 'Importing...' : `Import ${numSelected} Number(s)`}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+

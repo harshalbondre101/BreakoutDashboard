@@ -32,8 +32,7 @@ export function KnowledgeBaseTab() {
     const fetchDocuments = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/knowledge-base`);
-            if (!response.ok) throw new Error('Failed to fetch documents.');
+            // MOCK API call
              const staticDocs: Document[] = [
                 {id: 'doc-1', name: 'Product FAQ.pdf', type: 'file', status: 'indexed', createdAt: new Date().toISOString(), charCount: 15234},
                 {id: 'doc-2', name: 'Pricing Page', type: 'url', status: 'indexed', createdAt: new Date(Date.now() - 86400000).toISOString(), charCount: 4890},
@@ -55,6 +54,14 @@ export function KnowledgeBaseTab() {
     const filteredDocuments = documents.filter(doc =>
         doc.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const handleComputeIndex = () => {
+        toast({
+            title: "Processing RAG Index",
+            description: "Your knowledge base documents are being indexed. This may take a few minutes."
+        });
+        // In a real app, this would trigger an API call.
+    }
 
     const renderDocumentList = () => {
         if (loading) return <div className="text-center p-8">Loading documents...</div>;
@@ -119,7 +126,7 @@ export function KnowledgeBaseTab() {
                 </div>
                 <div className="flex gap-2">
                     <Button onClick={() => setCreateOpen(true)}><PlusCircle className="mr-2 h-4 w-4" /> Add Document</Button>
-                    <Button variant="outline">Compute RAG Index</Button>
+                    <Button variant="outline" onClick={handleComputeIndex}>Compute RAG Index</Button>
                 </div>
             </div>
             {renderDocumentList()}
@@ -145,14 +152,6 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess }: { open: boolean
         await new Promise(resolve => setTimeout(resolve, 1000));
         
         try {
-            // This is where you would make the API call, e.g.:
-            // const formData = new FormData();
-            // formData.append('type', type);
-            // if (type === 'file') formData.append('file', content);
-            // else formData.append('content', content);
-            // const response = await fetch(`${API_BASE_URL}/knowledge-base`, { method: 'POST', body: formData });
-            // if (!response.ok) throw new Error('Failed to create document.');
-
              toast({
                 title: 'Document Added',
                 description: 'The document is now being processed and indexed.',
