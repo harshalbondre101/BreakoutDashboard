@@ -7,128 +7,238 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { KeyRound, Trash2, Eye, EyeOff, PlusCircle, Check } from 'lucide-react';
+import { KeyRound, Trash2, Eye, EyeOff, PlusCircle, Check, Loader2 } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/config';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-interface Secret {
-    id: string;
-    key: string;
-    value: string;
-    createdAt: string;
+interface Settings {
+    conversation_initiation_client_data_webhook: {
+        url: string;
+        request_headers: Record<string, string>;
+    };
+    webhooks: {
+        post_call_webhook_id: string;
+        send_audio: boolean;
+    };
+    can_use_mcp_servers: boolean;
+    rag_retention_period_days: number;
+    default_livekit_stack: 'standard' | 'static';
 }
 
 export function WorkspaceSettingsTab() {
-    const [secrets, setSecrets] = useState<Secret[]>([]);
+    const [settings, setSettings] = useState<Partial<Settings>>({});
     const [loading, setLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
     const { toast } = useToast();
-    const [shownSecrets, setShownSecrets] = useState<Record<string, boolean>>({});
+    const apiKey = 'ec4e64c2b17bf057a451949c080adb9274676fd0eb166aa17b346de61bde70e3';
 
     const fetchSettings = async () => {
         setLoading(true);
-        // Mocking secrets fetch
-        const staticSecrets: Secret[] = [
-            { id: 'sec-1', key: 'ELEVENLABS_API_KEY', value: 'sk-********************************', createdAt: new Date().toISOString() },
-        ];
-        setSecrets(staticSecrets);
-        setLoading(false);
+        try {
+            const response = await fetch(`${API_BASE_URL}/settings`, {
+                headers: { 'xi-api-key': apiKey },
+            });
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({ detail: 'Failed to fetch settings' }));
+                throw new Error(err.detail);
+            }
+            const data: Settings = await response.json();
+            setSettings({
+                ...data,
+                conversation_initiation_client_data_webhook: {
+                    ...data.conversation_initiation_client_data_webhook,
+                    request_headers: data.conversation_initiation_client_data_webhook.request_headers || {},
+                },
+                webhooks: data.webhooks || { post_call_webhook_id: '', send_audio: false },
+            });
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: "Error loading settings",
+                description: (error as Error).message,
+            });
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
         fetchSettings();
     }, []);
-
-    const handleAddSecret = () => {
-        setSecrets(prev => [...prev, { id: `sec-${Date.now()}`, key: '', value: '', createdAt: new Date().toISOString() }]);
-    };
-
-    const handleSecretChange = (id: string, field: 'key' | 'value', value: string) => {
-        setSecrets(prev => prev.map(s => s.id === id ? { ...s, [field]: value } : s));
-    };
-
-    const handleSaveSecret = (id: string) => {
-        toast({ title: "Secret saved", description: "Your secret has been securely stored." });
-    };
-
-    const handleDeleteSecret = (id: string) => {
-        setSecrets(prev => prev.filter(s => s.id !== id));
-        toast({ title: "Secret deleted", description: "The secret has been removed." });
-    };
     
-    const toggleShowSecret = (id: string) => {
-        setShownSecrets(prev => ({...prev, [id]: !prev[id]}));
+    const handleSettingsChange = (path: string, value: any) => {
+        setSettings(prev => {
+            const newSettings = { ...prev };
+            const keys = path.split('.');
+            let current: any = newSettings;
+            keys.forEach((key, index) => {
+                if (index === keys.length - 1) {
+                    current[key] = value;
+                } else {
+                    current[key] = current[key] || {};
+                    current = current[key];
+                }
+            });
+            return newSettings;
+        });
     };
+
+    const handleSaveSettings = async () => {
+        setIsSaving(true);
+        try {
+            const response = await fetch(`${API_BASE_URL}/settings`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'xi-api-key': apiKey,
+                },
+                body: JSON.stringify(settings),
+            });
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({ detail: 'Failed to save settings' }));
+                throw new Error(err.detail);
+            }
+            toast({
+                title: "Settings Saved",
+                description: "Your workspace settings have been updated.",
+            });
+            fetchSettings(); // Re-fetch to confirm changes
+        } catch (error) {
+             toast({
+                variant: 'destructive',
+                title: "Error saving settings",
+                description: (error as Error).message,
+            });
+        } finally {
+            setIsSaving(false);
+        }
+    }
+
+    if (loading) {
+        return (
+            <div className="bg-white rounded-lg shadow-sm p-6 mt-6 flex justify-center items-center h-96">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            </div>
+        )
+    }
 
     return (
-        <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
+        <div className="bg-white rounded-lg shadow-sm p-6 mt-6 space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Webhook Settings</CardTitle>
+                    <CardDescription>Configure webhooks for conversation events.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="space-y-2 p-4 border rounded-lg">
+                        <Label>Conversation Initiation Webhook</Label>
+                        <div className="space-y-2">
+                             <Label htmlFor="webhook-url" className="text-xs text-muted-foreground">URL</Label>
+                             <Input 
+                                id="webhook-url" 
+                                value={settings.conversation_initiation_client_data_webhook?.url || ''}
+                                onChange={(e) => handleSettingsChange('conversation_initiation_client_data_webhook.url', e.target.value)}
+                                placeholder="https://your-service.com/webhook"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                             <Label htmlFor="webhook-headers" className="text-xs text-muted-foreground">Request Headers (JSON)</Label>
+                             <Textarea
+                                id="webhook-headers"
+                                value={JSON.stringify(settings.conversation_initiation_client_data_webhook?.request_headers || {}, null, 2)}
+                                onChange={(e) => {
+                                    try {
+                                        const parsed = JSON.parse(e.target.value);
+                                        handleSettingsChange('conversation_initiation_client_data_webhook.request_headers', parsed)
+                                    } catch (err) {
+                                        // Handle invalid JSON gracefully if needed
+                                    }
+                                }}
+                                placeholder={`{\n  "Authorization": "Bearer your-token"\n}`}
+                                className="font-mono text-xs"
+                                rows={4}
+                            />
+                        </div>
+                    </div>
+                     <div className="space-y-2 p-4 border rounded-lg">
+                        <Label>Post Call Webhook</Label>
+                         <div className="space-y-2">
+                            <Label htmlFor="post-call-webhook-id" className="text-xs text-muted-foreground">Webhook ID</Label>
+                            <Input
+                                id="post-call-webhook-id"
+                                value={settings.webhooks?.post_call_webhook_id || ''}
+                                onChange={(e) => handleSettingsChange('webhooks.post_call_webhook_id', e.target.value)}
+                                placeholder="wh_..."
+                            />
+                        </div>
+                        <div className="flex items-center justify-between rounded-lg border p-3">
+                            <Label htmlFor="send-audio">Send Audio in Webhook</Label>
+                            <Switch 
+                                id="send-audio" 
+                                checked={settings.webhooks?.send_audio || false}
+                                onCheckedChange={(checked) => handleSettingsChange('webhooks.send_audio', checked)}
+                            />
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                     <CardHeader>
-                        <CardTitle>General Settings</CardTitle>
-                        <CardDescription>Global configurations for your voice agents.</CardDescription>
+                        <CardTitle>Data & Privacy</CardTitle>
+                        <CardDescription>Manage data retention and privacy settings.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="workspace-name">Workspace Name</Label>
-                            <Input id="workspace-name" defaultValue="ElevenLabs Voice Agents" />
+                            <Label htmlFor="rag-retention">RAG Retention Period (days)</Label>
+                            <Input 
+                                id="rag-retention" 
+                                type="number" 
+                                value={settings.rag_retention_period_days || 0}
+                                onChange={(e) => handleSettingsChange('rag_retention_period_days', parseInt(e.target.value, 10))}
+                            />
                         </div>
-                        <div className="flex items-center justify-between rounded-lg border p-3">
-                            <div className="space-y-0.5">
-                                <Label>Automatic RAG Indexing</Label>
-                                <p className="text-xs text-muted-foreground">
-                                    Automatically re-index knowledge base on new document uploads.
-                                </p>
-                            </div>
-                            <Switch defaultChecked />
-                        </div>
-                        <Button>Save Settings</Button>
                     </CardContent>
                 </Card>
-                <Card>
+                 <Card>
                     <CardHeader>
-                        <CardTitle>Secrets Management</CardTitle>
-                        <CardDescription>Securely store API keys for ElevenLabs and other services.</CardDescription>
+                        <CardTitle>Advanced</CardTitle>
+                        <CardDescription>Advanced technical configurations.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
-                             {loading ? <p>Loading secrets...</p> : secrets.map(secret => (
-                                <div key={secret.id} className="p-3 border rounded-lg space-y-2">
-                                     <div className="flex items-center gap-2">
-                                        <KeyRound className="w-4 h-4 text-muted-foreground" />
-                                        <Input 
-                                            placeholder="Secret Key (e.g., ELEVENLABS_API_KEY)" 
-                                            value={secret.key}
-                                            onChange={(e) => handleSecretChange(secret.id, 'key', e.target.value)}
-                                            className="font-mono text-xs"
-                                        />
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Input 
-                                            type={shownSecrets[secret.id] ? 'text' : 'password'}
-                                            placeholder="Secret Value" 
-                                            value={secret.value}
-                                            onChange={(e) => handleSecretChange(secret.id, 'value', e.target.value)}
-                                            className="font-mono text-xs"
-                                        />
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => toggleShowSecret(secret.id)}>
-                                            {shownSecrets[secret.id] ? <EyeOff className="w-4 h-4"/> : <Eye className="w-4 h-4"/>}
-                                        </Button>
-                                    </div>
-                                     <div className="flex justify-between items-center pt-2">
-                                        <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => handleDeleteSecret(secret.id)}>
-                                            <Trash2 className="w-4 h-4 mr-1"/> Delete
-                                        </Button>
-                                        <Button variant="outline" size="sm" onClick={() => handleSaveSecret(secret.id)}>
-                                            <Check className="w-4 h-4 mr-1"/> Save
-                                        </Button>
-                                    </div>
-                                </div>
-                            ))}
+                        <div className="flex items-center justify-between rounded-lg border p-3">
+                            <Label>Enable MCP Servers</Label>
+                            <Switch
+                                checked={settings.can_use_mcp_servers || false}
+                                onCheckedChange={(checked) => handleSettingsChange('can_use_mcp_servers', checked)}
+                            />
                         </div>
-                        <Button variant="outline" className="w-full" onClick={handleAddSecret}>
-                            <PlusCircle className="mr-2 h-4 w-4" /> Add Secret
-                        </Button>
+                         <div className="space-y-2">
+                            <Label htmlFor="livekit-stack">Default LiveKit Stack</Label>
+                             <Select 
+                                value={settings.default_livekit_stack || 'standard'}
+                                onValueChange={(value: 'standard' | 'static') => handleSettingsChange('default_livekit_stack', value)}
+                            >
+                                <SelectTrigger id="livekit-stack">
+                                    <SelectValue placeholder="Select stack" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="standard">Standard</SelectItem>
+                                    <SelectItem value="static">Static</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </CardContent>
                 </Card>
+            </div>
+            
+            <div className="flex justify-end">
+                <Button onClick={handleSaveSettings} disabled={isSaving}>
+                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Save All Settings
+                </Button>
             </div>
         </div>
     );
