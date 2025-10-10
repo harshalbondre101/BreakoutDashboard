@@ -16,9 +16,13 @@ interface Document {
     id: string;
     name: string;
     type: 'file' | 'url' | 'text';
-    status: 'indexed' | 'processing' | 'failed';
-    createdAt: string;
-    charCount: number;
+    status: 'indexed' | 'processing' | 'failed' | 'ready';
+    created_at_unix_secs: number;
+    size_bytes: number;
+}
+
+interface ApiResponse {
+    documents: Document[];
 }
 
 export function KnowledgeBaseTab() {
@@ -28,20 +32,26 @@ export function KnowledgeBaseTab() {
     const [searchTerm, setSearchTerm] = useState('');
     const [isCreateOpen, setCreateOpen] = useState(false);
     const { toast } = useToast();
+    const apiKey = 'ec4e64c2b17bf057a451949c080adb9274676fd0eb166aa17b346de61bde70e3';
 
     const fetchDocuments = async () => {
         setLoading(true);
+        setError(null);
         try {
-            // MOCK API call
-             const staticDocs: Document[] = [
-                {id: 'doc-1', name: 'Product FAQ.pdf', type: 'file', status: 'indexed', createdAt: new Date().toISOString(), charCount: 15234},
-                {id: 'doc-2', name: 'Pricing Page', type: 'url', status: 'indexed', createdAt: new Date(Date.now() - 86400000).toISOString(), charCount: 4890},
-                {id: 'doc-3', name: 'Return Policy', type: 'text', status: 'processing', createdAt: new Date(Date.now() - 172800000).toISOString(), charCount: 2150},
-                {id: 'doc-4', name: 'API Docs', type: 'url', status: 'failed', createdAt: new Date(Date.now() - 259200000).toISOString(), charCount: 0},
-            ];
-            setDocuments(staticDocs);
+            const response = await fetch(`${API_BASE_URL}/knowledge-base`, {
+                headers: {
+                    'xi-api-key': apiKey,
+                }
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to fetch documents: ${response.status} ${errorText}`);
+            }
+            const data: ApiResponse = await response.json();
+            setDocuments(data.documents || []);
         } catch (err) {
             setError('Could not load knowledge base documents.');
+            console.error(err);
         } finally {
             setLoading(false);
         }
@@ -81,18 +91,18 @@ export function KnowledgeBaseTab() {
                             <div>
                                 <p className="font-medium text-gray-800">{doc.name}</p>
                                 <p className="text-xs text-gray-500">
-                                    {doc.charCount.toLocaleString()} chars &middot; Added on {new Date(doc.createdAt).toLocaleDateString()}
+                                    {(doc.size_bytes / 1024).toFixed(2)} KB &middot; Added on {new Date(doc.created_at_unix_secs * 1000).toLocaleDateString()}
                                 </p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
                              <span className={`px-2 py-1 text-xs font-medium rounded-full flex items-center gap-1.5 ${
-                                doc.status === 'indexed' ? 'bg-emerald-100 text-emerald-800' :
+                                doc.status === 'indexed' || doc.status === 'ready' ? 'bg-emerald-100 text-emerald-800' :
                                 doc.status === 'processing' ? 'bg-blue-100 text-blue-800' :
                                 'bg-red-100 text-red-800'
                             }`}>
                                 <span className={`w-2 h-2 rounded-full ${
-                                    doc.status === 'indexed' ? 'bg-emerald-500' :
+                                    doc.status === 'indexed' || doc.status === 'ready' ? 'bg-emerald-500' :
                                     doc.status === 'processing' ? 'bg-blue-500 animate-pulse' :
                                     'bg-red-500'
                                 }`}/>
