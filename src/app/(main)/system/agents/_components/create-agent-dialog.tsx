@@ -42,15 +42,43 @@ export function CreateAgentDialog({ open, onOpenChange, agent, onSuccess }: Crea
         setIsSubmitting(true);
 
         const agentData = { name, description, type };
-        
+        const url = agent 
+            ? `${API_BASE_URL}/agents/${agent.id}`
+            : `${API_BASE_URL}/agents`;
+        const method = agent ? 'PATCH' : 'POST';
+
+        // TODO: Replace with a secure way to get the API key, e.g., from a context or a hook
+        const apiKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY;
+        if (!apiKey) {
+             toast({
+                variant: 'destructive',
+                title: 'API Key Missing',
+                description: 'The ElevenLabs API key is not configured.',
+            });
+            setIsSubmitting(false);
+            return;
+        }
+
         try {
-            // Mocking API call to prevent fetch error
-            await new Promise(resolve => setTimeout(resolve, 500));
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'xi-api-key': apiKey,
+                },
+                body: JSON.stringify(agentData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || `Failed to ${agent ? 'update' : 'create'} agent.`);
+            }
             
             toast({
                 title: 'Success!',
                 description: `Voice Agent ${name} has been ${agent ? 'updated' : 'created'}.`,
             });
+
             onSuccess?.();
             onOpenChange(false);
         } catch (error) {
