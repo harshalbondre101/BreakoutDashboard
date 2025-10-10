@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { EditDocumentDialog } from './edit-document-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ComputeRagIndexDialog } from './compute-rag-index-dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 interface Document {
@@ -229,6 +230,27 @@ export function KnowledgeBaseTab() {
     );
 }
 
+const initialTextData = {
+    companyName: '',
+    industry: '',
+    location: '',
+    website: '',
+    companyDescription: '',
+    products: '',
+    productFeatures: '',
+    targetAudience: '',
+    policies: '',
+    codeOfConduct: '',
+    dataPrivacy: '',
+    sops: '',
+    faqs: '',
+    commonIssues: '',
+    internalDocs: '',
+    manuals: '',
+    trainingMaterials: '',
+    importantUrls: '',
+};
+
 
 function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open: boolean, onOpenChange: (open: boolean) => void, onSuccess: () => void, apiKey: string }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -237,17 +259,22 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open:
     const [url, setUrl] = useState('');
     const [urlName, setUrlName] = useState('');
     
-    const [text, setText] = useState('');
     const [textName, setTextName] = useState('');
+    const [textData, setTextData] = useState(initialTextData);
     
     const [file, setFile] = useState<File | null>(null);
     const [fileName, setFileName] = useState('');
     
     const fileInputRef = useRef<HTMLInputElement>(null);
+    
+    const handleTextDataChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { id, value } = e.target;
+        setTextData(prev => ({ ...prev, [id]: value }));
+    };
 
     const resetState = () => {
         setUrl(''); setUrlName('');
-        setText(''); setTextName('');
+        setTextData(initialTextData); setTextName('');
         setFile(null); setFileName('');
         if(fileInputRef.current) fileInputRef.current.value = '';
     }
@@ -281,17 +308,52 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open:
     };
 
     const handleTextSubmit = async () => {
-        if (!text) return;
+        const textContent = `
+# Company Information
+## Basic Company Information
+- Company Name: ${textData.companyName}
+- Industry / Domain: ${textData.industry}
+- Headquarters / Main Location: ${textData.location}
+- Official Website: ${textData.website}
+- Description: ${textData.companyDescription}
+
+## Products / Services
+- Main Products/Services: ${textData.products}
+- Features/Benefits: ${textData.productFeatures}
+- Target Audience: ${textData.targetAudience}
+
+# Policies & Procedures
+- HR & Work Policies: ${textData.policies}
+- Code of Conduct: ${textData.codeOfConduct}
+- Data Privacy: ${textData.dataPrivacy}
+- SOPs: ${textData.sops}
+
+# Customer Support & Knowledge
+- FAQs: ${textData.faqs}
+- Common Issues: ${textData.commonIssues}
+- Internal Documents: ${textData.internalDocs}
+
+# Key Documents & Links
+- Product Manuals/Guides: ${textData.manuals}
+- Training Materials: ${textData.trainingMaterials}
+- Important URLs: ${textData.importantUrls}
+        `.trim();
+
+        if (textContent.length < 200) { // arbitrary length check
+             toast({ variant: 'destructive', title: 'Error', description: 'Please fill out more information to create a meaningful document.' });
+             return;
+        }
+
         setIsSubmitting(true);
         try {
             const response = await fetch(`${API_BASE_URL}/knowledge-base/text`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'xi-api-key': apiKey },
-                body: JSON.stringify({ text, name: textName || undefined }),
+                body: JSON.stringify({ text: textContent, name: textName || textData.companyName || 'Company Knowledge Base' }),
             });
             if (!response.ok) throw new Error(await response.text());
             const result = await response.json();
-            toast({ title: 'Text Added', description: `Document "${result.name}" (${result.id}) is being indexed.` });
+            toast({ title: 'Text Document Created', description: `Document "${result.name}" (${result.id}) is being indexed.` });
             onSuccess();
             handleOpenChange(false);
         } catch (error) {
@@ -331,16 +393,16 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open:
     
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogContent className="sm:max-w-lg">
+            <DialogContent className="sm:max-w-3xl">
                 <DialogHeader>
                     <DialogTitle>Add to Knowledge Base</DialogTitle>
-                    <DialogDescription>Add a new document by URL, text, or file upload.</DialogDescription>
+                    <DialogDescription>Add a new document by URL, text template, or file upload.</DialogDescription>
                 </DialogHeader>
                 
-                <Tabs defaultValue="url" className="pt-4">
+                <Tabs defaultValue="text" className="pt-4">
                     <TabsList className="grid w-full grid-cols-3">
                         <TabsTrigger value="url"><Link2 className="w-4 h-4 mr-2" />URL</TabsTrigger>
-                        <TabsTrigger value="text"><Type className="w-4 h-4 mr-2" />Text</TabsTrigger>
+                        <TabsTrigger value="text"><Type className="w-4 h-4 mr-2" />From Template</TabsTrigger>
                         <TabsTrigger value="file"><Upload className="w-4 h-4 mr-2" />File</TabsTrigger>
                     </TabsList>
                     <TabsContent value="url" className="pt-4 space-y-4">
@@ -358,18 +420,53 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open:
                             </Button>
                         </DialogFooter>
                     </TabsContent>
-                    <TabsContent value="text" className="pt-4 space-y-4">
-                         <div className="space-y-2">
-                            <Label htmlFor="text-name">Name (Optional)</Label>
-                            <Input id="text-name" placeholder="My Notes" value={textName} onChange={e => setTextName(e.target.value)} />
+                    <TabsContent value="text" className="pt-4">
+                         <div className="space-y-2 mb-6">
+                            <Label htmlFor="text-name">Document Name</Label>
+                            <Input id="text-name" placeholder="e.g., Acme Inc. Knowledge Base" value={textName} onChange={e => setTextName(e.target.value)} />
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="text-content">Text Content</Label>
-                            <Textarea id="text-content" placeholder="Paste your content here." className="h-32" value={text} onChange={e => setText(e.target.value)} required />
-                        </div>
-                        <DialogFooter>
-                            <Button onClick={handleTextSubmit} disabled={isSubmitting || !text}>
-                                {isSubmitting ? 'Adding...' : 'Add Text'}
+                         <ScrollArea className="h-[50vh] pr-6">
+                            <div className="space-y-6">
+                                <fieldset className="space-y-4 p-4 border rounded-lg">
+                                    <legend className="text-lg font-semibold px-2">Basic Company Information</legend>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2"><Label htmlFor="companyName">Company Name</Label><Input id="companyName" value={textData.companyName} onChange={handleTextDataChange}/></div>
+                                        <div className="space-y-2"><Label htmlFor="industry">Industry / Domain</Label><Input id="industry" value={textData.industry} onChange={handleTextDataChange} /></div>
+                                        <div className="space-y-2"><Label htmlFor="location">Headquarters / Main Location</Label><Input id="location" value={textData.location} onChange={handleTextDataChange} /></div>
+                                        <div className="space-y-2"><Label htmlFor="website">Official Website Link</Label><Input id="website" type="url" value={textData.website} onChange={handleTextDataChange} /></div>
+                                    </div>
+                                    <div className="space-y-2"><Label htmlFor="companyDescription">Short Description (what the company does)</Label><Textarea id="companyDescription" value={textData.companyDescription} onChange={handleTextDataChange} /></div>
+                                </fieldset>
+                                <fieldset className="space-y-4 p-4 border rounded-lg">
+                                    <legend className="text-lg font-semibold px-2">Products / Services</legend>
+                                    <div className="space-y-2"><Label htmlFor="products">List of main products or services</Label><Textarea id="products" value={textData.products} onChange={handleTextDataChange} /></div>
+                                    <div className="space-y-2"><Label htmlFor="productFeatures">Short description of each (1–2 lines), key features, or benefits</Label><Textarea id="productFeatures" value={textData.productFeatures} onChange={handleTextDataChange} /></div>
+                                    <div className="spacey-2"><Label htmlFor="targetAudience">Target users/customers</Label><Textarea id="targetAudience" value={textData.targetAudience} onChange={handleTextDataChange} /></div>
+                                </fieldset>
+                                 <fieldset className="space-y-4 p-4 border rounded-lg">
+                                    <legend className="text-lg font-semibold px-2">Policies & Procedures</legend>
+                                    <div className="space-y-2"><Label htmlFor="policies">HR & work policies (leave, attendance, WFH, etc.)</Label><Textarea id="policies" value={textData.policies} onChange={handleTextDataChange} /></div>
+                                    <div className="space-y-2"><Label htmlFor="codeOfConduct">Code of conduct / basic company rules</Label><Textarea id="codeOfConduct" value={textData.codeOfConduct} onChange={handleTextDataChange} /></div>
+                                    <div className="space-y-2"><Label htmlFor="dataPrivacy">Security or data privacy do’s and don’ts</Label><Textarea id="dataPrivacy" value={textData.dataPrivacy} onChange={handleTextDataChange} /></div>
+                                    <div className="space-y-2"><Label htmlFor="sops">Department-wise SOPs (if available)</Label><Textarea id="sops" value={textData.sops} onChange={handleTextDataChange} /></div>
+                                </fieldset>
+                                <fieldset className="space-y-4 p-4 border rounded-lg">
+                                    <legend className="text-lg font-semibold px-2">Customer Support & Knowledge</legend>
+                                    <div className="space-y-2"><Label htmlFor="faqs">Top FAQs customers usually ask</Label><Textarea id="faqs" value={textData.faqs} onChange={handleTextDataChange} /></div>
+                                    <div className="space-y-2"><Label htmlFor="commonIssues">Common issues and how to fix or answer them</Label><Textarea id="commonIssues" value={textData.commonIssues} onChange={handleTextDataChange} /></div>
+                                    <div className="space-y-2"><Label htmlFor="internalDocs">Any useful internal documents or help articles</Label><Textarea id="internalDocs" value={textData.internalDocs} onChange={handleTextDataChange} /></div>
+                                </fieldset>
+                                 <fieldset className="space-y-4 p-4 border rounded-lg">
+                                    <legend className="text-lg font-semibold px-2">Key Documents / Links</legend>
+                                    <div className="space-y-2"><Label htmlFor="manuals">Product manuals or guides</Label><Textarea id="manuals" value={textData.manuals} onChange={handleTextDataChange} /></div>
+                                    <div className="space-y-2"><Label htmlFor="trainingMaterials">Internal or training materials</Label><Textarea id="trainingMaterials" value={textData.trainingMaterials} onChange={handleTextDataChange} /></div>
+                                    <div className="space-y-2"><Label htmlFor="importantUrls">Important URLs (company website, support page, etc.)</Label><Textarea id="importantUrls" value={textData.importantUrls} onChange={handleTextDataChange} /></div>
+                                </fieldset>
+                            </div>
+                         </ScrollArea>
+                        <DialogFooter className="pt-6">
+                            <Button onClick={handleTextSubmit} disabled={isSubmitting}>
+                                {isSubmitting ? 'Creating...' : 'Create Document'}
                             </Button>
                         </DialogFooter>
                     </TabsContent>
@@ -393,4 +490,4 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open:
         </Dialog>
     )
 }
-
+    

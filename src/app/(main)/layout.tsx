@@ -94,7 +94,7 @@ export default function MainLayout({
                       key={item.label}
                       href={item.href}
                       className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                        pathname === item.href
+                        pathname.startsWith(item.href) && item.href !== '/system'
                           ? 'bg-blue-50 text-blue-600'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
