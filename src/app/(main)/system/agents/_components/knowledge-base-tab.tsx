@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { API_BASE_URL } from '@/lib/config';
 import { useToast } from "@/hooks/use-toast";
 import { EditDocumentDialog } from './edit-document-dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
 interface Document {
@@ -221,9 +222,6 @@ export function KnowledgeBaseTab() {
 
 
 function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open: boolean, onOpenChange: (open: boolean) => void, onSuccess: () => void, apiKey: string }) {
-    type Step = 'selectType' | 'provideUrl' | 'provideText' | 'provideFile';
-    const [step, setStep] = useState<Step>('selectType');
-
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
     
@@ -239,7 +237,6 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open:
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const resetState = () => {
-        setStep('selectType');
         setUrl(''); setUrlName('');
         setText(''); setTextName('');
         setFile(null); setFileName('');
@@ -322,120 +319,68 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open:
             setIsSubmitting(false);
         }
     };
-
-    const renderContent = () => {
-        switch (step) {
-            case 'selectType':
-                return (
-                    <>
-                        <DialogHeader>
-                            <DialogTitle>Add to Knowledge Base</DialogTitle>
-                            <DialogDescription>How would you like to add a new document?</DialogDescription>
-                        </DialogHeader>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
-                            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => setStep('provideUrl')}>
-                                <Link2 className="w-6 h-6" /> From URL
-                            </Button>
-                             <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => setStep('provideText')}>
-                                <Type className="w-6 h-6" /> From Text
-                            </Button>
-                             <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => setStep('provideFile')}>
-                                <Upload className="w-6 h-6" /> Upload File
-                            </Button>
+    
+    return (
+        <Dialog open={open} onOpenChange={handleOpenChange}>
+            <DialogContent className="sm:max-w-lg">
+                <DialogHeader>
+                    <DialogTitle>Add to Knowledge Base</DialogTitle>
+                    <DialogDescription>Add a new document by URL, text, or file upload.</DialogDescription>
+                </DialogHeader>
+                
+                <Tabs defaultValue="url" className="pt-4">
+                    <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="url"><Link2 className="w-4 h-4 mr-2" />URL</TabsTrigger>
+                        <TabsTrigger value="text"><Type className="w-4 h-4 mr-2" />Text</TabsTrigger>
+                        <TabsTrigger value="file"><Upload className="w-4 h-4 mr-2" />File</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="url" className="pt-4 space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="url-name">Name (Optional)</Label>
+                            <Input id="url-name" placeholder="My Document Name" value={urlName} onChange={e => setUrlName(e.target.value)} />
                         </div>
-                    </>
-                );
-            case 'provideUrl':
-                 return (
-                    <>
-                        <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setStep('selectType')}><ArrowLeft className="w-4 h-4" /></Button>
-                                Import from URL
-                            </DialogTitle>
-                            <DialogDescription>Enter a URL to a website to add its content to the knowledge base.</DialogDescription>
-                        </DialogHeader>
-                        <div className="py-4 space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="url-name">Name (Optional)</Label>
-                                <Input id="url-name" placeholder="My Document Name" value={urlName} onChange={e => setUrlName(e.target.value)} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="url">Website URL</Label>
-                                <Input id="url" type="url" placeholder="https://example.com/faq" value={url} onChange={e => setUrl(e.target.value)} required />
-                            </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="url">Website URL</Label>
+                            <Input id="url" type="url" placeholder="https://example.com/faq" value={url} onChange={e => setUrl(e.target.value)} required />
                         </div>
-                         <DialogFooter>
+                        <DialogFooter>
                             <Button onClick={handleUrlSubmit} disabled={isSubmitting || !url}>
                                 {isSubmitting ? 'Importing...' : 'Import from URL'}
                             </Button>
                         </DialogFooter>
-                    </>
-                );
-            case 'provideText':
-                return (
-                    <>
-                        <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setStep('selectType')}><ArrowLeft className="w-4 h-4" /></Button>
-                                Add from Text
-                            </DialogTitle>
-                             <DialogDescription>Paste in content to add it to the knowledge base.</DialogDescription>
-                        </DialogHeader>
-                        <div className="pt-4 space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="text-name">Name (Optional)</Label>
-                                <Input id="text-name" placeholder="My Notes" value={textName} onChange={e => setTextName(e.target.value)} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="text-content">Text Content</Label>
-                                <Textarea id="text-content" placeholder="Paste your content here." className="h-32" value={text} onChange={e => setText(e.target.value)} required />
-                            </div>
+                    </TabsContent>
+                    <TabsContent value="text" className="pt-4 space-y-4">
+                         <div className="space-y-2">
+                            <Label htmlFor="text-name">Name (Optional)</Label>
+                            <Input id="text-name" placeholder="My Notes" value={textName} onChange={e => setTextName(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="text-content">Text Content</Label>
+                            <Textarea id="text-content" placeholder="Paste your content here." className="h-32" value={text} onChange={e => setText(e.target.value)} required />
                         </div>
                         <DialogFooter>
                             <Button onClick={handleTextSubmit} disabled={isSubmitting || !text}>
                                 {isSubmitting ? 'Adding...' : 'Add Text'}
                             </Button>
                         </DialogFooter>
-                    </>
-                );
-            case 'provideFile':
-                 return (
-                    <>
-                        <DialogHeader>
-                             <DialogTitle className="flex items-center gap-2">
-                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setStep('selectType')}><ArrowLeft className="w-4 h-4" /></Button>
-                                Upload a File
-                            </DialogTitle>
-                             <DialogDescription>Select a file from your computer to upload.</DialogDescription>
-                        </DialogHeader>
-                        <div className="pt-4 space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="file-name">Name (Optional)</Label>
-                                <Input id="file-name" placeholder="Annual Report" value={fileName} onChange={e => setFileName(e.target.value)} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="file-upload">File</Label>
-                                <Input id="file-upload" type="file" ref={fileInputRef} onChange={e => setFile(e.target.files?.[0] || null)} required />
-                            </div>
+                    </TabsContent>
+                    <TabsContent value="file" className="pt-4 space-y-4">
+                         <div className="space-y-2">
+                            <Label htmlFor="file-name">Name (Optional)</Label>
+                            <Input id="file-name" placeholder="Annual Report" value={fileName} onChange={e => setFileName(e.target.value)} />
                         </div>
-                         <DialogFooter>
+                        <div className="space-y-2">
+                            <Label htmlFor="file-upload">File</Label>
+                            <Input id="file-upload" type="file" ref={fileInputRef} onChange={e => setFile(e.target.files?.[0] || null)} required />
+                        </div>
+                        <DialogFooter>
                             <Button onClick={handleFileSubmit} disabled={isSubmitting || !file}>
                                 {isSubmitting ? 'Uploading...' : 'Upload File'}
                             </Button>
                         </DialogFooter>
-                    </>
-                );
-        }
-    }
-    
-    return (
-        <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogContent className="sm:max-w-md">
-               {renderContent()}
+                    </TabsContent>
+                </Tabs>
             </DialogContent>
         </Dialog>
     )
 }
-
-    
