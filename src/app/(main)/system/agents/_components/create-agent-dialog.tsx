@@ -43,7 +43,7 @@ export function CreateAgentDialog({ open, onOpenChange, agent, onSuccess }: Crea
 
         const agentData = { name, description, type };
         const url = agent 
-            ? `${API_BASE_URL}/agents/${agent.id}`
+            ? `${API_BASE_URL}/agents/${agent.agent_id}`
             : `${API_BASE_URL}/agents`;
         const method = agent ? 'PATCH' : 'POST';
 
@@ -61,7 +61,7 @@ export function CreateAgentDialog({ open, onOpenChange, agent, onSuccess }: Crea
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.detail || `Failed to ${agent ? 'update' : 'create'} agent.`);
+                throw new Error(errorData.detail || `Failed to ${agent ? 'update' : 'create'} voice agent.`);
             }
             
             toast({

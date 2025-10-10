@@ -11,12 +11,12 @@ import { CreateAgentDialog } from './create-agent-dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 export interface Agent {
-    id: string;
+    agent_id: string;
     name: string;
     type: 'ai' | 'human';
     status: 'available' | 'busy' | 'offline';
     description?: string;
-    createdAt?: string;
+    created_at?: string;
 }
 
 export function AgentsTab() {
@@ -29,37 +29,35 @@ export function AgentsTab() {
     const [isEditOpen, setEditOpen] = useState(false);
     const [isDeleteOpen, setDeleteOpen] = useState(false);
     const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+    
+    const apiKey = 'ec4e64c2b17bf057a451949c080adb9274676fd0eb166aa17b346de61bde70e3';
 
     const fetchAgents = async () => {
         setLoading(true);
         setError(null);
         try {
-            // MOCKING API call due to fetch errors.
-            // const response = await fetch(`${API_BASE_URL}/agents`);
-            // if (!response.ok) throw new Error('Failed to fetch agents.');
-            // const data = await response.json();
+            const response = await fetch(`${API_BASE_URL}/agents`, {
+                headers: {
+                    'xi-api-key': apiKey,
+                }
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to fetch agents: ${response.status} ${errorText}`);
+            }
+            const data = await response.json();
             
-            // Assuming API returns an array of agents, but the user example shows a different structure
-            // Let's use a mock structure that matches the UI for now.
-             const staticAgents: Agent[] = [
-                ...Array.from({ length: 8 }, (_, i) => ({
-                    id: `ai-agent-${i + 1}`,
-                    name: `AI Voice Agent ${i + 1}`,
-                    type: 'ai' as const,
-                    description: 'ElevenLabs voice agent for customer interaction.',
-                    status: ['available', 'busy', 'offline'][i % 3] as any,
-                    createdAt: new Date(Date.now() - (i * 86400000 * 2)).toISOString()
-                })),
-                ...Array.from({ length: 4 }, (_, i) => ({
-                    id: `human-agent-${i + 1}`,
-                    name: ['John Doe', 'Jane Smith', 'Peter Jones', 'Mary Williams'][i],
-                    type: 'human' as const,
-                    description: 'Senior support specialist for escalations.',
-                    status: ['available', 'busy', 'offline'][i % 3] as any,
-                    createdAt: new Date(Date.now() - (i * 86400000 * 5)).toISOString()
-                }))
-            ];
-            setAgents(staticAgents);
+            // The API returns an object with an 'agents' property which is an array
+            if (data && Array.isArray(data.agents)) {
+                 setAgents(data.agents.map((agent: any) => ({
+                    ...agent,
+                    // Mocking status and type as they are not in the API response
+                    status: ['available', 'busy', 'offline'][Math.floor(Math.random() * 3)] as any,
+                    type: 'ai',
+                 })));
+            } else {
+                 setAgents([]);
+            }
 
         } catch (err) {
             setError('Failed to fetch agents. Please try again later.');
@@ -79,7 +77,7 @@ export function AgentsTab() {
     
     const handleDelete = async () => {
         if (!selectedAgent) return;
-        setAgents(prev => prev.filter(a => a.id !== selectedAgent.id));
+        setAgents(prev => prev.filter(a => a.agent_id !== selectedAgent.agent_id));
         toast({ title: "Success", description: "Voice agent deleted successfully." });
         setDeleteOpen(false);
         setSelectedAgent(null);
@@ -111,7 +109,7 @@ export function AgentsTab() {
         return (
             <div className="space-y-4">
                 {filteredAgents.map(agent => (
-                    <div key={agent.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex items-center justify-between hover:border-blue-400 transition-colors">
+                    <div key={agent.agent_id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex items-center justify-between hover:border-blue-400 transition-colors">
                         <div className="flex items-center gap-4">
                             <div className={`w-12 h-12 rounded-full flex items-center justify-center ${agent.type === 'ai' ? 'bg-purple-100' : 'bg-blue-100'}`}>
                                 {agent.type === 'ai' ? <Bot className="w-6 h-6 text-purple-600" /> : <User className="w-6 h-6 text-blue-600" />}
@@ -120,7 +118,7 @@ export function AgentsTab() {
                                 <p className="font-bold text-gray-900">{agent.name}</p>
                                 <p className="text-sm text-gray-500">{agent.description || 'No description available.'}</p>
                                 <p className="text-xs text-gray-400 mt-1">
-                                    Created: {agent.createdAt ? new Date(agent.createdAt).toLocaleDateString() : 'N/A'}
+                                    Created: {agent.created_at ? new Date(agent.created_at).toLocaleDateString() : 'N/A'}
                                 </p>
                             </div>
                         </div>
@@ -143,7 +141,7 @@ export function AgentsTab() {
                                         <Edit className="mr-2 h-4 w-4" />
                                         <span>Edit</span>
                                     </DropdownMenuItem>
-                                     <DropdownMenuItem onClick={() => handleDuplicate(agent.id)}>
+                                     <DropdownMenuItem onClick={() => handleDuplicate(agent.agent_id)}>
                                         <Copy className="mr-2 h-4 w-4" />
                                         <span>Duplicate</span>
                                     </DropdownMenuItem>
@@ -203,7 +201,7 @@ export function AgentsTab() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the agent
+                            This action cannot be undone. This will permanently delete the voice agent
                              "{selectedAgent?.name}".
                         </AlertDialogDescription>
                     </AlertDialogHeader>
