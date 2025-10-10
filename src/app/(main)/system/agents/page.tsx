@@ -1,6 +1,6 @@
 
 'use client';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Bot, Book, Phone, Settings, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,17 +13,22 @@ import { WorkspaceSettingsTab } from './_components/workspace-settings-tab';
 export default function AgentsPage() {
     const [isCreateAgentOpen, setCreateAgentOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('agents');
+    
+    // We use a ref to store a function that can imperatively trigger a refresh
+    const refreshAgentsRef = useRef<() => void | null>(null);
 
     const handleSuccess = () => {
         // This could be used to refresh data across tabs if needed
-        console.log("Operation successful");
+        if (activeTab === 'agents' && refreshAgentsRef.current) {
+            refreshAgentsRef.current();
+        }
     };
 
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Agent & Knowledge Hub</h1>
+                    <h1 className="text-3xl font-bold text-gray-900">ElevenLabs Agent & Knowledge Hub</h1>
                     <p className="text-gray-500 mt-1">Manage voice agents, knowledge bases, and system configurations for ElevenLabs.</p>
                 </div>
                 {activeTab === 'agents' && (
@@ -55,7 +60,7 @@ export default function AgentsPage() {
                 </TabsList>
                 
                 <TabsContent value="agents">
-                    <AgentsTab />
+                    <AgentsTab onAgentCreated={handleSuccess} />
                 </TabsContent>
                 <TabsContent value="knowledge-base">
                     <KnowledgeBaseTab />

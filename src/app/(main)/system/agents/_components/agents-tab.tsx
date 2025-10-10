@@ -19,7 +19,7 @@ export interface Agent {
     created_at?: string;
 }
 
-export function AgentsTab() {
+export function AgentsTab({ onAgentCreated }: { onAgentCreated: () => void }) {
     const [agents, setAgents] = useState<Agent[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
