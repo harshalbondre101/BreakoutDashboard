@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, MoreVertical, Edit, Trash2, FileText, Globe, Type, Upload, PlusCircle, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -188,7 +188,7 @@ export function KnowledgeBaseTab() {
             </div>
             {renderDocumentList()}
 
-            <CreateDocumentDialog open={isCreateOpen} onOpenChange={setCreateOpen} onSuccess={fetchDocuments} />
+            <CreateDocumentDialog open={isCreateOpen} onOpenChange={setCreateOpen} onSuccess={fetchDocuments} apiKey={apiKey} />
 
             {selectedDoc && (
                 <EditDocumentDialog 
@@ -221,31 +221,91 @@ export function KnowledgeBaseTab() {
 }
 
 
-function CreateDocumentDialog({ open, onOpenChange, onSuccess }: { open: boolean, onOpenChange: (open: boolean) => void, onSuccess: () => void }) {
+function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open: boolean, onOpenChange: (open: boolean) => void, onSuccess: () => void, apiKey: string }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
     
     const [url, setUrl] = useState('');
+    const [urlName, setUrlName] = useState('');
+    
     const [text, setText] = useState('');
+    const [textName, setTextName] = useState('');
+    
+    const [file, setFile] = useState<File | null>(null);
     const [fileName, setFileName] = useState('');
+    
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleSubmit = async (type: 'url' | 'text' | 'file', content: string | File) => {
+    const handleUrlSubmit = async () => {
+        if (!url) return;
         setIsSubmitting(true);
-        
-        // This is a placeholder for the actual API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
         try {
-             toast({
-                title: 'Document Added',
-                description: 'The document is now being processed and indexed.',
+            const response = await fetch(`${API_BASE_URL}/knowledge-base/url`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'xi-api-key': apiKey },
+                body: JSON.stringify({ url, name: urlName || undefined }),
             });
+            if (!response.ok) throw new Error(await response.text());
+            const result = await response.json();
+            toast({ title: 'URL Added', description: `Document "${result.name}" (${result.id}) is being indexed.` });
             onSuccess();
             onOpenChange(false);
-            setUrl(''); setText(''); setFileName('');
+            setUrl(''); setUrlName('');
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleTextSubmit = async () => {
+        if (!text) return;
+        setIsSubmitting(true);
+        try {
+            const response = await fetch(`${API_BASE_URL}/knowledge-base/text`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'xi-api-key': apiKey },
+                body: JSON.stringify({ text, name: textName || undefined }),
+            });
+            if (!response.ok) throw new Error(await response.text());
+            const result = await response.json();
+            toast({ title: 'Text Added', description: `Document "${result.name}" (${result.id}) is being indexed.` });
+            onSuccess();
+            onOpenChange(false);
+            setText(''); setTextName('');
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleFileSubmit = async () => {
+        if (!file) return;
+        setIsSubmitting(true);
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        if (fileName) {
+            formData.append('name', fileName);
+        }
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/knowledge-base/file`, {
+                method: 'POST',
+                headers: { 'xi-api-key': apiKey },
+                body: formData,
+            });
+            if (!response.ok) throw new Error(await response.text());
+            const result = await response.json();
+            toast({ title: 'File Uploaded', description: `Document "${result.name}" (${result.id}) is being indexed.` });
+            onSuccess();
+            onOpenChange(false);
+            setFile(null); setFileName('');
+            if(fileInputRef.current) fileInputRef.current.value = '';
 
         } catch (error) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not add the document.' });
+            toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
         } finally {
             setIsSubmitting(false);
         }
@@ -256,7 +316,7 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess }: { open: boolean
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Add to Knowledge Base</DialogTitle>
-                    <DialogDescription>Add new content for your agents to learn from.</DialogDescription>
+                    <DialogDescription>Add new content for your voice agents to learn from.</DialogDescription>
                 </DialogHeader>
                 <Tabs defaultValue="url" className="w-full">
                     <TabsList className="grid w-full grid-cols-3">
@@ -264,30 +324,42 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess }: { open: boolean
                         <TabsTrigger value="text"><Type className="mr-1 h-4 w-4"/>From Text</TabsTrigger>
                         <TabsTrigger value="file"><Upload className="mr-1 h-4 w-4"/>Upload File</TabsTrigger>
                     </TabsList>
-                    <TabsContent value="url" className="pt-4">
+                    <TabsContent value="url" className="pt-4 space-y-4">
+                         <div className="space-y-2">
+                            <Label htmlFor="url-name">Name (Optional)</Label>
+                            <Input id="url-name" placeholder="My Document Name" value={urlName} onChange={e => setUrlName(e.target.value)} />
+                        </div>
                          <div className="space-y-2">
                             <Label htmlFor="url">Website URL</Label>
-                            <Input id="url" type="url" placeholder="https://example.com/faq" value={url} onChange={e => setUrl(e.target.value)} />
+                            <Input id="url" type="url" placeholder="https://example.com/faq" value={url} onChange={e => setUrl(e.target.value)} required/>
                         </div>
-                        <Button className="mt-4 w-full" onClick={() => handleSubmit('url', url)} disabled={isSubmitting || !url}>
+                        <Button className="w-full" onClick={handleUrlSubmit} disabled={isSubmitting || !url}>
                             {isSubmitting ? 'Importing...' : 'Import from URL'}
                         </Button>
                     </TabsContent>
-                    <TabsContent value="text" className="pt-4">
+                    <TabsContent value="text" className="pt-4 space-y-4">
+                         <div className="space-y-2">
+                            <Label htmlFor="text-name">Name (Optional)</Label>
+                            <Input id="text-name" placeholder="My Notes" value={textName} onChange={e => setTextName(e.target.value)} />
+                        </div>
                         <div className="space-y-2">
                             <Label htmlFor="text-content">Text Content</Label>
-                            <Textarea id="text-content" placeholder="Paste your content here." className="h-32" value={text} onChange={e => setText(e.target.value)} />
+                            <Textarea id="text-content" placeholder="Paste your content here." className="h-32" value={text} onChange={e => setText(e.target.value)} required/>
                         </div>
-                         <Button className="mt-4 w-full" onClick={() => handleSubmit('text', text)} disabled={isSubmitting || !text}>
+                         <Button className="w-full" onClick={handleTextSubmit} disabled={isSubmitting || !text}>
                             {isSubmitting ? 'Adding...' : 'Add Text'}
                         </Button>
                     </TabsContent>
-                    <TabsContent value="file" className="pt-4">
+                    <TabsContent value="file" className="pt-4 space-y-4">
+                         <div className="space-y-2">
+                            <Label htmlFor="file-name">Name (Optional)</Label>
+                            <Input id="file-name" placeholder="Annual Report" value={fileName} onChange={e => setFileName(e.target.value)} />
+                        </div>
                          <div className="space-y-2">
                             <Label htmlFor="file-upload">File</Label>
-                            <Input id="file-upload" type="file" onChange={e => setFileName(e.target.files?.[0]?.name || '')} />
+                            <Input id="file-upload" type="file" ref={fileInputRef} onChange={e => setFile(e.target.files?.[0] || null)} required/>
                         </div>
-                         <Button className="mt-4 w-full" onClick={() => handleSubmit('file', new File([], 'mock'))} disabled={isSubmitting || !fileName}>
+                         <Button className="w-full" onClick={handleFileSubmit} disabled={isSubmitting || !file}>
                             {isSubmitting ? 'Uploading...' : 'Upload File'}
                         </Button>
                     </TabsContent>
