@@ -47,18 +47,8 @@ export function CreateAgentDialog({ open, onOpenChange, agent, onSuccess }: Crea
             : `${API_BASE_URL}/agents`;
         const method = agent ? 'PATCH' : 'POST';
 
-        // TODO: Replace with a secure way to get the API key, e.g., from a context or a hook
-        const apiKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY;
-        if (!apiKey) {
-             toast({
-                variant: 'destructive',
-                title: 'API Key Missing',
-                description: 'The ElevenLabs API key is not configured.',
-            });
-            setIsSubmitting(false);
-            return;
-        }
-
+        const apiKey = 'ec4e64c2b17bf057a451949c080adb9274676fd0eb166aa17b346de61bde70e3';
+        
         try {
             const response = await fetch(url, {
                 method: method,
