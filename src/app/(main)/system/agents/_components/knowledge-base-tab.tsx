@@ -1,13 +1,12 @@
 
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { Search, MoreVertical, Edit, Trash2, FileText, Globe, Type, Upload, PlusCircle, Link2 } from 'lucide-react';
+import { Search, MoreVertical, Edit, Trash2, FileText, Globe, Type, Upload, PlusCircle, Link2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { API_BASE_URL } from '@/lib/config';
@@ -222,6 +221,9 @@ export function KnowledgeBaseTab() {
 
 
 function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open: boolean, onOpenChange: (open: boolean) => void, onSuccess: () => void, apiKey: string }) {
+    type Step = 'selectType' | 'provideUrl' | 'provideText' | 'provideFile';
+    const [step, setStep] = useState<Step>('selectType');
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
     
@@ -236,6 +238,21 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open:
     
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const resetState = () => {
+        setStep('selectType');
+        setUrl(''); setUrlName('');
+        setText(''); setTextName('');
+        setFile(null); setFileName('');
+        if(fileInputRef.current) fileInputRef.current.value = '';
+    }
+
+    const handleOpenChange = (isOpen: boolean) => {
+        if (!isOpen) {
+            resetState();
+        }
+        onOpenChange(isOpen);
+    }
+
     const handleUrlSubmit = async () => {
         if (!url) return;
         setIsSubmitting(true);
@@ -249,8 +266,7 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open:
             const result = await response.json();
             toast({ title: 'URL Added', description: `Document "${result.name}" (${result.id}) is being indexed.` });
             onSuccess();
-            onOpenChange(false);
-            setUrl(''); setUrlName('');
+            handleOpenChange(false);
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
         } finally {
@@ -271,8 +287,7 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open:
             const result = await response.json();
             toast({ title: 'Text Added', description: `Document "${result.name}" (${result.id}) is being indexed.` });
             onSuccess();
-            onOpenChange(false);
-            setText(''); setTextName('');
+            handleOpenChange(false);
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
         } finally {
@@ -300,71 +315,127 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open:
             const result = await response.json();
             toast({ title: 'File Uploaded', description: `Document "${result.name}" (${result.id}) is being indexed.` });
             onSuccess();
-            onOpenChange(false);
-            setFile(null); setFileName('');
-            if(fileInputRef.current) fileInputRef.current.value = '';
-
+            handleOpenChange(false);
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
         } finally {
             setIsSubmitting(false);
         }
     };
+
+    const renderContent = () => {
+        switch (step) {
+            case 'selectType':
+                return (
+                    <>
+                        <DialogHeader>
+                            <DialogTitle>Add to Knowledge Base</DialogTitle>
+                            <DialogDescription>How would you like to add a new document?</DialogDescription>
+                        </DialogHeader>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
+                            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => setStep('provideUrl')}>
+                                <Link2 className="w-6 h-6" /> From URL
+                            </Button>
+                             <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => setStep('provideText')}>
+                                <Type className="w-6 h-6" /> From Text
+                            </Button>
+                             <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => setStep('provideFile')}>
+                                <Upload className="w-6 h-6" /> Upload File
+                            </Button>
+                        </div>
+                    </>
+                );
+            case 'provideUrl':
+                 return (
+                    <>
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setStep('selectType')}><ArrowLeft className="w-4 h-4" /></Button>
+                                Import from URL
+                            </DialogTitle>
+                            <DialogDescription>Enter a URL to a website to add its content to the knowledge base.</DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4 space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="url-name">Name (Optional)</Label>
+                                <Input id="url-name" placeholder="My Document Name" value={urlName} onChange={e => setUrlName(e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="url">Website URL</Label>
+                                <Input id="url" type="url" placeholder="https://example.com/faq" value={url} onChange={e => setUrl(e.target.value)} required />
+                            </div>
+                        </div>
+                         <DialogFooter>
+                            <Button onClick={handleUrlSubmit} disabled={isSubmitting || !url}>
+                                {isSubmitting ? 'Importing...' : 'Import from URL'}
+                            </Button>
+                        </DialogFooter>
+                    </>
+                );
+            case 'provideText':
+                return (
+                    <>
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setStep('selectType')}><ArrowLeft className="w-4 h-4" /></Button>
+                                Add from Text
+                            </DialogTitle>
+                             <DialogDescription>Paste in content to add it to the knowledge base.</DialogDescription>
+                        </DialogHeader>
+                        <div className="pt-4 space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="text-name">Name (Optional)</Label>
+                                <Input id="text-name" placeholder="My Notes" value={textName} onChange={e => setTextName(e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="text-content">Text Content</Label>
+                                <Textarea id="text-content" placeholder="Paste your content here." className="h-32" value={text} onChange={e => setText(e.target.value)} required />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button onClick={handleTextSubmit} disabled={isSubmitting || !text}>
+                                {isSubmitting ? 'Adding...' : 'Add Text'}
+                            </Button>
+                        </DialogFooter>
+                    </>
+                );
+            case 'provideFile':
+                 return (
+                    <>
+                        <DialogHeader>
+                             <DialogTitle className="flex items-center gap-2">
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setStep('selectType')}><ArrowLeft className="w-4 h-4" /></Button>
+                                Upload a File
+                            </DialogTitle>
+                             <DialogDescription>Select a file from your computer to upload.</DialogDescription>
+                        </DialogHeader>
+                        <div className="pt-4 space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="file-name">Name (Optional)</Label>
+                                <Input id="file-name" placeholder="Annual Report" value={fileName} onChange={e => setFileName(e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="file-upload">File</Label>
+                                <Input id="file-upload" type="file" ref={fileInputRef} onChange={e => setFile(e.target.files?.[0] || null)} required />
+                            </div>
+                        </div>
+                         <DialogFooter>
+                            <Button onClick={handleFileSubmit} disabled={isSubmitting || !file}>
+                                {isSubmitting ? 'Uploading...' : 'Upload File'}
+                            </Button>
+                        </DialogFooter>
+                    </>
+                );
+        }
+    }
     
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Add to Knowledge Base</DialogTitle>
-                    <DialogDescription>Add new content for your voice agents to learn from.</DialogDescription>
-                </DialogHeader>
-                <Tabs defaultValue="url" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="url"><Link2 className="mr-1 h-4 w-4"/>From URL</TabsTrigger>
-                        <TabsTrigger value="text"><Type className="mr-1 h-4 w-4"/>From Text</TabsTrigger>
-                        <TabsTrigger value="file"><Upload className="mr-1 h-4 w-4"/>Upload File</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="url" className="pt-4 space-y-4">
-                         <div className="space-y-2">
-                            <Label htmlFor="url-name">Name (Optional)</Label>
-                            <Input id="url-name" placeholder="My Document Name" value={urlName} onChange={e => setUrlName(e.target.value)} />
-                        </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="url">Website URL</Label>
-                            <Input id="url" type="url" placeholder="https://example.com/faq" value={url} onChange={e => setUrl(e.target.value)} required/>
-                        </div>
-                        <Button className="w-full" onClick={handleUrlSubmit} disabled={isSubmitting || !url}>
-                            {isSubmitting ? 'Importing...' : 'Import from URL'}
-                        </Button>
-                    </TabsContent>
-                    <TabsContent value="text" className="pt-4 space-y-4">
-                         <div className="space-y-2">
-                            <Label htmlFor="text-name">Name (Optional)</Label>
-                            <Input id="text-name" placeholder="My Notes" value={textName} onChange={e => setTextName(e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="text-content">Text Content</Label>
-                            <Textarea id="text-content" placeholder="Paste your content here." className="h-32" value={text} onChange={e => setText(e.target.value)} required/>
-                        </div>
-                         <Button className="w-full" onClick={handleTextSubmit} disabled={isSubmitting || !text}>
-                            {isSubmitting ? 'Adding...' : 'Add Text'}
-                        </Button>
-                    </TabsContent>
-                    <TabsContent value="file" className="pt-4 space-y-4">
-                         <div className="space-y-2">
-                            <Label htmlFor="file-name">Name (Optional)</Label>
-                            <Input id="file-name" placeholder="Annual Report" value={fileName} onChange={e => setFileName(e.target.value)} />
-                        </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="file-upload">File</Label>
-                            <Input id="file-upload" type="file" ref={fileInputRef} onChange={e => setFile(e.target.files?.[0] || null)} required/>
-                        </div>
-                         <Button className="w-full" onClick={handleFileSubmit} disabled={isSubmitting || !file}>
-                            {isSubmitting ? 'Uploading...' : 'Upload File'}
-                        </Button>
-                    </TabsContent>
-                </Tabs>
+               {renderContent()}
             </DialogContent>
         </Dialog>
     )
 }
+
+    
