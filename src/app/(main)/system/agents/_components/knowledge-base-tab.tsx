@@ -5,13 +5,15 @@ import { Search, MoreVertical, Edit, Trash2, FileText, Globe, Type, Upload, Plus
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { API_BASE_URL } from '@/lib/config';
 import { useToast } from "@/hooks/use-toast";
+import { EditDocumentDialog } from './edit-document-dialog';
+
 
 interface Document {
     id: string;
@@ -32,6 +34,7 @@ export function KnowledgeBaseTab() {
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [isCreateOpen, setCreateOpen] = useState(false);
+    const [isEditOpen, setEditOpen] = useState(false);
     const [isDeleteOpen, setDeleteOpen] = useState(false);
     const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
     const { toast } = useToast();
@@ -149,7 +152,10 @@ export function KnowledgeBaseTab() {
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DropdownMenuItem><Edit className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => { setSelectedDoc(doc); setEditOpen(true); }}>
+                                        <Edit className="mr-2 h-4 w-4" />
+                                        Edit
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem className="text-red-600" onClick={() => { setSelectedDoc(doc); setDeleteOpen(true); }}>
                                         <Trash2 className="mr-2 h-4 w-4" />
                                         Delete
@@ -183,6 +189,18 @@ export function KnowledgeBaseTab() {
             {renderDocumentList()}
 
             <CreateDocumentDialog open={isCreateOpen} onOpenChange={setCreateOpen} onSuccess={fetchDocuments} />
+
+            {selectedDoc && (
+                <EditDocumentDialog 
+                    open={isEditOpen} 
+                    onOpenChange={setEditOpen} 
+                    document={selectedDoc} 
+                    onSuccess={() => {
+                        setEditOpen(false);
+                        fetchDocuments();
+                    }} 
+                />
+            )}
             
             <AlertDialog open={isDeleteOpen} onOpenChange={setDeleteOpen}>
                 <AlertDialogContent>
@@ -278,5 +296,3 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess }: { open: boolean
         </Dialog>
     )
 }
-
-    
