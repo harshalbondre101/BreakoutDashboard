@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -31,6 +32,8 @@ export function KnowledgeBaseTab() {
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [isCreateOpen, setCreateOpen] = useState(false);
+    const [isDeleteOpen, setDeleteOpen] = useState(false);
+    const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
     const { toast } = useToast();
     const apiKey = 'ec4e64c2b17bf057a451949c080adb9274676fd0eb166aa17b346de61bde70e3';
 
@@ -60,6 +63,41 @@ export function KnowledgeBaseTab() {
     useEffect(() => {
         fetchDocuments();
     }, []);
+
+    const handleDelete = async () => {
+        if (!selectedDoc) return;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/knowledge-base/${selectedDoc.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'xi-api-key': apiKey,
+                },
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to delete document: ${response.status} ${errorText}`);
+            }
+
+            toast({
+                title: "Success",
+                description: "Document deleted successfully."
+            });
+            
+            fetchDocuments(); // Refresh the list
+        } catch (error) {
+             toast({
+                variant: 'destructive',
+                title: "Error",
+                description: (error as Error).message || 'Could not delete the document.'
+            });
+        } finally {
+            setDeleteOpen(false);
+            setSelectedDoc(null);
+        }
+    };
+
 
     const filteredDocuments = documents.filter(doc =>
         doc.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -112,7 +150,10 @@ export function KnowledgeBaseTab() {
                                 <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                     <DropdownMenuItem><Edit className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
-                                    <DropdownMenuItem className="text-red-600"><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem>
+                                    <DropdownMenuItem className="text-red-600" onClick={() => { setSelectedDoc(doc); setDeleteOpen(true); }}>
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Delete
+                                    </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
@@ -142,6 +183,21 @@ export function KnowledgeBaseTab() {
             {renderDocumentList()}
 
             <CreateDocumentDialog open={isCreateOpen} onOpenChange={setCreateOpen} onSuccess={fetchDocuments} />
+            
+            <AlertDialog open={isDeleteOpen} onOpenChange={setDeleteOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the document "{selectedDoc?.name}".
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
@@ -222,3 +278,5 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess }: { open: boolean
         </Dialog>
     )
 }
+
+    
