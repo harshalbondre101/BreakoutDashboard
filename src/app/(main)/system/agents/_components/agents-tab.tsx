@@ -47,7 +47,6 @@ export function AgentsTab({ onAgentCreated }: { onAgentCreated: () => void }) {
             }
             const data = await response.json();
             
-            // The API returns an object with an 'agents' property which is an array
             if (data && Array.isArray(data.agents)) {
                  setAgents(data.agents.map((agent: any) => ({
                     ...agent,
@@ -187,14 +186,16 @@ export function AgentsTab({ onAgentCreated }: { onAgentCreated: () => void }) {
             </div>
             {renderAgentList()}
 
-            {selectedAgent && (
-                <CreateAgentDialog
-                    open={isEditOpen}
-                    onOpenChange={setEditOpen}
-                    agent={selectedAgent}
-                    onSuccess={fetchAgents}
-                />
-            )}
+            <CreateAgentDialog
+                open={isEditOpen}
+                onOpenChange={setEditOpen}
+                agent={selectedAgent}
+                onSuccess={() => {
+                    setEditOpen(false);
+                    setSelectedAgent(null);
+                    fetchAgents();
+                }}
+            />
 
             <AlertDialog open={isDeleteOpen} onOpenChange={setDeleteOpen}>
                 <AlertDialogContent>

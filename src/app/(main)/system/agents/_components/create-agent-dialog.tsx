@@ -35,12 +35,15 @@ export function CreateAgentDialog({ open, onOpenChange, agent, onSuccess }: Crea
     const isEditMode = !!agent;
 
     useEffect(() => {
-        if (agent) {
+        if (agent && open) {
             setName(agent.name);
-            // These would be fetched from get agent details endpoint
-            // setFirstMessage(agent.first_message);
-            // setPrompt(agent.prompt);
-        } else {
+            // In a real app, you would fetch full agent details here via GET /agents/{id}
+            // For now, we'll use placeholder data or what's available.
+            // The list endpoint doesn't provide all config details.
+            setFirstMessage('Hello! I’m your updated AI assistant.');
+            setPrompt('You are an expert AI assistant focused on lead engagement.');
+        } else if (!agent) {
+             // Reset to default for creation
             setName('Demo Agent');
             setFirstMessage('Hello! I’m your new AI assistant.');
             setPrompt('You are a helpful AI assistant specialized in customer engagement and sales support.');
@@ -53,29 +56,61 @@ export function CreateAgentDialog({ open, onOpenChange, agent, onSuccess }: Crea
         e.preventDefault();
         setIsSubmitting(true);
 
-        const payload = {
-          "conversation_config": {
-            "agent": {
-              "name": name,
-              "language": language,
-              "first_message": firstMessage,
-              "disable_first_message_interruptions": interruptionsDisabled
-            },
-            "prompt": {
-              "prompt": prompt,
-              "temperature": temperature,
-              "max_tokens": 500,
-              "llm": llm
-            }
-          }
-        };
-
-        const url = isEditMode
-            ? `${API_BASE_URL}/agents/${agent.agent_id}`
-            : `${API_BASE_URL}/agents/create`;
-        const method = isEditMode ? 'PATCH' : 'POST';
-
         const apiKey = 'ec4e64c2b17bf057a451949c080adb9274676fd0eb166aa17b346de61bde70e3';
+        
+        let payload;
+        let url;
+        let method;
+
+        if (isEditMode) {
+            method = 'PATCH';
+            url = `${API_BASE_URL}/agents/${agent.agent_id}`;
+            payload = {
+              "name": name,
+              "conversation_config": {
+                "agent": {
+                  "language": language,
+                  "first_message": firstMessage,
+                  "disable_first_message_interruptions": interruptionsDisabled,
+                  "prompt": {
+                    "prompt": prompt,
+                    "temperature": temperature,
+                    "max_tokens": 600,
+                    "llm": llm
+                  }
+                },
+                "tts": {
+                  "model_id": "eleven_turbo_v2",
+                  "voice_id": "cjVigY5qzO86Huf0OWal",
+                  "speed": 1.0,
+                  "similarity_boost": 0.8
+                },
+                "conversation": {
+                  "text_only": false,
+                  "max_duration_seconds": 600
+                }
+              }
+            };
+        } else {
+            method = 'POST';
+            url = `${API_BASE_URL}/agents/create`;
+            payload = {
+              "conversation_config": {
+                "agent": {
+                  "name": name,
+                  "language": language,
+                  "first_message": firstMessage,
+                  "disable_first_message_interruptions": interruptionsDisabled
+                },
+                "prompt": {
+                  "prompt": prompt,
+                  "temperature": temperature,
+                  "max_tokens": 500,
+                  "llm": llm
+                }
+              }
+            };
+        }
         
         try {
             const response = await fetch(url, {
@@ -87,15 +122,20 @@ export function CreateAgentDialog({ open, onOpenChange, agent, onSuccess }: Crea
                 body: JSON.stringify(payload),
             });
 
-            const responseData = await response.json();
-
             if (!response.ok) {
+                const responseData = await response.json().catch(() => ({ detail: `HTTP Error: ${response.status}` }));
                 throw new Error(responseData.detail || `Failed to ${isEditMode ? 'update' : 'create'} voice agent.`);
             }
             
+            let successMessage = `Voice Agent ${name} has been ${isEditMode ? 'updated' : 'created'}.`;
+            if (!isEditMode) {
+                 const responseData = await response.json();
+                 successMessage += ` Agent ID: ${responseData.agent_id}`;
+            }
+
             toast({
                 title: 'Success!',
-                description: `Voice Agent ${name} has been ${isEditMode ? 'updated' : 'created'}. Agent ID: ${responseData.agent_id}`,
+                description: successMessage,
             });
 
             onSuccess?.();
@@ -154,6 +194,7 @@ export function CreateAgentDialog({ open, onOpenChange, agent, onSuccess }: Crea
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="gpt-4o">GPT-4o</SelectItem>
+                                        <SelectItem value="gpt-4o-mini">GPT-4o Mini</SelectItem>
                                         <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
                                         <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
                                     </SelectContent>
