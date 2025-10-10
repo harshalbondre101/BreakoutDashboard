@@ -1,7 +1,7 @@
 
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { Search, MoreVertical, Edit, Trash2, FileText, Globe, Type, Upload, PlusCircle, Link2, ArrowLeft } from 'lucide-react';
+import { Search, MoreVertical, Edit, Trash2, FileText, Globe, Type, Upload, PlusCircle, Link2, ArrowLeft, Cpu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -13,6 +13,7 @@ import { API_BASE_URL } from '@/lib/config';
 import { useToast } from "@/hooks/use-toast";
 import { EditDocumentDialog } from './edit-document-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ComputeRagIndexDialog } from './compute-rag-index-dialog';
 
 
 interface Document {
@@ -36,6 +37,7 @@ export function KnowledgeBaseTab() {
     const [isCreateOpen, setCreateOpen] = useState(false);
     const [isEditOpen, setEditOpen] = useState(false);
     const [isDeleteOpen, setDeleteOpen] = useState(false);
+    const [isRagIndexOpen, setRagIndexOpen] = useState(false);
     const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
     const { toast } = useToast();
     const apiKey = 'ec4e64c2b17bf057a451949c080adb9274676fd0eb166aa17b346de61bde70e3';
@@ -106,14 +108,6 @@ export function KnowledgeBaseTab() {
         doc.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const handleComputeIndex = () => {
-        toast({
-            title: "Processing RAG Index",
-            description: "Your knowledge base documents are being indexed. This may take a few minutes."
-        });
-        // In a real app, this would trigger an API call.
-    }
-
     const renderDocumentList = () => {
         if (loading) return <div className="text-center p-8">Loading documents...</div>;
         if (error) return <div className="text-center p-8 text-red-500">{error}</div>;
@@ -156,6 +150,10 @@ export function KnowledgeBaseTab() {
                                         <Edit className="mr-2 h-4 w-4" />
                                         Edit
                                     </DropdownMenuItem>
+                                     <DropdownMenuItem onClick={() => { setSelectedDoc(doc); setRagIndexOpen(true); }}>
+                                        <Cpu className="mr-2 h-4 w-4" />
+                                        Compute RAG Index
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem className="text-red-600" onClick={() => { setSelectedDoc(doc); setDeleteOpen(true); }}>
                                         <Trash2 className="mr-2 h-4 w-4" />
                                         Delete
@@ -183,7 +181,6 @@ export function KnowledgeBaseTab() {
                 </div>
                 <div className="flex gap-2">
                     <Button onClick={() => setCreateOpen(true)}><PlusCircle className="mr-2 h-4 w-4" /> Add Document</Button>
-                    <Button variant="outline" onClick={handleComputeIndex}>Compute RAG Index</Button>
                 </div>
             </div>
             {renderDocumentList()}
@@ -199,6 +196,18 @@ export function KnowledgeBaseTab() {
                         setEditOpen(false);
                         fetchDocuments();
                     }} 
+                />
+            )}
+             {selectedDoc && (
+                <ComputeRagIndexDialog
+                    open={isRagIndexOpen}
+                    onOpenChange={setRagIndexOpen}
+                    document={selectedDoc}
+                    apiKey={apiKey}
+                    onSuccess={() => {
+                        setRagIndexOpen(false);
+                        fetchDocuments();
+                    }}
                 />
             )}
             
@@ -384,3 +393,4 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open:
         </Dialog>
     )
 }
+
