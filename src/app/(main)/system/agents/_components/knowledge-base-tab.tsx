@@ -444,14 +444,14 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open:
                                     <div className="spacey-2"><Label htmlFor="targetAudience">Target users/customers</Label><Textarea id="targetAudience" value={textData.targetAudience} onChange={handleTextDataChange} /></div>
                                 </fieldset>
                                  <fieldset className="space-y-4 p-4 border rounded-lg">
-                                    <legend className="text-lg font-semibold px-2">Policies & Procedures</legend>
-                                    <div className="space-y-2"><Label htmlFor="policies">HR & work policies (leave, attendance, WFH, etc.)</Label><Textarea id="policies" value={textData.policies} onChange={handleTextDataChange} /></div>
+                                    <legend className="text-lg font-semibold px-2">Policies &amp; Procedures</legend>
+                                    <div className="space-y-2"><Label htmlFor="policies">HR &amp; work policies (leave, attendance, WFH, etc.)</Label><Textarea id="policies" value={textData.policies} onChange={handleTextDataChange} /></div>
                                     <div className="space-y-2"><Label htmlFor="codeOfConduct">Code of conduct / basic company rules</Label><Textarea id="codeOfConduct" value={textData.codeOfConduct} onChange={handleTextDataChange} /></div>
                                     <div className="space-y-2"><Label htmlFor="dataPrivacy">Security or data privacy do’s and don’ts</Label><Textarea id="dataPrivacy" value={textData.dataPrivacy} onChange={handleTextDataChange} /></div>
                                     <div className="space-y-2"><Label htmlFor="sops">Department-wise SOPs (if available)</Label><Textarea id="sops" value={textData.sops} onChange={handleTextDataChange} /></div>
                                 </fieldset>
                                 <fieldset className="space-y-4 p-4 border rounded-lg">
-                                    <legend className="text-lg font-semibold px-2">Customer Support & Knowledge</legend>
+                                    <legend className="text-lg font-semibold px-2">Customer Support &amp; Knowledge</legend>
                                     <div className="space-y-2"><Label htmlFor="faqs">Top FAQs customers usually ask</Label><Textarea id="faqs" value={textData.faqs} onChange={handleTextDataChange} /></div>
                                     <div className="space-y-2"><Label htmlFor="commonIssues">Common issues and how to fix or answer them</Label><Textarea id="commonIssues" value={textData.commonIssues} onChange={handleTextDataChange} /></div>
                                     <div className="space-y-2"><Label htmlFor="internalDocs">Any useful internal documents or help articles</Label><Textarea id="internalDocs" value={textData.internalDocs} onChange={handleTextDataChange} /></div>

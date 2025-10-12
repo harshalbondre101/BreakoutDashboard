@@ -64,7 +64,7 @@ export function WorkspaceSettingsTab() {
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                     <div>
-                        <CardTitle>Secrets & Keys</CardTitle>
+                        <CardTitle>Secrets &amp; Keys</CardTitle>
                         <p className="text-sm text-muted-foreground pt-1">Manage API keys and other secrets for your workspace.</p>
                     </div>
                     <Button variant="outline"><PlusCircle className="mr-2 h-4 w-4" /> Add Secret</Button>

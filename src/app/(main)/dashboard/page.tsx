@@ -32,7 +32,7 @@ const leaderboardData = [
 ];
 
 
-export default function EmployeeDashboardPage() {
+export default function DashboardPage() {
     const [time, setTime] = useState('');
 
     useEffect(() => {
