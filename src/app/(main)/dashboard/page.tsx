@@ -1,567 +1,154 @@
 
 'use client';
 import { useState, useEffect } from 'react';
-import { Phone, AlertTriangle } from 'lucide-react';
+import { IndianRupee, Phone, Trophy, User } from 'lucide-react';
 import { KPICard } from '@/components/kpi-card';
-import { KPIMetric, KpiApiResponse, Booking, ApiCall as Call, Alert } from '@/lib/types';
-import { IndianRupee } from 'lucide-react';
+import { Booking, ApiCall as Call, KPIMetric } from '@/lib/types';
 import { API_BASE_URL } from '@/lib/config';
 
-const formatDurationFromSeconds = (seconds: number) => {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, '0')} min`;
-};
+// Mock data for employee-specific view
+const employeeKpiData: KPIMetric[] = [
+  { id: 'my_csat', label: 'My CSAT', value: '92%', target: '>90%', trend: 'up', status: 'good', sparklineData: [88, 89, 91, 90, 92, 92, 91, 92] },
+  { id: 'my_fcr', label: 'My Resolution Rate', value: '85%', target: '>80%', trend: 'up', status: 'good', sparklineData: [80, 82, 81, 83, 84, 85, 85, 85] },
+  { id: 'my_calls', label: 'My Calls Today', value: '24', target: '20-30', trend: 'stable', status: 'good', sparklineData: [18, 20, 22, 21, 23, 24, 24, 24] },
+  { id: 'my_revenue', label: 'My Revenue', value: '₹1,52,000', target: '>₹1,20,000', trend: 'up', status: 'good', sparklineData: [110, 120, 135, 140, 145, 150, 155, 152].map(v => v * 1000) },
+];
 
-// Helper function to generate plausible sparkline data
-const generateSparklineData = (currentValue: number, points: number = 8) => {
-  const data = [currentValue];
-  for (let i = 1; i < points; i++) {
-    const fluctuation = (Math.random() - 0.5) * (currentValue * 0.2); // Fluctuate by up to 20%
-    const previousValue = data[0];
-    const newValue = Math.max(0, previousValue + fluctuation);
-    data.unshift(newValue);
-  }
-  return data;
-};
+const myActiveCallsData: Call[] = [
+    { Conv_ID: 'conv-e-1', Customer_ID: 201, Call_intent: 'New Booking Inquiry', Duration: 185, Date_time: new Date().toISOString(), Credits_consumed: 0.8, Transcript: '...' },
+    { Conv_ID: 'conv-e-2', Customer_ID: 202, Call_intent: 'Follow-up', Duration: 320, Date_time: new Date().toISOString(), Credits_consumed: 1.2, Transcript: '...' },
+];
 
-// Helper function to determine the trend
-const getTrend = (sparklineData: number[]): 'up' | 'down' | 'stable' => {
-  if (sparklineData.length < 2) return 'stable';
-  const last = sparklineData[sparklineData.length - 1];
-  const secondLast = sparklineData[sparklineData.length - 2];
-  if (last > secondLast) return 'up';
-  if (last < secondLast) return 'down';
-  return 'stable';
-};
+const myRecentBookingsData: Booking[] = [
+    { Booking_ID: 101, Customer_ID: 301, Slot_ID: 501, Payment_ID: 701, conv_id: 'conv-b-1', Booking_date: new Date(Date.now() - 3600000).toISOString(), guest_count: 50, Booking_status: 'confirmed' },
+    { Booking_ID: 102, Customer_ID: 302, Slot_ID: 502, Payment_ID: 702, conv_id: 'conv-b-2', Booking_date: new Date(Date.now() - 86400000).toISOString(), guest_count: 120, Booking_status: 'confirmed' },
+];
+
+const leaderboardData = [
+    { name: 'Your Rank', rank: 3, value: '₹1,52,000', isCurrentUser: true },
+    { name: 'Sarah J.', rank: 1, value: '₹1,98,000' },
+    { name: 'Michael B.', rank: 2, value: '₹1,75,000' },
+    { name: 'Jessica D.', rank: 4, value: '₹1,45,000' },
+];
 
 
-export default function DashboardPage() {
-  const [time, setTime] = useState('');
-  const [kpiMetrics, setKpiMetrics] = useState<KPIMetric[]>([]);
-  const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
-  const [activeCalls, setActiveCalls] = useState<Call[]>([]);
-  const [callVolume, setCallVolume] = useState<number[]>(Array(24).fill(0));
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  
-  const [kpiLoading, setKpiLoading] = useState(true);
-  const [bookingsLoading, setBookingsLoading] = useState(true);
-  const [callsLoading, setCallsLoading] = useState(true);
+export default function EmployeeDashboardPage() {
+    const [time, setTime] = useState('');
 
-  const [kpiError, setKpiError] = useState<string | null>(null);
-  const [bookingsError, setBookingsError] = useState<string | null>(null);
-  const [callsError, setCallsError] = useState<string | null>(null);
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setTime(new Date().toLocaleTimeString());
+        }, 1000);
+        return () => clearInterval(interval);
+    }, []);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTime(new Date().toLocaleTimeString());
-    }, 1000);
-
-    const fetchKpis = async () => {
-      setKpiLoading(true);
-      setKpiError(null);
-      try {
-        const response = await fetch(`${API_BASE_URL}/compute/kpis`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data: KpiApiResponse = await response.json();
-        const kpis = data.kpis;
-
-        const kpiConfig: { id: keyof typeof kpis; label: string; target: string; higherIsBetter: boolean, unit: 'percentage' | 'seconds' | 'number' | 'rating' }[] = [
-            { id: 'first_call_resolution_pct', label: 'First Call Resolution', target: '>90%', higherIsBetter: true, unit: 'percentage' },
-            { id: 'avg_call_duration_sec', label: 'Avg Call Duration', target: '<5 min', higherIsBetter: false, unit: 'seconds' },
-            { id: 'call_abandon_rate_pct', label: 'Call Abandon Rate', target: '<5%', higherIsBetter: false, unit: 'percentage' },
-            { id: 'customer_satisfaction_avg_rating', label: 'Customer Satisfaction', target: '>4.5', higherIsBetter: true, unit: 'rating' },
-            { id: 'missed_calls', label: 'Missed Calls', target: '0', higherIsBetter: false, unit: 'number' },
-            { id: 'customer_conversion_rate_pct', label: 'Customer Conversion Rate', target: '>10%', higherIsBetter: true, unit: 'percentage' },
-            { id: 'overall_quality_score', label: 'Overall Quality Score', target: '>85', higherIsBetter: true, unit: 'number' },
-            { id: 'positive_sentiment_rate_pct', label: 'Positive Sentiment Rate', target: '>80%', higherIsBetter: true, unit: 'percentage' },
-        ];
-        
-        const mappedKpis: KPIMetric[] = kpiConfig.map(config => {
-            const value = kpis[config.id];
-            const sparklineData = generateSparklineData(value);
-            const trend = getTrend(sparklineData);
-
-            let displayValue: string;
-            let status: 'good' | 'warning' | 'critical';
-
-            const targetValue = parseFloat(config.target.replace(/[^\d.-]/g, ''));
-
-            switch (config.unit) {
-                case 'percentage':
-                    displayValue = `${value.toFixed(1)}%`;
-                    status = config.higherIsBetter 
-                        ? (value >= targetValue ? 'good' : 'warning') 
-                        : (value <= targetValue ? 'good' : 'warning');
-                    break;
-                case 'seconds':
-                    displayValue = formatDurationFromSeconds(value);
-                     status = config.higherIsBetter 
-                        ? (value >= targetValue * 60 ? 'good' : 'warning') 
-                        : (value <= targetValue * 60 ? 'good' : 'warning');
-                    break;
-                case 'rating':
-                    displayValue = `${value.toFixed(1)}/5`;
-                    status = value >= targetValue ? 'good' : 'warning';
-                    break;
-                default: // number
-                    displayValue = value.toString();
-                    status = config.higherIsBetter
-                      ? (value >= targetValue ? 'good' : 'warning')
-                      : (value <= targetValue ? 'good' : (value > 0 ? 'warning' : 'critical'));
-                    if (config.id === 'missed_calls' && value > 0) status = 'critical';
-
-            }
-
-            return {
-                id: config.id,
-                label: config.label,
-                value: displayValue,
-                target: config.target,
-                trend: trend,
-                status: status,
-                sparklineData: sparklineData,
-            };
-        });
-
-        setKpiMetrics(mappedKpis);
-
-        // Generate dynamic alerts
-        const newAlerts: Alert[] = [];
-        if (kpis.missed_calls > 0) {
-            newAlerts.push({
-                id: 'alert-missed-calls',
-                type: 'critical',
-                title: 'Missed Calls Detected',
-                message: `${kpis.missed_calls} call(s) were missed. Review agent availability.`,
-                timestamp: new Date(),
-                read: false,
-            });
-        }
-        if (kpis.call_abandon_rate_pct > 5) {
-            newAlerts.push({
-                id: 'alert-abandon-rate',
-                type: 'warning',
-                title: 'High Abandonment Rate',
-                message: `Call abandonment is at ${kpis.call_abandon_rate_pct.toFixed(1)}%, exceeding the 5% target.`,
-                timestamp: new Date(),
-                read: false,
-            });
-        }
-        if (kpis.first_call_resolution_pct < 90) {
-             newAlerts.push({
-                id: 'alert-fcr',
-                type: 'warning',
-                title: 'Low First Call Resolution',
-                message: `FCR is at ${kpis.first_call_resolution_pct.toFixed(1)}%, below the 90% target.`,
-                timestamp: new Date(),
-                read: false,
-            });
-        }
-         if (newAlerts.length === 0) {
-            newAlerts.push({
-                id: 'alert-all-good',
-                type: 'info',
-                title: 'System Nominal',
-                message: 'All key performance indicators are within their target ranges.',
-                timestamp: new Date(),
-                read: true,
-            });
-        }
-        setAlerts(newAlerts);
-
-      } catch (err) {
-        if (err instanceof Error) {
-          setKpiError(err.message);
-        } else {
-          setKpiError('An unexpected error occurred');
-        }
-      } finally {
-        setKpiLoading(false);
-      }
-    };
-    
-    const fetchBookings = async () => {
-      setBookingsLoading(true);
-      setBookingsError(null);
-      try {
-        const response = await fetch(`${API_BASE_URL}/bookings/`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data: Booking[] = await response.json();
-        setRecentBookings(data);
-      } catch (err) {
-        if (err instanceof Error) {
-          setBookingsError(err.message);
-        } else {
-          setBookingsError('An unexpected error occurred');
-        }
-      } finally {
-        setBookingsLoading(false);
-      }
-    };
-    
-    const fetchCalls = async () => {
-      setCallsLoading(true);
-      setCallsError(null);
-      try {
-        const response = await fetch(`${API_BASE_URL}/calls/`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data: Call[] = await response.json();
-        setActiveCalls(data.slice(-5));
-        
-        const now = new Date();
-        const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        const hourlyCounts = Array(24).fill(0);
-
-        data.forEach(call => {
-          const callDate = new Date(call.Date_time);
-          if (callDate >= twentyFourHoursAgo) {
-            const hour = callDate.getHours();
-            hourlyCounts[hour]++;
-          }
-        });
-
-        setCallVolume(hourlyCounts);
-      } catch (err) {
-        if (err instanceof Error) {
-          setCallsError(err.message);
-        } else {
-          setCallsError('An unexpected error occurred');
-        }
-      } finally {
-        setCallsLoading(false);
-      }
+    const formatDuration = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
-
-    fetchKpis();
-    fetchBookings();
-    fetchCalls();
-    
-    return () => clearInterval(interval);
-  }, []);
-
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'confirmed': case 'paid': return 'bg-emerald-100 text-emerald-800';
-      case 'pending': return 'bg-amber-100 text-amber-800';
-      case 'failed': case 'cancelled': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const queueWaitTime = '3.2 min';
-  const activeCallsCount = activeCalls.length;
-  const availableAgents = 18;
-  const missedCalls = kpiMetrics.find(k => k.id === 'missed_calls')?.value || 0;
-
-  const renderKpiGrid = () => {
-    if (kpiLoading) {
-      return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <div key={index} className="p-4 bg-white rounded-lg shadow-sm h-32 animate-pulse" />
-          ))}
-        </div>
-      );
-    }
-
-    if (kpiError) {
-      return (
-        <div className="col-span-full bg-red-50 text-red-700 p-4 rounded-lg text-center">
-          <p>Failed to load KPI data.</p>
-          <p className="text-sm">{kpiError}</p>
-        </div>
-      );
-    }
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'confirmed': return 'bg-emerald-100 text-emerald-800';
+            default: return 'bg-gray-100 text-gray-800';
+        }
+    };
     
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpiMetrics.map((metric) => (
-          <KPICard key={metric.id} metric={metric} />
-        ))}
-      </div>
-    );
-  }
-
-  const renderRecentBookings = () => {
-    if (bookingsLoading) {
-      return (
-        <div className="space-y-3 max-h-96 overflow-y-auto">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="p-3 border border-gray-200 rounded-lg h-24 animate-pulse bg-gray-50" />
-          ))}
-        </div>
-      );
-    }
-
-    if (bookingsError) {
-      return (
-        <div className="max-h-96 flex items-center justify-center bg-gray-50 rounded-lg">
-          <div className="text-red-500 text-center">
-            <p>Failed to load bookings.</p>
-            <p className="text-sm">{bookingsError}</p>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-3 max-h-96 overflow-y-auto">
-        {recentBookings.slice(0, 10).map((booking) => (
-          <div key={booking.Booking_ID} className="p-3 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors cursor-pointer">
-            <div className="flex justify-between items-start mb-2">
-              <p className="font-semibold text-gray-900 text-sm">Booking #{booking.Booking_ID}</p>
-              <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(booking.Booking_status)}`}>
-                {booking.Booking_status}
-              </span>
-            </div>
-            <p className="text-xs text-gray-600">Customer ID: {booking.Customer_ID}</p>
-            <div className="flex justify-between items-center mt-2">
-              <p className="text-sm font-bold text-gray-800">Guests: {booking.guest_count}</p>
-              <p className="text-xs text-gray-500">{new Date(booking.Booking_date).toLocaleString()}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
-  
-  const renderActiveCalls = () => {
-    if (callsLoading) {
-      return (
-        <div className="space-y-3 max-h-96 overflow-y-auto">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="p-4 bg-gray-50 rounded-lg h-24 animate-pulse" />
-          ))}
-        </div>
-      );
-    }
-
-    if (callsError) {
-      return (
-        <div className="max-h-96 flex items-center justify-center bg-gray-50 rounded-lg">
-          <div className="text-red-500 text-center">
-            <p>Failed to load active calls.</p>
-            <p className="text-sm">{callsError}</p>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-       <div className="space-y-3 max-h-96 overflow-y-auto">
-        {activeCalls.map((call) => (
-          <div key={call.Conv_ID} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-            <div className="flex-1">
-              <div className="flex items-center gap-3">
-                <div className={`px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800`}>
-                  {call.Call_intent}
-                </div>
-                <p className="font-semibold text-gray-900">Conv: {call.Conv_ID}</p>
-              </div>
-              <p className="text-sm text-gray-600 mt-1">Customer: {call.Customer_ID}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-lg font-bold text-gray-900">{formatDuration(call.Duration)}</p>
-              <p className={`text-xs font-medium mt-1 text-emerald-600`}>
-                ACTIVE
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-    const renderAlerts = () => {
-    if (kpiLoading) {
-      return (
-        <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="p-3 rounded-lg h-20 animate-pulse bg-gray-50" />
-          ))}
-        </div>
-      );
-    }
-    
-    return (
-        <div className="space-y-3">
-            {alerts.map((alert) => (
-                <div
-                key={alert.id}
-                className={`p-3 rounded-lg border-l-4 ${
-                    alert.type === 'critical' ? 'bg-red-50 border-red-500' :
-                    alert.type === 'warning' ? 'bg-amber-50 border-amber-500' :
-                    'bg-blue-50 border-blue-500'
-                }`}
-                >
-                <div className="flex justify-between items-start mb-1">
-                    <p className="font-semibold text-gray-900 text-sm">{alert.title}</p>
-                    {!alert.read && (
-                    <div className="w-2 h-2 bg-blue-600 rounded-full" />
-                    )}
-                </div>
-                <p className="text-xs text-gray-600">{alert.message}</p>
-                <p className="text-xs text-gray-500 mt-2">
-                    {new Date(alert.timestamp).toLocaleTimeString()}
-                </p>
-                </div>
-            ))}
-            </div>
-    );
-  };
-
-
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Command Center</h1>
-          <p className="text-gray-500 mt-1">Real-time operational overview</p>
-        </div>
-        <div className="flex gap-3">
-          <div className="px-4 py-2 bg-emerald-100 text-emerald-800 rounded-lg font-medium">
-            System Online
-          </div>
-          <div className="px-4 py-2 bg-white border border-gray-200 rounded-lg">
-            {time}
-          </div>
-        </div>
-      </div>
-
-      {renderKpiGrid()}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <Phone className="w-6 h-6 text-blue-600" />
-                Active Calls
-              </h2>
-              <div className="flex gap-4">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-gray-900">{activeCallsCount}</p>
-                  <p className="text-xs text-gray-500">Active</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-gray-900">{queueWaitTime}</p>
-                  <p className="text-xs text-gray-500">Avg Wait</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-gray-900">{availableAgents}</p>
-                  <p className="text-xs text-gray-500">Available</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-red-600">{missedCalls}</p>
-                  <p className="text-xs text-gray-500">Missed</p>
-                </div>
-              </div>
-            </div>
-            {renderActiveCalls()}
-          </div>
-
-          <div className="grid grid-cols-2 gap-6">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                Call Volume (24h)
-              </h3>
-              <div className="h-48 flex items-end justify-between gap-1">
-                {callVolume.map((count, i) => {
-                  const maxCount = Math.max(...callVolume);
-                  const height = maxCount > 0 ? (count / maxCount) * 100 : 0;
-                  const current = new Date().getHours() === i;
-                  return (
-                    <div key={i} className="flex-1 flex flex-col items-center">
-                      <div
-                        className={`w-full ${current ? 'bg-blue-600' : 'bg-blue-300'} rounded-t transition-all hover:bg-blue-500`}
-                        style={{ height: `${height}%` }}
-                      />
-                      {i % 4 === 0 && (
-                        <p className="text-xs text-gray-500 mt-1">{i}h</p>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Sentiment Distribution</h3>
-              <div className="flex items-center justify-center h-48">
-                <div className="relative w-40 h-40">
-                  <svg viewBox="0 0 100 100" className="transform -rotate-90">
-                    <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" strokeWidth="20" />
-                    <circle
-                      cx="50" cy="50" r="40" fill="none" stroke="#10b981" strokeWidth="20"
-                      strokeDasharray="251.2"
-                      strokeDashoffset={251.2 * (1 - 0.68)}
-                    />
-                    <circle
-                      cx="50" cy="50" r="40" fill="none" stroke="#6b7280" strokeWidth="20"
-                      strokeDasharray="251.2"
-                      strokeDashoffset={251.2 * (1 - 0.68 - 0.22)}
-                      style={{ transform: 'rotate(245deg)', transformOrigin: '50% 50%' }}
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <p className="text-3xl font-bold text-gray-900">68%</p>
-                    <p className="text-xs text-gray-500">Positive</p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-around mt-4">
-                <div className="text-center">
-                  <div className="w-3 h-3 bg-emerald-500 rounded-full mx-auto mb-1" />
-                  <p className="text-sm font-medium">68%</p>
-                  <p className="text-xs text-gray-500">Positive</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-3 h-3 bg-gray-500 rounded-full mx-auto mb-1" />
-                  <p className="text-sm font-medium">22%</p>
-                  <p className="text-xs text-gray-500">Neutral</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-3 h-3 bg-red-500 rounded-full mx-auto mb-1" />
-                  <p className="text-sm font-medium">10%</p>
-                  <p className="text-xs text-gray-500">Negative</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <IndianRupee className="w-6 h-6 text-emerald-600" />
-              Recent Bookings
-            </h2>
-            {renderRecentBookings()}
-          </div>
+            <div className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900">Welcome, Alex!</h1>
+                    <p className="text-gray-500 mt-1">Here's your performance snapshot for today.</p>
+                </div>
+                <div className="px-4 py-2 bg-white border border-gray-200 rounded-lg">
+                    {time}
+                </div>
+            </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <AlertTriangle className="w-6 h-6 text-amber-600" />
-              System Alerts
-            </h2>
-            {renderAlerts()}
-          </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {employeeKpiData.map((metric) => (
+                    <KPICard key={metric.id} metric={metric} />
+                ))}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-6">
+                    <div className="bg-white rounded-lg shadow-sm p-6">
+                        <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-4">
+                            <Phone className="w-6 h-6 text-blue-600" />
+                            My Active Calls
+                        </h2>
+                        <div className="space-y-3">
+                            {myActiveCallsData.map((call) => (
+                                <div key={call.Conv_ID} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-3">
+                                            <div className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                {call.Call_intent}
+                                            </div>
+                                            <p className="font-semibold text-gray-900">Conv: {call.Conv_ID}</p>
+                                        </div>
+                                        <p className="text-sm text-gray-600 mt-1">Customer: {call.Customer_ID}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-lg font-bold text-gray-900">{formatDuration(call.Duration)}</p>
+                                        <p className="text-xs font-medium mt-1 text-emerald-600">ACTIVE</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-lg shadow-sm p-6">
+                        <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-4">
+                            <IndianRupee className="w-6 h-6 text-emerald-600" />
+                            My Recent Bookings
+                        </h2>
+                         <div className="space-y-3">
+                            {myRecentBookingsData.map((booking) => (
+                            <div key={booking.Booking_ID} className="p-3 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors cursor-pointer">
+                                <div className="flex justify-between items-start mb-2">
+                                <p className="font-semibold text-gray-900 text-sm">Booking #{booking.Booking_ID}</p>
+                                <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(booking.Booking_status)}`}>
+                                    {booking.Booking_status}
+                                </span>
+                                </div>
+                                <p className="text-xs text-gray-600">Customer ID: {booking.Customer_ID}</p>
+                                <div className="flex justify-between items-center mt-2">
+                                <p className="text-sm font-bold text-gray-800">Guests: {booking.guest_count}</p>
+                                <p className="text-xs text-gray-500">{new Date(booking.Booking_date).toLocaleTimeString()}</p>
+                                </div>
+                            </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-4">
+                        <Trophy className="w-6 h-6 text-amber-500" />
+                        Team Leaderboard
+                    </h2>
+                    <div className="space-y-3">
+                        {leaderboardData.map((item) => (
+                            <div key={item.rank} className={`p-3 rounded-lg flex items-center justify-between ${item.isCurrentUser ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50'}`}>
+                                <div className="flex items-center gap-3">
+                                    <span className={`w-8 h-8 flex items-center justify-center rounded-full font-bold ${item.rank <= 3 ? 'bg-amber-400 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                                        {item.rank}
+                                    </span>
+                                    <div>
+                                        <p className={`font-semibold ${item.isCurrentUser ? 'text-blue-900' : 'text-gray-900'}`}>{item.name}</p>
+                                    </div>
+                                </div>
+                                <span className="font-bold text-gray-800">{item.value}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
         </div>
-      </div>
-    </div>
-  );
+    );
 }

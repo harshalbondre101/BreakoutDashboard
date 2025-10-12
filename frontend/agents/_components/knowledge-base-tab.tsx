@@ -490,5 +490,4 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open:
         </Dialog>
     )
 }
-
     
