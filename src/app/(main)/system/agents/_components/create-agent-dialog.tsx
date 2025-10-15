@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { API_BASE_URL } from '@/lib/config';
+import { XI_BASE_URL } from '@/lib/config';
 import type { Agent } from './agents-tab';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
@@ -64,7 +64,7 @@ export function CreateAgentDialog({ open, onOpenChange, agent, onSuccess }: Crea
 
         if (isEditMode) {
             method = 'PATCH';
-            url = `${API_BASE_URL}/agents/${agent.agent_id}`;
+            url = `${XI_BASE_URL}/agents/${agent.agent_id}`;
             payload = {
               "name": name,
               "conversation_config": {
@@ -93,7 +93,7 @@ export function CreateAgentDialog({ open, onOpenChange, agent, onSuccess }: Crea
             };
         } else {
             method = 'POST';
-            url = `${API_BASE_URL}/agents/create`;
+            url = `${XI_BASE_URL}/agents/create`;
             payload = {
               "conversation_config": {
                 "agent": {

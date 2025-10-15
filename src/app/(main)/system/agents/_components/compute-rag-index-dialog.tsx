@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { API_BASE_URL } from '@/lib/config';
+import { XI_BASE_URL } from '@/lib/config';
 
 interface Document {
     id: string;
@@ -29,7 +29,7 @@ export function ComputeRagIndexDialog({ open, onOpenChange, document, apiKey, on
     const handleSubmit = async () => {
         setIsSubmitting(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/knowledge-base/${document.id}/rag-index`, {
+            const response = await fetch(`${XI_BASE_URL}/knowledge-base/${document.id}/rag-index`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

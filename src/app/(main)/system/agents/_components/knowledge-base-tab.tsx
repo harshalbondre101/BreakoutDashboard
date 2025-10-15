@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { API_BASE_URL } from '@/lib/config';
+import { XI_BASE_URL } from '@/lib/config';
 import { useToast } from "@/hooks/use-toast";
 import { EditDocumentDialog } from './edit-document-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -47,7 +47,7 @@ export function KnowledgeBaseTab() {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_BASE_URL}/knowledge-base`, {
+            const response = await fetch(`${XI_BASE_URL}/knowledge-base`, {
                 headers: {
                     'xi-api-key': apiKey,
                 }
@@ -74,7 +74,7 @@ export function KnowledgeBaseTab() {
         if (!selectedDoc) return;
 
         try {
-            const response = await fetch(`${API_BASE_URL}/knowledge-base/${selectedDoc.id}`, {
+            const response = await fetch(`${XI_BASE_URL}/knowledge-base/${selectedDoc.id}`, {
                 method: 'DELETE',
                 headers: {
                     'xi-api-key': apiKey,
@@ -290,7 +290,7 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open:
         if (!url) return;
         setIsSubmitting(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/knowledge-base/url`, {
+            const response = await fetch(`${XI_BASE_URL}/knowledge-base/url`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'xi-api-key': apiKey },
                 body: JSON.stringify({ url, name: urlName || undefined }),
@@ -346,7 +346,7 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open:
 
         setIsSubmitting(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/knowledge-base/text`, {
+            const response = await fetch(`${XI_BASE_URL}/knowledge-base/text`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'xi-api-key': apiKey },
                 body: JSON.stringify({ text: textContent, name: textName || textData.companyName || 'Company Knowledge Base' }),
@@ -374,7 +374,7 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open:
         }
         
         try {
-            const response = await fetch(`${API_BASE_URL}/knowledge-base/file`, {
+            const response = await fetch(`${XI_BASE_URL}/knowledge-base/file`, {
                 method: 'POST',
                 headers: { 'xi-api-key': apiKey },
                 body: formData,

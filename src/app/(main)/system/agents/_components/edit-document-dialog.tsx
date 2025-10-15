@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { API_BASE_URL } from '@/lib/config';
+import { XI_BASE_URL } from '@/lib/config';
 
 interface Document {
     id: string;
@@ -36,7 +36,7 @@ export function EditDocumentDialog({ open, onOpenChange, document, onSuccess }: 
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/knowledge-base/${document.id}`, {
+            const response = await fetch(`${XI_BASE_URL}/knowledge-base/${document.id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',

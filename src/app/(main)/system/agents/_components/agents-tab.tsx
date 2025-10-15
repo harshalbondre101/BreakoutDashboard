@@ -5,7 +5,7 @@ import { Search, MoreVertical, Edit, Copy, Trash2, Bot, User, Share2, FlaskConic
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { API_BASE_URL } from '@/lib/config';
+import { XI_BASE_URL } from '@/lib/config';
 import { useToast } from "@/hooks/use-toast";
 import { CreateAgentDialog } from './create-agent-dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -36,7 +36,7 @@ export function AgentsTab({ onAgentCreated }: { onAgentCreated: () => void }) {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_BASE_URL}/agents`, {
+            const response = await fetch(`${XI_BASE_URL}/agents`, {
                 headers: {
                     'xi-api-key': apiKey,
                 }
