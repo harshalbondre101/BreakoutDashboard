@@ -24,7 +24,7 @@ const transformCustomerGrowth = (data: any) => data.dates.map((date: string, ind
 const transformCustomerSegments = (data: any) => data.regions.map((region: string, index: number) => ({ region, count: data.counts[index] }));
 const transformRevenueSummary = (data: any) => data.dates.map((date: string, index: number) => ({ date, revenue: data.revenue[index], refunds: data.refunds[index] }));
 const transformPaymentsStatus = (data: any) => Object.entries(data).map(([name, value]) => ({ name, value: value as number }));
-const transformCallSentiment = (data: any) => data.sentiments.map((sentiment: string, index: number) => ({ name: sentiment, value: data.counts[index] }));
+const transformCallSentiment = (data: any) => Object.entries(data).map(([name, value]) => ({ name, value: value as number }));
 
 export const useAnalyticsData = () => {
   const [data, setData] = useState<Record<string, any[]>>({});
