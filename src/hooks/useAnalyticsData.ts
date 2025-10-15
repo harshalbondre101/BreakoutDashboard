@@ -4,15 +4,15 @@ import { useState, useEffect } from 'react';
 import { API_BASE_URL } from '@/lib/config';
 
 const chartsConfig = [
-  { id: 'calls-trend', title: 'Calls Trend (Last 7 Days)', chartType: 'line', endpoint: 'calls-trend' },
-  { id: 'bookings-revenue', title: 'Bookings & Revenue Trend', chartType: 'bar-line', endpoint: 'bookings-trend' },
-  { id: 'lead-funnel', title: 'Lead Conversion Funnel', chartType: 'funnel', endpoint: 'lead-funnel' },
-  { id: 'lead-sources', title: 'Lead Source Effectiveness', chartType: 'pie', endpoint: 'lead-sources' },
-  { id: 'customer-growth', title: 'Customer Growth Over Time', chartType: 'area', endpoint: 'customer-growth' },
-  { id: 'customer-segments', title: 'Customer Segments by Location', chartType: 'horizontal-bar', endpoint: 'customer-segments' },
-  { id: 'revenue-summary', title: 'Revenue vs Refunds', chartType: 'dual-bar', endpoint: 'revenue-summary' },
-  { id: 'payments-status', title: 'Payments Status Breakdown', chartType: 'donut', endpoint: 'payments-status' },
-  { id: 'call-sentiment', title: 'Call Sentiment Distribution', chartType: 'call-sentiment', endpoint: 'sentiment-summary' },
+  { id: 'calls-trend', title: 'Calls Trend (Last 7 Days)', chartType: 'line', endpoint: '/calls-trend' },
+  { id: 'bookings-revenue', title: 'Bookings & Revenue Trend', chartType: 'bar-line', endpoint: '/bookings-trend' },
+  { id: 'lead-funnel', title: 'Lead Conversion Funnel', chartType: 'funnel', endpoint: '/lead-funnel' },
+  { id: 'lead-sources', title: 'Lead Source Effectiveness', chartType: 'pie', endpoint: '/lead-sources' },
+  { id: 'customer-growth', title: 'Customer Growth Over Time', chartType: 'area', endpoint: '/customer-growth' },
+  { id: 'customer-segments', title: 'Customer Segments by Location', chartType: 'horizontal-bar', endpoint: '/customer-segments' },
+  { id: 'revenue-summary', title: 'Revenue vs Refunds', chartType: 'dual-bar', endpoint: '/revenue-summary' },
+  { id: 'payments-status', title: 'Payments Status Breakdown', chartType: 'donut', endpoint: '/payments-status' },
+  { id: 'call-sentiment', title: 'Call Sentiment Distribution', chartType: 'call-sentiment', endpoint: '/sentiment-summary' },
 ];
 
 // Data transformation functions
