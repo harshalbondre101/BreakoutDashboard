@@ -23,7 +23,7 @@ const transformLeadSources = (data: any) => data.sources.map((source: string, in
 const transformCustomerGrowth = (data: any) => data.dates.map((date: string, index: number) => ({ date, total_customers: data.total[index] }));
 const transformCustomerSegments = (data: any) => data.regions.map((region: string, index: number) => ({ region, count: data.counts[index] }));
 const transformRevenueSummary = (data: any) => data.dates.map((date: string, index: number) => ({ date, revenue: data.revenue[index], refunds: data.refunds[index] }));
-const transformPaymentsStatus = (data: any) => data.status.map((status: string, index: number) => ({ name: status, value: data.counts[index] }));
+const transformPaymentsStatus = (data: any) => Object.entries(data).map(([name, value]) => ({ name, value: value as number }));
 const transformCallSentiment = (data: any) => data.sentiments.map((sentiment: string, index: number) => ({ name: sentiment, value: data.counts[index] }));
 
 export const useAnalyticsData = () => {
