@@ -4,23 +4,23 @@ import { useState, useEffect } from 'react';
 import { API_BASE_URL } from '@/lib/config';
 
 const chartsConfig = [
-  { id: 'calls-trend', title: 'Calls Trend (Last 7 Days)', chartType: 'line', endpoint: '/api/dashboard/calls-trend' },
-  { id: 'bookings-revenue', title: 'Bookings & Revenue Trend', chartType: 'bar-line', endpoint: '/api/dashboard/bookings-trend' },
-  { id: 'lead-funnel', title: 'Lead Conversion Funnel', chartType: 'funnel', endpoint: '/api/dashboard/lead-funnel' },
-  { id: 'lead-sources', title: 'Lead Source Effectiveness', chartType: 'pie', endpoint: '/api/dashboard/lead-sources' },
-  { id: 'customer-growth', title: 'Customer Growth Over Time', chartType: 'area', endpoint: '/api/dashboard/customer-growth' },
-  { id: 'customer-segments', title: 'Customer Segments by Location', chartType: 'horizontal-bar', endpoint: '/api/dashboard/customer-segments' },
-  { id: 'revenue-summary', title: 'Revenue vs Refunds', chartType: 'dual-bar', endpoint: '/api/dashboard/revenue-summary' },
-  { id: 'payments-status', title: 'Payments Status Breakdown', chartType: 'donut', endpoint: '/api/dashboard/payments-status' },
-  { id: 'call-sentiment', title: 'Call Sentiment Distribution', chartType: 'call-sentiment', endpoint: '/api/dashboard/sentiment-summary' },
+  { id: 'calls-trend', title: 'Calls Trend (Last 7 Days)', chartType: 'line', endpoint: 'calls-trend' },
+  { id: 'bookings-revenue', title: 'Bookings & Revenue Trend', chartType: 'bar-line', endpoint: 'bookings-trend' },
+  { id: 'lead-funnel', title: 'Lead Conversion Funnel', chartType: 'funnel', endpoint: 'lead-funnel' },
+  { id: 'lead-sources', title: 'Lead Source Effectiveness', chartType: 'pie', endpoint: 'lead-sources' },
+  { id: 'customer-growth', title: 'Customer Growth Over Time', chartType: 'area', endpoint: 'customer-growth' },
+  { id: 'customer-segments', title: 'Customer Segments by Location', chartType: 'horizontal-bar', endpoint: 'customer-segments' },
+  { id: 'revenue-summary', title: 'Revenue vs Refunds', chartType: 'dual-bar', endpoint: 'revenue-summary' },
+  { id: 'payments-status', title: 'Payments Status Breakdown', chartType: 'donut', endpoint: 'payments-status' },
+  { id: 'call-sentiment', title: 'Call Sentiment Distribution', chartType: 'call-sentiment', endpoint: 'sentiment-summary' },
 ];
 
 // Data transformation functions
 const transformCallsTrend = (data: any) => data.dates.map((date: string, index: number) => ({ date, total_calls: data.calls[index] }));
 const transformBookingsRevenue = (data: any) => data.dates.map((date: string, index: number) => ({ date, bookings: data.bookings[index], revenue: data.revenue[index] }));
 const transformLeadFunnel = (data: any) => data.stages.map((stage: string, index: number) => ({ stage, count: data.counts[index] }));
-const transformLeadSources = (data: any) => data.sources.map((source: string, index: number) => ({ name: source, value: data.counts[index] }));
-const transformCustomerGrowth = (data: any) => data.dates.map((date: string, index: number) => ({ date, total_customers: data.customers[index] }));
+const transformLeadSources = (data: any) => data.sources.map((source: string, index: number) => ({ name: source, value: data.conversions[index] }));
+const transformCustomerGrowth = (data: any) => data.dates.map((date: string, index: number) => ({ date, total_customers: data.total[index] }));
 const transformCustomerSegments = (data: any) => data.regions.map((region: string, index: number) => ({ region, count: data.counts[index] }));
 const transformRevenueSummary = (data: any) => data.dates.map((date: string, index: number) => ({ date, revenue: data.revenue[index], refunds: data.refunds[index] }));
 const transformPaymentsStatus = (data: any) => data.status.map((status: string, index: number) => ({ name: status, value: data.counts[index] }));
