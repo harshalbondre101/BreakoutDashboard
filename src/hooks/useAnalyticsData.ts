@@ -1,7 +1,7 @@
 
 'use client';
 import { useState, useEffect } from 'react';
-import { API_BASE_URL } from '@/lib/config';
+import { API_CHARTS_BASE_URL } from '@/lib/config';
 
 const chartsConfig = [
   { id: 'calls-trend', title: 'Calls Trend (Last 7 Days)', chartType: 'line', endpoint: '/calls-trend' },
@@ -36,7 +36,7 @@ export const useAnalyticsData = () => {
       setLoading(prev => ({ ...prev, [id]: true }));
       setError(prev => ({ ...prev, [id]: null }));
       try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`);
+        const response = await fetch(`${API_CHARTS_BASE_URL}${endpoint}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }

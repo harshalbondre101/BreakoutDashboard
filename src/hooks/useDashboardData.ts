@@ -189,12 +189,9 @@ export const useDashboardData = () => {
       setBookingsLoading(true);
       setBookingsError(null);
       try {
-        console.log("Fetching from:", `${API_BASE_URL}/bookings/?skip=0&limit=100`);
         const response = await fetch(`${API_BASE_URL}/bookings/?skip=0&limit=100`);
-        console.log("Response status:", response.status);
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         const data: Booking[] = await response.json();
-        console.log("Fetched data:", data);
         setRecentBookings(data);
       } catch (err) {
         if (err instanceof Error) {
