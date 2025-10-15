@@ -28,6 +28,33 @@ type ChartCardProps = {
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28CFE', '#FF6F91'];
 
+const renderFunnel = (data: any[]) => {
+  const total = data.reduce((sum, item) => sum + item.count, 0);
+  return (
+    <div className="w-full flex flex-col items-center gap-1">
+      {data.map((item, index) => {
+        const percentage = total > 0 ? (item.count / data[0].count) * 100 : 0;
+        return (
+          <div key={item.stage} className="flex flex-col items-center">
+            <div
+              className="bg-blue-500 text-white text-center py-2 transition-all duration-300"
+              style={{
+                width: `${Math.max(percentage, 10)}%`,
+                clipPath: index === data.length - 1 
+                  ? 'polygon(0 0, 100% 0, 100% 100%, 0 100%)' 
+                  : 'polygon(0 0, 100% 0, 85% 100%, 15% 100%)',
+              }}
+            >
+              <div className="text-sm font-semibold">{item.stage}</div>
+              <div className="text-xs">{item.count}</div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export const ChartCard: React.FC<ChartCardProps> = ({
   title,
   chartType,
@@ -55,7 +82,7 @@ export const ChartCard: React.FC<ChartCardProps> = ({
     );
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-6 flex flex-col">
+    <div className="bg-white rounded-xl shadow-md p-6 flex flex-col h-full">
       <h3 className="text-lg font-semibold mb-4 text-gray-800">{title}</h3>
       <div className="flex-1 flex items-center justify-center">
         {/* Line Chart */}
@@ -74,11 +101,12 @@ export const ChartCard: React.FC<ChartCardProps> = ({
           <BarChart width={320} height={250} data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" />
-            <YAxis />
+            <YAxis yAxisId="left" orientation="left" stroke="#8884d8" />
+            <YAxis yAxisId="right" orientation="right" stroke="#FF8042" />
             <Tooltip />
             <Legend />
-            <Bar dataKey="bookings" fill="#8884d8" />
-            <Line type="monotone" dataKey="revenue" stroke="#FF8042" />
+            <Bar yAxisId="left" dataKey="bookings" fill="#8884d8" />
+            <Line yAxisId="right" type="monotone" dataKey="revenue" stroke="#FF8042" />
           </BarChart>
         )}
 
@@ -112,7 +140,7 @@ export const ChartCard: React.FC<ChartCardProps> = ({
             <Pie
               data={data}
               dataKey="value"
-              nameKey={data[0].name ? 'name' : 'stage'}
+              nameKey="name"
               cx="50%"
               cy="50%"
               innerRadius={chartType === 'donut' ? 50 : 0}
@@ -125,6 +153,7 @@ export const ChartCard: React.FC<ChartCardProps> = ({
               ))}
             </Pie>
             <Tooltip />
+            <Legend />
           </PieChart>
         )}
 
@@ -133,7 +162,7 @@ export const ChartCard: React.FC<ChartCardProps> = ({
           <BarChart layout="vertical" width={320} height={250} data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis type="number" />
-            <YAxis dataKey="region" type="category" />
+            <YAxis dataKey="region" type="category" width={80} />
             <Tooltip />
             <Bar dataKey="count" fill="#8884d8" />
           </BarChart>
@@ -152,12 +181,8 @@ export const ChartCard: React.FC<ChartCardProps> = ({
           </BarChart>
         )}
 
-        {/* Funnel placeholder */}
-        {chartType === 'funnel' && (
-          <div className="text-gray-500 text-center">
-            Funnel chart requires a custom implementation
-          </div>
-        )}
+        {/* Funnel */}
+        {chartType === 'funnel' && renderFunnel(data)}
       </div>
     </div>
   );

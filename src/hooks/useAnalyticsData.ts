@@ -15,6 +15,17 @@ const chartsConfig = [
   { id: 'call-sentiment', title: 'Call Sentiment Distribution', chartType: 'call-sentiment', endpoint: '/api/dashboard/sentiment-summary' },
 ];
 
+// Data transformation functions
+const transformCallsTrend = (data: any) => data.dates.map((date: string, index: number) => ({ date, total_calls: data.calls[index] }));
+const transformBookingsRevenue = (data: any) => data.dates.map((date: string, index: number) => ({ date, bookings: data.bookings[index], revenue: data.revenue[index] }));
+const transformLeadFunnel = (data: any) => data.stages.map((stage: string, index: number) => ({ stage, count: data.counts[index] }));
+const transformLeadSources = (data: any) => data.sources.map((source: string, index: number) => ({ name: source, value: data.counts[index] }));
+const transformCustomerGrowth = (data: any) => data.dates.map((date: string, index: number) => ({ date, total_customers: data.customers[index] }));
+const transformCustomerSegments = (data: any) => data.regions.map((region: string, index: number) => ({ region, count: data.counts[index] }));
+const transformRevenueSummary = (data: any) => data.dates.map((date: string, index: number) => ({ date, revenue: data.revenue[index], refunds: data.refunds[index] }));
+const transformPaymentsStatus = (data: any) => data.status.map((status: string, index: number) => ({ name: status, value: data.counts[index] }));
+const transformCallSentiment = (data: any) => data.sentiments.map((sentiment: string, index: number) => ({ name: sentiment, value: data.counts[index] }));
+
 export const useAnalyticsData = () => {
   const [data, setData] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
@@ -25,57 +36,27 @@ export const useAnalyticsData = () => {
       setLoading(prev => ({ ...prev, [id]: true }));
       setError(prev => ({ ...prev, [id]: null }));
       try {
-        if (id === 'calls-trend') {
-            const response = await fetch(`https://breakout-project-homepage.onrender.com/api/dashboard/calls-trend`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const result = await response.json();
-            const formattedData = result.dates.map((date: string, index: number) => ({
-                date: date,
-                total_calls: result.calls[index],
-            }));
-            setData(prev => ({ ...prev, [id]: formattedData }));
-        } else {
-            // Mocking other API calls for now
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            let mockData: any[] = [];
-            const today = new Date();
-            const last7Days = Array.from({ length: 7 }).map((_, i) => {
-                const d = new Date(today);
-                d.setDate(d.getDate() - i);
-                return d.toISOString().split('T')[0];
-            }).reverse();
-
-            switch (id) {
-                case 'bookings-revenue':
-                    mockData = last7Days.map(date => ({ date, bookings: Math.floor(Math.random() * 10) + 5, revenue: (Math.random() * 500) + 1000 }));
-                    break;
-                case 'lead-funnel':
-                    mockData = [ { stage: 'Leads', count: 1200 }, { stage: 'Qualified', count: 650 }, { stage: 'Booked', count: 320 } ];
-                    break;
-                case 'lead-sources':
-                    mockData = [ { name: 'Organic Search', value: 400 }, { name: 'Paid Ads', value: 300 }, { name: 'Referral', value: 200 }, { name: 'Social Media', value: 250 } ];
-                    break;
-                case 'customer-growth':
-                    mockData = last7Days.map((date, i) => ({ date, total_customers: 1000 + (i * (Math.floor(Math.random() * 20) + 10)) }));
-                    break;
-                case 'customer-segments':
-                    mockData = [ { region: 'North America', count: 45 }, { region: 'Europe', count: 30 }, { region: 'Asia', count: 20 }, { region: 'South America', count: 15 } ];
-                    break;
-                case 'revenue-summary':
-                    mockData = last7Days.map(date => ({ date, revenue: (Math.random() * 1000) + 1500, refunds: (Math.random() * 100) + 50 }));
-                    break;
-                case 'payments-status':
-                    mockData = [ { name: 'Paid', value: 12500 }, { name: 'Pending', value: 2500 } ];
-                    break;
-                case 'call-sentiment':
-                    mockData = [ { name: 'Positive', value: 68 }, { name: 'Neutral', value: 22 }, { name: 'Negative', value: 10 } ];
-                    break;
-            }
-            setData(prev => ({ ...prev, [id]: mockData }));
+        const response = await fetch(`${API_BASE_URL}${endpoint}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const result = await response.json();
+        
+        let transformedData;
+        switch(id) {
+          case 'calls-trend': transformedData = transformCallsTrend(result); break;
+          case 'bookings-revenue': transformedData = transformBookingsRevenue(result); break;
+          case 'lead-funnel': transformedData = transformLeadFunnel(result); break;
+          case 'lead-sources': transformedData = transformLeadSources(result); break;
+          case 'customer-growth': transformedData = transformCustomerGrowth(result); break;
+          case 'customer-segments': transformedData = transformCustomerSegments(result); break;
+          case 'revenue-summary': transformedData = transformRevenueSummary(result); break;
+          case 'payments-status': transformedData = transformPaymentsStatus(result); break;
+          case 'call-sentiment': transformedData = transformCallSentiment(result); break;
+          default: transformedData = result;
         }
 
+        setData(prev => ({ ...prev, [id]: transformedData }));
       } catch (e) {
         setError(prev => ({ ...prev, [id]: e instanceof Error ? e.message : 'An error occurred' }));
       } finally {
