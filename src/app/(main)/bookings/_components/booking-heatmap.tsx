@@ -11,11 +11,11 @@ interface BookingHeatmapProps {
 
 export function BookingHeatmap({ bookings, loading }: BookingHeatmapProps) {
   const timeSlots = Array.from({ length: 13 }, (_, i) => `${(i + 9).toString().padStart(2, '0')}:00`); // 9am to 9pm
-  const next7Days = Array.from({ length: 7 }, (_, i) => {
+  const prev7Days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
-    d.setDate(d.getDate() + i);
+    d.setDate(d.getDate() - i);
     return d;
-  });
+  }).reverse();
 
   const bookingGrid: Record<string, Set<string>> = {};
   for (const booking of bookings) {
@@ -52,7 +52,7 @@ export function BookingHeatmap({ bookings, loading }: BookingHeatmapProps) {
           ))}
 
           {/* Date rows */}
-          {next7Days.map(day => {
+          {prev7Days.map(day => {
             const dateKey = day.toISOString().split('T')[0];
             const isToday = new Date().toDateString() === day.toDateString();
 
@@ -85,7 +85,7 @@ export function BookingHeatmap({ bookings, loading }: BookingHeatmapProps) {
     <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="flex items-center gap-2 mb-4">
         <Calendar className="w-6 h-6 text-blue-600" />
-        <h2 className="text-2xl font-bold text-gray-900">Booking Heatmap (Next 7 Days)</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Booking Heatmap (Previous 7 Days)</h2>
       </div>
       {renderHeatmap()}
     </div>
