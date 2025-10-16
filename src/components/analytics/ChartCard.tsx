@@ -31,22 +31,24 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28CFE', '#FF6F91'
 const renderFunnel = (data: any[]) => {
   const total = data.reduce((sum, item) => sum + item.count, 0);
   return (
-    <div className="w-full flex flex-col items-center gap-1">
+    <div className="w-full flex flex-col items-center gap-0">
       {data.map((item, index) => {
         const percentage = total > 0 ? (item.count / data[0].count) * 100 : 0;
         return (
-          <div key={item.stage} className="flex flex-col items-center">
-            <div
-              className="bg-blue-500 text-white text-center py-2 transition-all duration-300"
-              style={{
-                width: `${Math.max(percentage, 10)}%`,
-                clipPath: index === data.length - 1 
-                  ? 'polygon(0 0, 100% 0, 100% 100%, 0 100%)' 
-                  : 'polygon(0 0, 100% 0, 85% 100%, 15% 100%)',
-              }}
-            >
-              <div className="text-sm font-semibold">{item.stage}</div>
-              <div className="text-xs">{item.count}</div>
+          <div
+            key={item.stage}
+            className="relative flex items-center justify-center text-center transition-all duration-300 bg-primary/20 border-b-2 border-white"
+            style={{
+              width: `${Math.max(percentage, 20)}%`,
+              minHeight: '40px',
+              clipPath: index === data.length - 1 
+                ? 'polygon(0 0, 100% 0, 100% 100%, 0 100%)' 
+                : 'polygon(0 0, 100% 0, 85% 100%, 15% 100%)',
+            }}
+          >
+            <div className="px-2 py-1">
+              <div className="text-sm font-semibold text-primary-foreground/90">{item.stage}</div>
+              <div className="text-xs font-bold text-primary-foreground">{item.count.toLocaleString()}</div>
             </div>
           </div>
         );
