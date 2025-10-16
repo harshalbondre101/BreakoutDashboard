@@ -87,14 +87,10 @@ export const ChartCard: React.FC<ChartCardProps> = ({
       </div>
     );
 
-  return (
-    <div className="bg-white rounded-xl shadow-md p-6 flex flex-col h-full">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">{title}</h3>
-      <div className="flex-1 -mx-4">
-        <ResponsiveContainer width="100%" height={250}>
-        <>
-        {/* Line Chart */}
-        {chartType === 'line' && (
+  const renderChart = () => {
+    switch (chartType) {
+      case 'line':
+        return (
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" />
@@ -102,10 +98,9 @@ export const ChartCard: React.FC<ChartCardProps> = ({
             <Tooltip />
             <Line type="monotone" dataKey="total_calls" stroke="#8884d8" />
           </LineChart>
-        )}
-
-        {/* Bar + Line */}
-        {chartType === 'bar-line' && (
+        );
+      case 'bar-line':
+        return (
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" />
@@ -116,10 +111,9 @@ export const ChartCard: React.FC<ChartCardProps> = ({
             <Bar yAxisId="left" dataKey="bookings" fill="#8884d8" />
             <Line yAxisId="right" type="monotone" dataKey="revenue" stroke="#FF8042" />
           </BarChart>
-        )}
-
-        {/* Area Chart */}
-        {chartType === 'area' && (
+        );
+      case 'area':
+        return (
           <AreaChart data={data}>
             <defs>
               <linearGradient id="colorArea" x1="0" y1="0" x2="0" y2="1">
@@ -138,12 +132,11 @@ export const ChartCard: React.FC<ChartCardProps> = ({
               fill="url(#colorArea)"
             />
           </AreaChart>
-        )}
-
-        {/* Pie / Donut / Sentiment */}
-        {(chartType === 'pie' ||
-          chartType === 'donut' ||
-          chartType === 'call-sentiment') && (
+        );
+      case 'pie':
+      case 'donut':
+      case 'call-sentiment':
+        return (
           <PieChart>
             <Pie
               data={data}
@@ -163,10 +156,9 @@ export const ChartCard: React.FC<ChartCardProps> = ({
             <Tooltip />
             <Legend />
           </PieChart>
-        )}
-
-        {/* Horizontal Bar */}
-        {chartType === 'horizontal-bar' && (
+        );
+      case 'horizontal-bar':
+        return (
           <BarChart layout="vertical" data={data} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis type="number" />
@@ -174,10 +166,9 @@ export const ChartCard: React.FC<ChartCardProps> = ({
             <Tooltip />
             <Bar dataKey={data[0]?.count ? "count" : "value"} fill="#8884d8" />
           </BarChart>
-        )}
-
-        {/* Dual Bar */}
-        {chartType === 'dual-bar' && (
+        );
+      case 'dual-bar':
+        return (
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" />
@@ -187,13 +178,11 @@ export const ChartCard: React.FC<ChartCardProps> = ({
             <Bar dataKey="revenue" fill="#82ca9d" />
             <Bar dataKey="refunds" fill="#FF8042" />
           </BarChart>
-        )}
-
-        {/* Funnel */}
-        {chartType === 'funnel' && renderFunnel(data)}
-        
-        {/* Treemap */}
-        {chartType === 'treemap' && (
+        );
+      case 'funnel':
+        return renderFunnel(data);
+      case 'treemap':
+        return (
           <Treemap
             data={data}
             dataKey="value"
@@ -203,10 +192,9 @@ export const ChartCard: React.FC<ChartCardProps> = ({
           >
             <Tooltip/>
           </Treemap>
-        )}
-        
-        {/* Bubble Chart */}
-        {chartType === 'bubble' && (
+        );
+      case 'bubble':
+        return (
           <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
             <CartesianGrid />
             <XAxis type="category" dataKey="name" name="source" />
@@ -220,8 +208,18 @@ export const ChartCard: React.FC<ChartCardProps> = ({
               ))}
             </Scatter>
           </ScatterChart>
-        )}
-        </>
+        );
+      default:
+        return null;
+    }
+  }
+
+  return (
+    <div className="bg-white rounded-xl shadow-md p-6 flex flex-col h-full">
+      <h3 className="text-lg font-semibold mb-4 text-gray-800">{title}</h3>
+      <div className="flex-1 -mx-4">
+        <ResponsiveContainer width="100%" height={250}>
+          {renderChart()}
         </ResponsiveContainer>
       </div>
     </div>
