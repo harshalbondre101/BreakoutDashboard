@@ -4,14 +4,14 @@ import { useState, useEffect } from 'react';
 import { API_CHARTS_BASE_URL } from '@/lib/config';
 
 const chartsConfig = [
-  { id: 'calls-trend', title: 'Calls Trend (Last 7 Days)', chartType: 'line', endpoint: '/calls-trend' },
-  { id: 'bookings-revenue', title: 'Bookings & Revenue Trend', chartType: 'bar-line', endpoint: '/bookings-trend' },
-  { id: 'lead-funnel', title: 'Lead Conversion Funnel', chartType: 'funnel', endpoint: '/lead-funnel' },
-  { id: 'lead-sources', title: 'Lead Source Effectiveness', chartType: 'pie', endpoint: '/lead-sources' },
-  { id: 'customer-growth', title: 'Customer Growth Over Time', chartType: 'area', endpoint: '/customer-growth' },
-  { id: 'revenue-summary', title: 'Revenue vs Refunds', chartType: 'dual-bar', endpoint: '/revenue-summary' },
-  { id: 'payments-status', title: 'Payments Status Breakdown', chartType: 'donut', endpoint: '/payments-status' },
-  { id: 'call-sentiment', title: 'Call Sentiment Distribution', chartType: 'call-sentiment', endpoint: '/sentiment-summary' },
+  { id: 'calls-trend', title: 'Calls Trend (Last 7 Days)', chartType: 'line', endpoint: 'calls-trend' },
+  { id: 'bookings-revenue', title: 'Bookings & Revenue Trend', chartType: 'bar-line', endpoint: 'bookings-trend' },
+  { id: 'lead-funnel', title: 'Lead Conversion Funnel', chartType: 'funnel', endpoint: 'lead-funnel' },
+  { id: 'lead-sources', title: 'Lead Source Effectiveness', chartType: 'horizontal-bar', endpoint: 'lead-sources' },
+  { id: 'customer-growth', title: 'Customer Growth Over Time', chartType: 'area', endpoint: 'customer-growth' },
+  { id: 'revenue-summary', title: 'Revenue vs Refunds', chartType: 'dual-bar', endpoint: 'revenue-summary' },
+  { id: 'payments-status', title: 'Payments Status Breakdown', chartType: 'donut', endpoint: 'payments-status' },
+  { id: 'call-sentiment', title: 'Call Sentiment Distribution', chartType: 'call-sentiment', endpoint: 'sentiment-summary' },
 ];
 
 // Data transformation functions
@@ -34,7 +34,7 @@ export const useAnalyticsData = () => {
       setLoading(prev => ({ ...prev, [id]: true }));
       setError(prev => ({ ...prev, [id]: null }));
       try {
-        const response = await fetch(`${API_CHARTS_BASE_URL}${endpoint}`);
+        const response = await fetch(`${API_CHARTS_BASE_URL}/${endpoint}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }

@@ -162,9 +162,9 @@ export const ChartCard: React.FC<ChartCardProps> = ({
           <BarChart layout="vertical" width={320} height={250} data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis type="number" />
-            <YAxis dataKey="region" type="category" width={80} />
+            <YAxis dataKey="name" type="category" width={80} />
             <Tooltip />
-            <Bar dataKey="count" fill="#8884d8" />
+            <Bar dataKey="value" fill="#8884d8" />
           </BarChart>
         )}
 
