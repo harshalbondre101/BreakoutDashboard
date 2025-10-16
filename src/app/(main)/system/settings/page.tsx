@@ -1,20 +1,35 @@
 
 'use client';
 import { useState } from 'react';
-import { User, Globe, Bell, Package, Key, LogOut } from 'lucide-react';
+import { User, Globe, Bell, Package, Key, LogOut, Icon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import settingsConfig from '@/config/roles.json';
 
-type SettingsTab = 'profile' | 'language' | 'integrations' | 'notifications' | 'access' | 'logout';
+type SettingsTabId = 'profile' | 'language' | 'integrations' | 'notifications' | 'access' | 'logout';
+
+const iconMap: { [key: string]: Icon } = {
+  User,
+  Globe,
+  Bell,
+  Package,
+  Key,
+  LogOut,
+};
+
 
 export default function SettingsPage() {
   const { toast } = useToast();
   const { user, logout } = useAuth();
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
+  const userRole = user?.role || 'employee';
+
+  const accessibleTabs = settingsConfig.settings.filter(tab => tab.roles.includes(userRole));
+  
+  const [activeTab, setActiveTab] = useState<SettingsTabId>(accessibleTabs[0].id as SettingsTabId);
 
   const [profile, setProfile] = useState({ name: user?.email?.split('@')[0] || 'User', email: user?.email || '' });
 
@@ -86,7 +101,6 @@ export default function SettingsPage() {
           </div>
         );
       case 'integrations':
-        if (user?.role !== 'admin') return null;
         return (
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Integrations</h2>
@@ -125,7 +139,6 @@ export default function SettingsPage() {
           </div>
         );
       case 'access':
-        if (user?.role !== 'admin') return null;
         return (
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Access Control</h2>
@@ -157,15 +170,6 @@ export default function SettingsPage() {
     }
   };
 
-  const tabs = [
-    { id: 'profile', label: 'Profile', icon: User, adminOnly: false },
-    { id: 'language', label: 'Language', icon: Globe, adminOnly: false },
-    { id: 'integrations', label: 'Integrations', icon: Package, adminOnly: true },
-    { id: 'notifications', label: 'Notifications', icon: Bell, adminOnly: false },
-    { id: 'access', label: 'Access Control', icon: Key, adminOnly: true },
-    { id: 'logout', label: 'Logout', icon: LogOut, adminOnly: false },
-  ];
-
   return (
     <div className="space-y-6">
       <div>
@@ -177,19 +181,19 @@ export default function SettingsPage() {
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-sm p-4">
             <nav className="space-y-1">
-              {tabs.map(tab => {
-                if (tab.adminOnly && user?.role !== 'admin') return null;
+              {accessibleTabs.map(tab => {
+                const Icon = iconMap[tab.icon];
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id as SettingsTab)}
+                    onClick={() => setActiveTab(tab.id as SettingsTabId)}
                     className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                       activeTab === tab.id
                         ? 'bg-blue-50 text-blue-700'
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     } ${tab.id === 'logout' ? 'text-red-600 hover:bg-red-50' : ''}`}
                   >
-                    <tab.icon className="w-5 h-5" />
+                    {Icon && <Icon className="w-5 h-5" />}
                     <span>{tab.label}</span>
                   </button>
                 )
