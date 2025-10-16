@@ -5,9 +5,12 @@ import { Booking } from '@/lib/types';
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'confirmed': case 'paid': return 'bg-emerald-100 text-emerald-800';
+    case 'active':
+    case 'confirmed':
+    case 'paid': return 'bg-emerald-100 text-emerald-800';
     case 'pending': return 'bg-amber-100 text-amber-800';
-    case 'failed': case 'cancelled': return 'bg-red-100 text-red-800';
+    case 'failed':
+    case 'cancelled': return 'bg-red-100 text-red-800';
     default: return 'bg-gray-100 text-gray-800';
   }
 };
@@ -40,15 +43,14 @@ export const RecentBookings = ({ recentBookings, bookingsLoading, bookingsError 
         {recentBookings.slice(0, 10).map((booking) => (
           <div key={booking.booking_id} className="p-3 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors cursor-pointer">
             <div className="flex justify-between items-start mb-2">
-              <p className="font-semibold text-gray-900 text-sm">Booking #{booking.booking_id}</p>
-              <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(booking.booking_status)}`}>
-                {booking.booking_status}
+              <p className="font-semibold text-gray-900 text-sm">Booking #{booking.booking_id.slice(-6)}</p>
+              <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${getStatusColor(booking.status)}`}>
+                {booking.status}
               </span>
             </div>
-            <p className="text-xs text-gray-600">Customer ID: {booking.customer_id}</p>
+            <p className="text-xs text-gray-600">Customer ID: {booking.customer_id.slice(-6)}</p>
             <div className="flex justify-between items-center mt-2">
-              <p className="text-sm font-bold text-gray-800">Guests: {booking.guest_count}</p>
-              <p className="text-xs text-gray-500">{new Date(booking.booking_date).toLocaleString()}</p>
+               <p className="text-xs text-gray-500">{new Date(booking.creation_time).toLocaleString()}</p>
             </div>
           </div>
         ))}
