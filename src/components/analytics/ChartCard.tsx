@@ -6,7 +6,8 @@ import {
   BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   PieChart, Pie, Cell,
-  AreaChart, Area
+  AreaChart, Area,
+  Treemap,
 } from 'recharts';
 
 type ChartCardProps = {
@@ -20,7 +21,8 @@ type ChartCardProps = {
     | 'horizontal-bar'
     | 'dual-bar'
     | 'donut'
-    | 'call-sentiment';
+    | 'call-sentiment'
+    | 'treemap';
   data: any[];
   isLoading?: boolean;
   error?: string | null;
@@ -37,7 +39,7 @@ const renderFunnel = (data: any[]) => {
         return (
           <div
             key={item.stage}
-            className="relative flex items-center justify-center text-center transition-all duration-300 bg-primary/80 border-b-2 border-background"
+            className="relative flex items-center justify-center text-center transition-all duration-300 bg-primary border-b-2 border-background"
             style={{
               width: `${Math.max(percentage, 20)}%`,
               minHeight: '40px',
@@ -185,6 +187,21 @@ export const ChartCard: React.FC<ChartCardProps> = ({
 
         {/* Funnel */}
         {chartType === 'funnel' && renderFunnel(data)}
+        
+        {/* Treemap */}
+        {chartType === 'treemap' && (
+          <Treemap
+            width={320}
+            height={250}
+            data={data}
+            dataKey="value"
+            ratio={4 / 3}
+            stroke="#fff"
+            fill="#8884d8"
+          >
+            <Tooltip/>
+          </Treemap>
+        )}
       </div>
     </div>
   );
