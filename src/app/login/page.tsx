@@ -20,17 +20,22 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    const hardcodedUsers = [
+      { email: 'admin@example.com', password: 'admin', is_admin: true },
+      { email: 'user@gmail.com', password: 'user123', is_admin: false },
+    ];
+
+    const foundUser = hardcodedUsers.find(
+      (u) => u.email === email && u.password === password
+    );
+
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     try {
-      const response = await fetch('https://breakout-project.onrender.com/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (data.exists) {
-        const role = data.is_admin ? 'admin' : 'employee';
+      if (foundUser) {
+        const role = foundUser.is_admin ? 'admin' : 'employee';
         login({ email, role });
         router.push('/dashboard');
         toast({
@@ -38,7 +43,7 @@ export default function LoginPage() {
           description: `Welcome back! You are logged in as ${role}.`,
         });
       } else {
-        throw new Error(data.reason || 'Invalid credentials');
+        throw new Error('Invalid credentials. Please try again.');
       }
     } catch (error) {
       toast({
