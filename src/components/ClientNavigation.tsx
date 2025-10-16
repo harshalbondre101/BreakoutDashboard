@@ -1,7 +1,7 @@
 
 'use client';
 import { useState, Suspense } from 'react';
-import { useUserRole } from '@/context/UserRoleContext';
+import { useAuth } from '@/context/AuthContext';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -16,17 +16,14 @@ import {
   Shield,
   Bot,
   Settings as SettingsIcon,
-  Menu,
-  X
 } from 'lucide-react';
 
-function NavigationContent({ sidebarOpen, setSidebarOpen }: { 
+function NavigationContent({ sidebarOpen }: { 
   sidebarOpen: boolean; 
   setSidebarOpen: (open: boolean) => void; 
 }) {
   const pathname = usePathname();
-
-  const { role } = useUserRole();
+  const { user } = useAuth();
 
   const navigation = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, section: 'Analytics' },
@@ -35,10 +32,10 @@ function NavigationContent({ sidebarOpen, setSidebarOpen }: {
     { href: '/customers', label: 'Customers Hub', icon: Users, section: 'Operations' },
     { href: '/calls', label: 'Calls', icon: Phone, section: 'Operations' },
     { href: '/bookings', label: 'Bookings', icon: CalendarCheck, section: 'Operations' },
-  { href: '/system/whatsapp', label: 'WhatsApp', icon: MessageSquare, section: 'System', adminOnly: true },
-  { href: '/system/themes', label: 'Themes', icon: Palette, section: 'System' },
-  { href: '/system/validation', label: 'Validation', icon: Shield, section: 'System', adminOnly: true },
-  { href: '/system/agents', label: 'Agents', icon: Bot, section: 'System' },
+    { href: '/system/whatsapp', label: 'WhatsApp', icon: MessageSquare, section: 'System', adminOnly: true },
+    { href: '/system/themes', label: 'Themes', icon: Palette, section: 'System' },
+    { href: '/system/validation', label: 'Validation', icon: Shield, section: 'System', adminOnly: true },
+    { href: '/system/agents', label: 'Agents', icon: Bot, section: 'System' },
     { href: '/system/settings', label: 'Settings', icon: SettingsIcon, section: 'System', adminOnly: true }
   ];
 
@@ -60,7 +57,7 @@ function NavigationContent({ sidebarOpen, setSidebarOpen }: {
           <div className="space-y-1">
             {items.map((item) => {
               const Icon = item.icon;
-              if ((item as any).adminOnly && role !== 'admin') return null;
+              if (item.adminOnly && user?.role !== 'admin') return null;
               return (
                 <Link
                   key={item.label}

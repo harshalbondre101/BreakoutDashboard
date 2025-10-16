@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider } from '@/context/AuthContext';
 
 export const metadata: Metadata = {
   title: 'Enterprise Command',
@@ -8,7 +9,6 @@ export const metadata: Metadata = {
 };
 
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { UserRoleProvider } from '@/context/UserRoleContext';
 
 export default function RootLayout({
   children,
@@ -24,14 +24,13 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <UserRoleProvider>
+        <AuthProvider>
           <SidebarProvider>
             {children}
             <Toaster />
           </SidebarProvider>
-        </UserRoleProvider>
+        </AuthProvider>
       </body>
     </html>
   );
 }
-
