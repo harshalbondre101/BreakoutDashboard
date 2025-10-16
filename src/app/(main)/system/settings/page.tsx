@@ -86,6 +86,7 @@ export default function SettingsPage() {
           </div>
         );
       case 'integrations':
+        if (user?.role !== 'admin') return null;
         return (
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Integrations</h2>
@@ -124,6 +125,7 @@ export default function SettingsPage() {
           </div>
         );
       case 'access':
+        if (user?.role !== 'admin') return null;
         return (
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Access Control</h2>
@@ -156,12 +158,12 @@ export default function SettingsPage() {
   };
 
   const tabs = [
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'language', label: 'Language', icon: Globe },
-    { id: 'integrations', label: 'Integrations', icon: Package },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'access', label: 'Access Control', icon: Key },
-    { id: 'logout', label: 'Logout', icon: LogOut },
+    { id: 'profile', label: 'Profile', icon: User, adminOnly: false },
+    { id: 'language', label: 'Language', icon: Globe, adminOnly: false },
+    { id: 'integrations', label: 'Integrations', icon: Package, adminOnly: true },
+    { id: 'notifications', label: 'Notifications', icon: Bell, adminOnly: false },
+    { id: 'access', label: 'Access Control', icon: Key, adminOnly: true },
+    { id: 'logout', label: 'Logout', icon: LogOut, adminOnly: false },
   ];
 
   return (
@@ -175,20 +177,23 @@ export default function SettingsPage() {
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-sm p-4">
             <nav className="space-y-1">
-              {tabs.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as SettingsTab)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  } ${tab.id === 'logout' ? 'text-red-600 hover:bg-red-50' : ''}`}
-                >
-                  <tab.icon className="w-5 h-5" />
-                  <span>{tab.label}</span>
-                </button>
-              ))}
+              {tabs.map(tab => {
+                if (tab.adminOnly && user?.role !== 'admin') return null;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as SettingsTab)}
+                    className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      activeTab === tab.id
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    } ${tab.id === 'logout' ? 'text-red-600 hover:bg-red-50' : ''}`}
+                  >
+                    <tab.icon className="w-5 h-5" />
+                    <span>{tab.label}</span>
+                  </button>
+                )
+              })}
             </nav>
           </div>
         </div>

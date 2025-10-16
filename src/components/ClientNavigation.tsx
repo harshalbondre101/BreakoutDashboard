@@ -36,7 +36,7 @@ function NavigationContent({ sidebarOpen }: {
     { href: '/system/themes', label: 'Themes', icon: Palette, section: 'System' },
     { href: '/system/validation', label: 'Validation', icon: Shield, section: 'System', adminOnly: true },
     { href: '/system/agents', label: 'Agents', icon: Bot, section: 'System' },
-    { href: '/system/settings', label: 'Settings', icon: SettingsIcon, section: 'System', adminOnly: true }
+    { href: '/system/settings', label: 'Settings', icon: SettingsIcon, section: 'System', adminOnly: false }
   ];
 
   const groupedNav = navigation.reduce((acc, item) => {
