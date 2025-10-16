@@ -37,7 +37,7 @@ const renderFunnel = (data: any[]) => {
         return (
           <div
             key={item.stage}
-            className="relative flex items-center justify-center text-center transition-all duration-300 bg-primary/20 border-b-2 border-white"
+            className="relative flex items-center justify-center text-center transition-all duration-300 bg-primary/80 border-b-2 border-background"
             style={{
               width: `${Math.max(percentage, 20)}%`,
               minHeight: '40px',
@@ -47,8 +47,8 @@ const renderFunnel = (data: any[]) => {
             }}
           >
             <div className="px-2 py-1">
-              <div className="text-sm font-semibold text-primary-foreground/90">{item.stage}</div>
-              <div className="text-xs font-bold text-primary-foreground">{item.count.toLocaleString()}</div>
+              <div className="text-sm font-semibold text-primary-foreground">{item.stage}</div>
+              <div className="text-xs font-bold text-primary-foreground/90">{item.count.toLocaleString()}</div>
             </div>
           </div>
         );
@@ -164,9 +164,9 @@ export const ChartCard: React.FC<ChartCardProps> = ({
           <BarChart layout="vertical" width={320} height={250} data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis type="number" />
-            <YAxis dataKey="name" type="category" width={80} />
+            <YAxis dataKey={data[0]?.stage ? "stage" : "name"} type="category" width={80} />
             <Tooltip />
-            <Bar dataKey="value" fill="#8884d8" />
+            <Bar dataKey={data[0]?.count ? "count" : "value"} fill="#8884d8" />
           </BarChart>
         )}
 
