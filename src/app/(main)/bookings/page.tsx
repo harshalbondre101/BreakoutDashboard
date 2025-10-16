@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { IndianRupee, TrendingUp, Calendar, CreditCard } from 'lucide-react';
 import { Booking } from '@/lib/types';
-import { recentBookings as staticRecentBookings } from '@/lib/data';
 import { API_BASE_URL } from '@/lib/config';
+import { BookingHeatmap } from './_components/booking-heatmap';
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -136,6 +136,8 @@ export default function BookingsPage() {
           <p className="text-xs text-gray-500 mt-2">{totalBookings > 0 ? ((confirmedBookings / totalBookings) * 100).toFixed(1) : '0.0'}% completion rate</p>
         </div>
       </div>
+      
+      <BookingHeatmap bookings={bookings} loading={loading} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-6">
