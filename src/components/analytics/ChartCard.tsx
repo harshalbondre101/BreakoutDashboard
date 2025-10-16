@@ -8,6 +8,7 @@ import {
   PieChart, Pie, Cell,
   AreaChart, Area,
   Treemap,
+  ScatterChart, Scatter, ZAxis, ResponsiveContainer,
 } from 'recharts';
 
 type ChartCardProps = {
@@ -22,7 +23,8 @@ type ChartCardProps = {
     | 'dual-bar'
     | 'donut'
     | 'call-sentiment'
-    | 'treemap';
+    | 'treemap'
+    | 'bubble';
   data: any[];
   isLoading?: boolean;
   error?: string | null;
@@ -88,10 +90,12 @@ export const ChartCard: React.FC<ChartCardProps> = ({
   return (
     <div className="bg-white rounded-xl shadow-md p-6 flex flex-col h-full">
       <h3 className="text-lg font-semibold mb-4 text-gray-800">{title}</h3>
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 -mx-4">
+        <ResponsiveContainer width="100%" height={250}>
+        <>
         {/* Line Chart */}
         {chartType === 'line' && (
-          <LineChart width={320} height={250} data={data}>
+          <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" />
             <YAxis />
@@ -102,7 +106,7 @@ export const ChartCard: React.FC<ChartCardProps> = ({
 
         {/* Bar + Line */}
         {chartType === 'bar-line' && (
-          <BarChart width={320} height={250} data={data}>
+          <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" />
             <YAxis yAxisId="left" orientation="left" stroke="#8884d8" />
@@ -116,7 +120,7 @@ export const ChartCard: React.FC<ChartCardProps> = ({
 
         {/* Area Chart */}
         {chartType === 'area' && (
-          <AreaChart width={320} height={250} data={data}>
+          <AreaChart data={data}>
             <defs>
               <linearGradient id="colorArea" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
@@ -140,14 +144,14 @@ export const ChartCard: React.FC<ChartCardProps> = ({
         {(chartType === 'pie' ||
           chartType === 'donut' ||
           chartType === 'call-sentiment') && (
-          <PieChart width={250} height={250}>
+          <PieChart>
             <Pie
               data={data}
               dataKey="value"
               nameKey="name"
               cx="50%"
               cy="50%"
-              innerRadius={chartType === 'donut' ? 50 : 0}
+              innerRadius={chartType === 'donut' ? 60 : 0}
               outerRadius={80}
               fill="#8884d8"
               label
@@ -163,10 +167,10 @@ export const ChartCard: React.FC<ChartCardProps> = ({
 
         {/* Horizontal Bar */}
         {chartType === 'horizontal-bar' && (
-          <BarChart layout="vertical" width={320} height={250} data={data}>
+          <BarChart layout="vertical" data={data} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis type="number" />
-            <YAxis dataKey={data[0]?.stage ? "stage" : "name"} type="category" width={80} />
+            <YAxis dataKey={data[0]?.stage ? "stage" : "name"} type="category" width={80} interval={0} />
             <Tooltip />
             <Bar dataKey={data[0]?.count ? "count" : "value"} fill="#8884d8" />
           </BarChart>
@@ -174,7 +178,7 @@ export const ChartCard: React.FC<ChartCardProps> = ({
 
         {/* Dual Bar */}
         {chartType === 'dual-bar' && (
-          <BarChart width={320} height={250} data={data}>
+          <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" />
             <YAxis />
@@ -191,8 +195,6 @@ export const ChartCard: React.FC<ChartCardProps> = ({
         {/* Treemap */}
         {chartType === 'treemap' && (
           <Treemap
-            width={320}
-            height={250}
             data={data}
             dataKey="value"
             ratio={4 / 3}
@@ -202,6 +204,25 @@ export const ChartCard: React.FC<ChartCardProps> = ({
             <Tooltip/>
           </Treemap>
         )}
+        
+        {/* Bubble Chart */}
+        {chartType === 'bubble' && (
+          <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+            <CartesianGrid />
+            <XAxis type="category" dataKey="name" name="source" />
+            <YAxis type="number" dataKey="value" name="conversions" />
+            <ZAxis dataKey="value" range={[100, 1000]} name="conversions" />
+            <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+            <Legend />
+            <Scatter name="Lead Sources" data={data} fill="#8884d8">
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Scatter>
+          </ScatterChart>
+        )}
+        </>
+        </ResponsiveContainer>
       </div>
     </div>
   );
