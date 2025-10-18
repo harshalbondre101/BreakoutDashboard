@@ -34,10 +34,11 @@ export default function AnalysisPage() {
       setLoading(true);
       setError(null);
       try {
-        const [kpiResponse, customerKpiResponse, leadsKpiResponse] = await Promise.all([
+        const [kpiResponse, customerKpiResponse, leadsKpiResponse, bookingsKpiResponse] = await Promise.all([
             fetch(`${API_BASE_URL}/compute/kpis`),
             fetch(`https://breakout-project.onrender.com/kpis/customers`),
-            fetch(`https://breakout-project.onrender.com/kpis/leads`)
+            fetch(`https://breakout-project.onrender.com/kpis/leads`),
+            fetch(`https://breakout-project.onrender.com/kpis/bookings`)
         ]);
 
         if (!kpiResponse.ok) {
@@ -49,10 +50,14 @@ export default function AnalysisPage() {
         if (!leadsKpiResponse.ok) {
             throw new Error(`HTTP error on leads KPIs! Status: ${leadsKpiResponse.status}`);
         }
+        if (!bookingsKpiResponse.ok) {
+            throw new Error(`HTTP error on bookings KPIs! Status: ${bookingsKpiResponse.status}`);
+        }
         
         const data: KpiApiResponse = await kpiResponse.json();
         const customerKpiData: {name: string, value: any, unit?: string}[] = await customerKpiResponse.json();
         const leadsKpiData: {name: string, value: any, unit?: string}[] = await leadsKpiResponse.json();
+        const bookingsKpiData: {name: string, value: any, unit?: string}[] = await bookingsKpiResponse.json();
         
         const customerKpisObject = customerKpiData.reduce((acc, item) => {
             const key = item.name === 'customer_conversion_rate' ? 'customer_conversion_rate_pct' : item.name;
@@ -76,8 +81,19 @@ export default function AnalysisPage() {
             return acc;
         }, {} as Record<string, any>);
 
+        const bookingsKpiObject = bookingsKpiData.reduce((acc, item) => {
+             const keyMap: Record<string, string> = {
+                'booking_conversion_rate': 'booking_conversion_rate_pct',
+                'cancellation_rate': 'cancellation_rate_pct',
+                'repeat_booking_rate': 'repeat_booking_rate_pct',
+            };
+            const key = keyMap[item.name] || item.name;
+            acc[key] = item.value;
+            return acc;
+        }, {} as Record<string, any>);
+
         // Merge all KPI sources
-        const kpis = { ...data.kpis, ...customerKpisObject, ...leadsKpiObject };
+        const kpis = { ...data.kpis, ...customerKpisObject, ...leadsKpiObject, ...bookingsKpiObject };
 
         const executiveKpiConfig: { id: keyof KpiApiResponse['kpis']; label: string; target: string; higherIsBetter: boolean, unit: 'percentage' | 'seconds' | 'number' | 'rating' }[] = [
             { id: 'first_call_resolution_pct', label: 'First Call Resolution', target: '>90%', higherIsBetter: true, unit: 'percentage' },
