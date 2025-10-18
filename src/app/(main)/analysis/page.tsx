@@ -13,9 +13,14 @@ import { Alerts } from './_components/alerts';
 import { AdditionalAnalytics } from './_components/additional-analytics';
 
 const formatDurationFromSeconds = (seconds: number) => {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, '0')} min`;
+  if (seconds < 3600) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.round(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')} min`;
+  }
+  const hours = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  return `${hours}h ${mins}m`;
 };
 
 export default function AnalysisPage() {
@@ -29,9 +34,10 @@ export default function AnalysisPage() {
       setLoading(true);
       setError(null);
       try {
-        const [kpiResponse, customerKpiResponse] = await Promise.all([
+        const [kpiResponse, customerKpiResponse, leadsKpiResponse] = await Promise.all([
             fetch(`${API_BASE_URL}/compute/kpis`),
-            fetch(`https://breakout-project.onrender.com/kpis/customers`)
+            fetch(`https://breakout-project.onrender.com/kpis/customers`),
+            fetch(`https://breakout-project.onrender.com/kpis/leads`)
         ]);
 
         if (!kpiResponse.ok) {
@@ -40,19 +46,38 @@ export default function AnalysisPage() {
         if (!customerKpiResponse.ok) {
             throw new Error(`HTTP error on customer KPIs! Status: ${customerKpiResponse.status}`);
         }
+        if (!leadsKpiResponse.ok) {
+            throw new Error(`HTTP error on leads KPIs! Status: ${leadsKpiResponse.status}`);
+        }
         
         const data: KpiApiResponse = await kpiResponse.json();
         const customerKpiData: {name: string, value: any, unit?: string}[] = await customerKpiResponse.json();
+        const leadsKpiData: {name: string, value: any, unit?: string}[] = await leadsKpiResponse.json();
         
         const customerKpisObject = customerKpiData.reduce((acc, item) => {
-            // The API returns 'customer_conversion_rate', but the config expects 'customer_conversion_rate_pct'
             const key = item.name === 'customer_conversion_rate' ? 'customer_conversion_rate_pct' : item.name;
             acc[key] = item.value;
             return acc;
         }, {} as Record<string, any>);
         
-        // Merge customer KPIs into the main KPI object
-        const kpis = { ...data.kpis, ...customerKpisObject };
+        const leadsKpiObject = leadsKpiData.reduce((acc, item) => {
+            const keyMap: Record<string, string> = {
+                'lead_conversion_rate': 'lead_conversion_rate_pct',
+                'avg_lead_response_time': 'lead_response_time_sec',
+                'best_lead_source': 'lead_source_effectiveness',
+                'qualified_lead_ratio': 'qualified_lead_ratio_pct'
+            };
+            const key = keyMap[item.name] || item.name;
+            let value = item.value;
+            if (item.name === 'avg_lead_response_time' && item.unit === 'hours') {
+                value = value * 3600; // convert hours to seconds
+            }
+            acc[key] = value;
+            return acc;
+        }, {} as Record<string, any>);
+
+        // Merge all KPI sources
+        const kpis = { ...data.kpis, ...customerKpisObject, ...leadsKpiObject };
 
         const executiveKpiConfig: { id: keyof KpiApiResponse['kpis']; label: string; target: string; higherIsBetter: boolean, unit: 'percentage' | 'seconds' | 'number' | 'rating' }[] = [
             { id: 'first_call_resolution_pct', label: 'First Call Resolution', target: '>90%', higherIsBetter: true, unit: 'percentage' },
@@ -110,10 +135,11 @@ export default function AnalysisPage() {
                             : (Number(value) <= targetValue ? 'good' : 'warning');
                         break;
                     case 'seconds':
+                        const targetInSeconds = conf.target.includes('hr') ? targetValue * 3600 : targetValue * 60;
                         displayValue = formatDurationFromSeconds(Number(value));
                         status = conf.higherIsBetter 
-                            ? (Number(value) >= targetValue * 60 ? 'good' : 'warning') 
-                            : (Number(value) <= targetValue * 60 ? 'good' : 'warning');
+                            ? (Number(value) >= targetInSeconds ? 'good' : 'warning') 
+                            : (Number(value) <= targetInSeconds ? 'good' : 'warning');
                         break;
                     case 'rating':
                         displayValue = `${Number(value).toFixed(1)}/5`;
