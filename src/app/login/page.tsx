@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Bot } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/config';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -21,29 +22,29 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
 
-    const hardcodedUsers = [
-      { email: 'admin@example.com', password: 'admin', is_admin: true },
-      { email: 'user@gmail.com', password: 'user123', is_admin: false },
-    ];
-
-    const foundUser = hardcodedUsers.find(
-      (u) => u.email === email && u.password === password
-    );
-
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
     try {
-      if (foundUser) {
-        const role = foundUser.is_admin ? 'admin' : 'employee';
+      const response = await fetch(`${API_BASE_URL}/employees/validate`, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.exists) {
+        throw new Error(data.reason || 'Invalid credentials. Please try again.');
+      }
+
+      if (data.exists) {
+        const role = data.is_admin ? 'admin' : 'employee';
         login({ email, role });
         router.push('/dashboard');
         toast({
           title: 'Login Successful',
           description: `Welcome back! You are logged in as ${role}.`,
         });
-      } else {
-        throw new Error('Invalid credentials. Please try again.');
       }
     } catch (error) {
       toast({
