@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import { KPIMetric, KpiApiResponse } from '@/lib/types';
@@ -28,12 +29,30 @@ export default function AnalysisPage() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`${API_BASE_URL}/compute/kpis`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+        const [kpiResponse, customerKpiResponse] = await Promise.all([
+            fetch(`${API_BASE_URL}/compute/kpis`),
+            fetch(`https://breakout-project.onrender.com/kpis/customers`)
+        ]);
+
+        if (!kpiResponse.ok) {
+          throw new Error(`HTTP error on main KPIs! Status: ${kpiResponse.status}`);
         }
-        const data: KpiApiResponse = await response.json();
-        const kpis = data.kpis;
+        if (!customerKpiResponse.ok) {
+            throw new Error(`HTTP error on customer KPIs! Status: ${customerKpiResponse.status}`);
+        }
+        
+        const data: KpiApiResponse = await kpiResponse.json();
+        const customerKpiData: {name: string, value: any, unit?: string}[] = await customerKpiResponse.json();
+        
+        const customerKpisObject = customerKpiData.reduce((acc, item) => {
+            // The API returns 'customer_conversion_rate', but the config expects 'customer_conversion_rate_pct'
+            const key = item.name === 'customer_conversion_rate' ? 'customer_conversion_rate_pct' : item.name;
+            acc[key] = item.value;
+            return acc;
+        }, {} as Record<string, any>);
+        
+        // Merge customer KPIs into the main KPI object
+        const kpis = { ...data.kpis, ...customerKpisObject };
 
         const executiveKpiConfig: { id: keyof KpiApiResponse['kpis']; label: string; target: string; higherIsBetter: boolean, unit: 'percentage' | 'seconds' | 'number' | 'rating' }[] = [
             { id: 'first_call_resolution_pct', label: 'First Call Resolution', target: '>90%', higherIsBetter: true, unit: 'percentage' },
@@ -103,7 +122,12 @@ export default function AnalysisPage() {
                         status = Number(value) >= targetValue ? 'good' : 'warning';
                         break;
                     case 'currency':
-                        displayValue = `$${(Number(value)/1000).toFixed(1)}k`;
+                        const kValue = (Number(value)/1000);
+                        if (kValue > 0) {
+                            displayValue = `$${kValue.toFixed(1)}k`;
+                        } else {
+                             displayValue = `$${Number(value).toFixed(2)}`;
+                        }
                         status = conf.higherIsBetter
                             ? (Number(value) >= targetValue ? 'good' : 'warning')
                             : (Number(value) <= targetValue ? 'good' : 'warning');
