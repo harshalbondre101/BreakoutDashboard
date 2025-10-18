@@ -8,6 +8,8 @@ const defaultChartsConfig = [
   { id: 'bookings-revenue', title: 'Bookings Trend', chartType: 'bar', endpoint: 'bookings-trend' },
   { id: 'call-sentiment', title: 'Call Sentiment Distribution', chartType: 'call-sentiment', endpoint: 'sentiment-summary' },
   { id: 'customer-growth', title: 'Customer Growth Over Time', chartType: 'area', endpoint: 'customer-growth' },
+  { id: 'customer-rating', title: 'Customer Rating Distribution', chartType: 'pie', endpoint: 'dummy-customer-rating' },
+  { id: 'intent-distribution', title: 'Intent Distribution', chartType: 'pie', endpoint: 'dummy-intent-distribution' },
 ];
 
 
@@ -28,6 +30,28 @@ const transformRevenueSummary = (data: any) => data.dates.map((date: string, ind
 const transformPaymentsStatus = (data: any) => Object.entries(data).map(([name, value]) => ({ name, value: value as number }));
 const transformCallSentiment = (data: any) => Object.entries(data).map(([name, value]) => ({ name, value: value as number }));
 
+const getDummyData = (endpoint: string) => {
+    if (endpoint === 'dummy-customer-rating') {
+        return [
+            { name: '5 Stars', value: 400 },
+            { name: '4 Stars', value: 300 },
+            { name: '3 Stars', value: 200 },
+            { name: '2 Stars', value: 100 },
+            { name: '1 Star', value: 50 },
+        ];
+    }
+    if (endpoint === 'dummy-intent-distribution') {
+        return [
+            { name: 'Booking', value: 250 },
+            { name: 'Inquiry', value: 450 },
+            { name: 'Complaint', value: 80 },
+            { name: 'Modification', value: 120 },
+            { name: 'Other', value: 50 },
+        ];
+    }
+    return null;
+}
+
 export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultChartsConfig) => {
   const [data, setData] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
@@ -37,6 +61,14 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
     const fetchData = async (id: string, endpoint: string) => {
       setLoading(prev => ({ ...prev, [id]: true }));
       setError(prev => ({ ...prev, [id]: null }));
+
+      const dummyData = getDummyData(endpoint);
+      if (dummyData) {
+        setData(prev => ({ ...prev, [id]: dummyData }));
+        setLoading(prev => ({ ...prev, [id]: false }));
+        return;
+      }
+      
       try {
         const response = await fetch(`${API_CHARTS_BASE_URL}/${endpoint}`);
         if (!response.ok) {
