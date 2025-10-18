@@ -20,7 +20,6 @@ const movedChartsConfig = [
   { id: 'revenue-summary', title: 'Revenue vs Refunds', chartType: 'dual-bar', endpoint: 'revenue-summary' },
   { id: 'payments-status', title: 'Payments Status Breakdown', chartType: 'donut', endpoint: 'payments-status' },
   { id: 'lead-funnel', title: 'Lead Conversion Funnel', chartType: 'horizontal-bar', endpoint: 'lead-funnel' },
-  { id: 'lead-sources', title: 'Lead Source Effectiveness', chartType: 'bubble', endpoint: 'lead-sources' },
 ];
 
 export const AdditionalAnalytics = () => {
@@ -29,7 +28,7 @@ export const AdditionalAnalytics = () => {
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
       <h2 className="text-xl font-bold text-gray-900 mb-4">Additional Analytics</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {movedChartsConfig.map((chart) => (
           <ChartCard
             key={chart.id}
