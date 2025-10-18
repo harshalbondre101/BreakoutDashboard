@@ -126,13 +126,6 @@ export default function AnalysisPage() {
             { id: 'avg_booking_value', label: 'Average Booking Value (ABV)', target: '>$800', higherIsBetter: true, unit: 'currency' },
             { id: 'cancellation_rate_pct', label: 'Cancellation Rate', target: '<5%', higherIsBetter: false, unit: 'percentage' },
             { id: 'repeat_booking_rate_pct', label: 'Repeat Booking Rate', target: '>20%', higherIsBetter: true, unit: 'percentage' },
-
-            // Payment Analytics
-            { id: 'total_revenue_collected', label: 'Total Revenue Collected', target: '>$100k', higherIsBetter: true, unit: 'currency' },
-            { id: 'pending_payments', label: 'Outstanding / Pending Payments', target: '<$5k', higherIsBetter: false, unit: 'currency' },
-            { id: 'avg_payment_value', label: 'Average Payment Value', target: '>$750', higherIsBetter: true, unit: 'currency' },
-            { id: 'revenue_growth_rate_pct', label: 'Revenue Growth Rate', target: '>5%', higherIsBetter: true, unit: 'percentage' },
-            { id: 'refund_chargeback_rate_pct', label: 'Refund / Chargeback Rate', target: '<2%', higherIsBetter: false, unit: 'percentage' },
         ];
 
         const processKpis = (config: any[]): KPIMetric[] => {
@@ -260,7 +253,6 @@ export default function AnalysisPage() {
               <TabsTrigger value="customers">Customers</TabsTrigger>
               <TabsTrigger value="leads">Leads</TabsTrigger>
               <TabsTrigger value="bookings">Bookings</TabsTrigger>
-              <TabsTrigger value="others">Others</TabsTrigger>
             </TabsList>
             <TabsContent value="customers">
               <KpiSection 
@@ -282,14 +274,6 @@ export default function AnalysisPage() {
               <KpiSection
                 title="KPIs - Bookings"
                 kpiIds={['total_bookings', 'booking_conversion_rate_pct', 'avg_booking_value', 'cancellation_rate_pct', 'repeat_booking_rate_pct']}
-                metrics={kpiMetrics}
-                loading={loading}
-              />
-            </TabsContent>
-            <TabsContent value="others">
-              <KpiSection
-                title="KPIs - Others [Payment Analytics]"
-                kpiIds={['total_revenue_collected', 'pending_payments', 'avg_payment_value', 'revenue_growth_rate_pct', 'refund_chargeback_rate_pct']}
                 metrics={kpiMetrics}
                 loading={loading}
               />
