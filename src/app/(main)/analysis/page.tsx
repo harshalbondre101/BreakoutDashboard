@@ -70,9 +70,7 @@ export default function AnalysisPage() {
             { id: 'total_customers', label: 'Total Customers', target: '>1000', higherIsBetter: true, unit: 'number' },
             { id: 'new_customers', label: 'New Customers', target: '>50', higherIsBetter: true, unit: 'number' },
             { id: 'avg_spend_per_customer', label: 'Average Spend per Customer', target: '>$500', higherIsBetter: true, unit: 'currency' },
-            { id: 'top_customer_locations', label: 'Top Customer Locations', target: 'N/A', higherIsBetter: true, unit: 'string' },
             { id: 'customer_conversion_rate_pct', label: 'Customer Conversion Rate', target: '>10%', higherIsBetter: true, unit: 'percentage' },
-            { id: 'customer_satisfaction_avg_rating', label: 'Customer Satisfaction', target: '>4.5', higherIsBetter: true, unit: 'rating' },
             
             // Leads
             { id: 'total_leads_generated', label: 'Total Leads Generated', target: '>200', higherIsBetter: true, unit: 'number' },
@@ -225,7 +223,7 @@ export default function AnalysisPage() {
             <TabsContent value="customers">
               <KpiSection 
                 title="KPIs - Customers" 
-                kpiIds={['total_customers', 'new_customers', 'avg_spend_per_customer', 'top_customer_locations', 'customer_conversion_rate_pct', 'customer_satisfaction_avg_rating']}
+                kpiIds={['total_customers', 'new_customers', 'avg_spend_per_customer', 'customer_conversion_rate_pct']}
                 metrics={kpiMetrics}
                 loading={loading}
               />
