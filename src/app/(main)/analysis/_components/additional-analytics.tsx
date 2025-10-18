@@ -1,12 +1,11 @@
 
 'use client';
 import { useAnalyticsData } from '@/hooks/useAnalyticsData';
-import { ChartCard } from './analytics/ChartCard';
+import { ChartCard } from '@/components/analytics/ChartCard';
 
 
 const chartComponents = {
   line: "line",
-  bar: "bar",
   'bar-line': "bar-line",
   funnel: "funnel",
   pie: "pie",
@@ -15,18 +14,23 @@ const chartComponents = {
   'dual-bar': "dual-bar",
   donut: "donut",
   'call-sentiment': "call-sentiment",
-  bubble: "bubble",
-  treemap: "treemap",
 };
 
-export const AnalyticsOverview = () => {
-  const { data, loading, error, chartsConfig } = useAnalyticsData();
+const movedChartsConfig = [
+  { id: 'revenue-summary', title: 'Revenue vs Refunds', chartType: 'dual-bar', endpoint: 'revenue-summary' },
+  { id: 'payments-status', title: 'Payments Status Breakdown', chartType: 'donut', endpoint: 'payments-status' },
+  { id: 'lead-funnel', title: 'Lead Conversion Funnel', chartType: 'horizontal-bar', endpoint: 'lead-funnel' },
+  { id: 'lead-sources', title: 'Lead Source Effectiveness', chartType: 'bubble', endpoint: 'lead-sources' },
+];
+
+export const AdditionalAnalytics = () => {
+  const { data, loading, error } = useAnalyticsData(movedChartsConfig);
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">Analytics Overview</h2>
+      <h2 className="text-xl font-bold text-gray-900 mb-4">Additional Analytics</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {chartsConfig.map((chart) => (
+        {movedChartsConfig.map((chart) => (
           <ChartCard
             key={chart.id}
             title={chart.title}

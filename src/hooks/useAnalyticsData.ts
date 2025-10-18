@@ -3,16 +3,20 @@
 import { useState, useEffect } from 'react';
 import { API_CHARTS_BASE_URL } from '@/lib/config';
 
-const chartsConfig = [
+const defaultChartsConfig = [
   { id: 'calls-trend', title: 'Calls Trend (Last 7 Days)', chartType: 'line', endpoint: 'calls-trend' },
   { id: 'bookings-revenue', title: 'Bookings Trend', chartType: 'bar', endpoint: 'bookings-trend' },
-  { id: 'lead-funnel', title: 'Lead Conversion Funnel', chartType: 'horizontal-bar', endpoint: 'lead-funnel' },
-  { id: 'lead-sources', title: 'Lead Source Effectiveness', chartType: 'bubble', endpoint: 'lead-sources' },
-  { id: 'revenue-summary', title: 'Revenue vs Refunds', chartType: 'dual-bar', endpoint: 'revenue-summary' },
-  { id: 'payments-status', title: 'Payments Status Breakdown', chartType: 'donut', endpoint: 'payments-status' },
   { id: 'call-sentiment', title: 'Call Sentiment Distribution', chartType: 'call-sentiment', endpoint: 'sentiment-summary' },
   { id: 'customer-growth', title: 'Customer Growth Over Time', chartType: 'area', endpoint: 'customer-growth' },
 ];
+
+
+type ChartConfigItem = {
+    id: string;
+    title: string;
+    chartType: string;
+    endpoint: string;
+};
 
 // Data transformation functions
 const transformCallsTrend = (data: any) => data.dates.map((date: string, index: number) => ({ date, total_calls: data.calls[index] }));
@@ -24,7 +28,7 @@ const transformRevenueSummary = (data: any) => data.dates.map((date: string, ind
 const transformPaymentsStatus = (data: any) => Object.entries(data).map(([name, value]) => ({ name, value: value as number }));
 const transformCallSentiment = (data: any) => Object.entries(data).map(([name, value]) => ({ name, value: value as number }));
 
-export const useAnalyticsData = () => {
+export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultChartsConfig) => {
   const [data, setData] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<Record<string, string | null>>({});
@@ -62,7 +66,7 @@ export const useAnalyticsData = () => {
     };
 
     chartsConfig.forEach(chart => fetchData(chart.id, chart.endpoint));
-  }, []);
+  }, [JSON.stringify(chartsConfig)]);
 
   return { data, loading, error, chartsConfig };
 };

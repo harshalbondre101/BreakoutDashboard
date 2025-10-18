@@ -9,6 +9,7 @@ import { KpiSection } from './_components/kpi-section';
 import { AiPerformance } from './_components/ai-performance';
 import { QualityAssurance } from './_components/quality-assurance';
 import { Alerts } from './_components/alerts';
+import { AdditionalAnalytics } from './_components/additional-analytics';
 
 const formatDurationFromSeconds = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
@@ -231,6 +232,7 @@ export default function AnalysisPage() {
             </TabsContent>
           </Tabs>
           
+          <AdditionalAnalytics />
           <AiPerformance />
           <QualityAssurance />
           <Alerts />
