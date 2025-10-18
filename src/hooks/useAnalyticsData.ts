@@ -5,7 +5,7 @@ import { API_CHARTS_BASE_URL } from '@/lib/config';
 
 const chartsConfig = [
   { id: 'calls-trend', title: 'Calls Trend (Last 7 Days)', chartType: 'line', endpoint: 'calls-trend' },
-  { id: 'bookings-revenue', title: 'Bookings & Revenue Trend', chartType: 'bar-line', endpoint: 'bookings-trend' },
+  { id: 'bookings-revenue', title: 'Bookings Trend', chartType: 'bar', endpoint: 'bookings-trend' },
   { id: 'lead-funnel', title: 'Lead Conversion Funnel', chartType: 'horizontal-bar', endpoint: 'lead-funnel' },
   { id: 'lead-sources', title: 'Lead Source Effectiveness', chartType: 'bubble', endpoint: 'lead-sources' },
   { id: 'revenue-summary', title: 'Revenue vs Refunds', chartType: 'dual-bar', endpoint: 'revenue-summary' },
@@ -16,7 +16,7 @@ const chartsConfig = [
 
 // Data transformation functions
 const transformCallsTrend = (data: any) => data.dates.map((date: string, index: number) => ({ date, total_calls: data.calls[index] }));
-const transformBookingsRevenue = (data: any) => data.dates.map((date: string, index: number) => ({ date, bookings: data.bookings[index], revenue: data.revenue[index] }));
+const transformBookingsTrend = (data: any) => data.dates.map((date: string, index: number) => ({ date, bookings: data.bookings[index] }));
 const transformLeadFunnel = (data: any) => data.stages.map((stage: string, index: number) => ({ stage, count: data.counts[index] }));
 const transformLeadSources = (data: any) => data.sources.map((source: string, index: number) => ({ name: source, value: data.conversions[index] }));
 const transformCustomerGrowth = (data: any) => data.dates.map((date: string, index: number) => ({ date, total_customers: data.total[index] }));
@@ -43,7 +43,7 @@ export const useAnalyticsData = () => {
         let transformedData;
         switch(id) {
           case 'calls-trend': transformedData = transformCallsTrend(result); break;
-          case 'bookings-revenue': transformedData = transformBookingsRevenue(result); break;
+          case 'bookings-revenue': transformedData = transformBookingsTrend(result); break;
           case 'lead-funnel': transformedData = transformLeadFunnel(result); break;
           case 'lead-sources': transformedData = transformLeadSources(result); break;
           case 'customer-growth': transformedData = transformCustomerGrowth(result); break;

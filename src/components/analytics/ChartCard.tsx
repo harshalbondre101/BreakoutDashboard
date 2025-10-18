@@ -15,6 +15,7 @@ type ChartCardProps = {
   title: string;
   chartType:
     | 'line'
+    | 'bar'
     | 'bar-line'
     | 'funnel'
     | 'pie'
@@ -98,6 +99,17 @@ export const ChartCard: React.FC<ChartCardProps> = ({
             <Tooltip />
             <Line type="monotone" dataKey="total_calls" stroke="#8884d8" />
           </LineChart>
+        );
+       case 'bar':
+        return (
+          <BarChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="date" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="bookings" fill="#8884d8" />
+          </BarChart>
         );
       case 'bar-line':
         return (
