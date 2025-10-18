@@ -59,7 +59,7 @@ export function KnowledgeBaseTab() {
             const data: ApiResponse = await response.json();
             setDocuments(data.documents || []);
         } catch (err) {
-            setError('Could not load knowledge base documents.');
+            setError(err instanceof Error ? err.message : 'Could not load knowledge base documents.');
             console.error(err);
         } finally {
             setLoading(false);
@@ -301,7 +301,7 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open:
             onSuccess();
             handleOpenChange(false);
         } catch (error) {
-            toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
+            toast({ variant: 'destructive', title: 'Error adding URL', description: (error as Error).message });
         } finally {
             setIsSubmitting(false);
         }
@@ -357,7 +357,7 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open:
             onSuccess();
             handleOpenChange(false);
         } catch (error) {
-            toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
+            toast({ variant: 'destructive', title: 'Error creating text document', description: (error as Error).message });
         } finally {
             setIsSubmitting(false);
         }
@@ -385,7 +385,7 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open:
             onSuccess();
             handleOpenChange(false);
         } catch (error) {
-            toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
+            toast({ variant: 'destructive', title: 'Error uploading file', description: (error as Error).message });
         } finally {
             setIsSubmitting(false);
         }
@@ -490,4 +490,5 @@ function CreateDocumentDialog({ open, onOpenChange, onSuccess, apiKey }: { open:
         </Dialog>
     )
 }
+
     

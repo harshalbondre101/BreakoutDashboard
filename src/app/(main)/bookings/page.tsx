@@ -26,7 +26,7 @@ export default function BookingsPage() {
         if (err instanceof Error) {
           setError(err.message);
         } else {
-          setError('An unexpected error occurred');
+          setError('An unexpected error occurred while fetching bookings.');
         }
       } finally {
         setLoading(false);
@@ -52,9 +52,9 @@ export default function BookingsPage() {
 
     if (error) {
       return (
-        <div className="flex justify-center items-center h-64">
-          <div className="text-red-500 text-center">
-            <p>Failed to load booking data.</p>
+        <div className="flex justify-center items-center h-64 bg-red-50 rounded-lg">
+          <div className="text-red-600 text-center">
+            <p className="font-bold">Failed to load booking data.</p>
             <p className="text-sm">{error}</p>
           </div>
         </div>
@@ -237,3 +237,5 @@ export default function BookingsPage() {
     </div>
   );
 }
+
+    

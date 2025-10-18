@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import { Users, Calendar, TrendingUp, Search, Filter, Download } from 'lucide-react';
@@ -123,9 +124,9 @@ export default function CustomersHubPage() {
           fetch(`${API_BASE_URL}/events/?skip=0&limit=100`),
         ]);
 
-        if (!customersResponse.ok) throw new Error(`HTTP ${customersResponse.status} on customers`);
-        if (!leadsResponse.ok) throw new Error(`HTTP ${leadsResponse.status} on leads`);
-        if (!eventsResponse.ok) throw new Error(`HTTP ${eventsResponse.status} on events`);
+        if (!customersResponse.ok) throw new Error(`HTTP error on customers: ${customersResponse.status} ${await customersResponse.text()}`);
+        if (!leadsResponse.ok) throw new Error(`HTTP error on leads: ${leadsResponse.status} ${await leadsResponse.text()}`);
+        if (!eventsResponse.ok) throw new Error(`HTTP error on events: ${eventsResponse.status} ${await eventsResponse.text()}`);
 
         const [customersDataRaw, leadsDataRaw, eventsDataRaw] = await Promise.all([
           customersResponse.json(),
@@ -148,15 +149,15 @@ export default function CustomersHubPage() {
         setLeads(normalizedLeads);
         setEvents(normalizedEvents);
 
-        setLoadingCustomers(false);
-        setLoadingLeads(false);
-        setLoadingEvents(false);
       } catch (err) {
         console.error('❌ Error fetching data:', err);
-        setError(err instanceof Error ? err.message : 'Unexpected error');
-        setLoadingCustomers(false);
-        setLoadingLeads(false);
-        setLoadingEvents(false);
+        setError(err instanceof Error ? err.message : 'An unexpected error occurred while fetching data.');
+      } finally {
+        if (!cancelled) {
+            setLoadingCustomers(false);
+            setLoadingLeads(false);
+            setLoadingEvents(false);
+        }
       }
     };
 
@@ -245,9 +246,9 @@ export default function CustomersHubPage() {
 
     if (error) {
       return (
-        <div className="flex justify-center items-center h-64">
-          <div className="text-red-500 text-center">
-            <p>Failed to load data.</p>
+        <div className="flex justify-center items-center h-64 bg-red-50 rounded-lg">
+          <div className="text-red-600 text-center">
+            <p className="font-bold">Failed to load data.</p>
             <p className="text-sm">{error}</p>
           </div>
         </div>
@@ -505,3 +506,5 @@ export default function CustomersHubPage() {
     </div>
   );
 }
+
+    

@@ -24,7 +24,7 @@ export default function ThemesPage() {
         if (err instanceof Error) {
           setError(err.message);
         } else {
-          setError('An unexpected error occurred');
+          setError('An unexpected error occurred while fetching themes.');
         }
       } finally {
         setLoading(false);
@@ -37,7 +37,7 @@ export default function ThemesPage() {
   const renderThemes = () => {
     if (loading) {
       return (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="bg-white rounded-lg shadow-sm h-64 animate-pulse" />
           ))}
@@ -48,7 +48,7 @@ export default function ThemesPage() {
     if (error) {
       return (
         <div className="col-span-full bg-red-50 text-red-700 p-4 rounded-lg text-center">
-          <p>Failed to load theme data.</p>
+          <p className="font-bold">Failed to load theme data.</p>
           <p className="text-sm">{error}</p>
         </div>
       );
@@ -110,3 +110,5 @@ export default function ThemesPage() {
     </div>
   );
 }
+
+    

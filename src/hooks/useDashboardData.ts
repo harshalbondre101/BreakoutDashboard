@@ -178,7 +178,7 @@ export const useDashboardData = () => {
         if (err instanceof Error) {
           setKpiError(err.message);
         } else {
-          setKpiError('An unexpected error occurred');
+          setKpiError('An unexpected error occurred while fetching KPIs.');
         }
       } finally {
         setKpiLoading(false);
@@ -197,7 +197,7 @@ export const useDashboardData = () => {
         if (err instanceof Error) {
           setBookingsError(err.message);
         } else {
-          setBookingsError('An unexpected error occurred');
+          setBookingsError('An unexpected error occurred while fetching bookings.');
         }
       } finally {
         setBookingsLoading(false);
@@ -232,7 +232,7 @@ export const useDashboardData = () => {
         if (err instanceof Error) {
           setCallsError(err.message);
         } else {
-          setCallsError('An unexpected error occurred');
+          setCallsError('An unexpected error occurred while fetching calls.');
         }
       } finally {
         setCallsLoading(false);
@@ -247,3 +247,5 @@ export const useDashboardData = () => {
 
   return { kpiMetrics, recentBookings, activeCalls, callVolume, alerts, kpiLoading, bookingsLoading, callsLoading, kpiError, bookingsError, callsError };
 };
+
+    

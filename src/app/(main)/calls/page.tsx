@@ -29,7 +29,8 @@ export default function CallsPage() {
     try {
       const response = await fetch(`${API_BASE_URL}/calls/?skip=${initialLoad ? 0 : offset}&limit=${CALLS_PER_PAGE}`);
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
       }
       const data: Call[] = await response.json();
       
@@ -49,7 +50,7 @@ export default function CallsPage() {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError('An unexpected error occurred');
+        setError('An unexpected error occurred while fetching calls.');
       }
     } finally {
       setLoading(false);
@@ -134,3 +135,5 @@ export default function CallsPage() {
     </div>
   );
 }
+
+    

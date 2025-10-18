@@ -59,7 +59,7 @@ export function AgentsTab({ onAgentCreated }: { onAgentCreated: () => void }) {
             }
 
         } catch (err) {
-            setError('Failed to fetch agents. Please try again later.');
+            setError(err instanceof Error ? err.message : 'Failed to fetch agents. Please try again later.');
             console.error(err);
         } finally {
             setLoading(false);
@@ -215,3 +215,5 @@ export function AgentsTab({ onAgentCreated }: { onAgentCreated: () => void }) {
         </div>
     );
 }
+
+    
