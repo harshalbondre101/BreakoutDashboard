@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { KPIMetric, KpiApiResponse, Booking, ApiCall as Call, Alert } from '@/lib/types';
 import { API_BASE_URL } from '@/lib/config';
+import { useAuth } from '@/context/AuthContext';
 
 const formatDurationFromSeconds = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
@@ -56,6 +57,7 @@ const getKpiStatus = (value: number, target: string, higherIsBetter: boolean, un
 };
 
 export const useDashboardData = () => {
+  const { isAuthenticated } = useAuth();
   const [kpiMetrics, setKpiMetrics] = useState<KPIMetric[]>([]);
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
   const [activeCalls, setActiveCalls] = useState<Call[]>([]);
@@ -71,6 +73,8 @@ export const useDashboardData = () => {
   const [callsError, setCallsError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     const fetchKpis = async () => {
       setKpiLoading(true);
       setKpiError(null);
@@ -243,9 +247,7 @@ export const useDashboardData = () => {
     fetchKpis();
     fetchBookings();
     fetchCalls();
-  }, []);
+  }, [isAuthenticated]);
 
   return { kpiMetrics, recentBookings, activeCalls, callVolume, alerts, kpiLoading, bookingsLoading, callsLoading, kpiError, bookingsError, callsError };
 };
-
-    
