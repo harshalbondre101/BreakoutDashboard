@@ -9,7 +9,7 @@ const formatDuration = (seconds: number) => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
-export const ActiveCalls = ({ activeCalls, callsLoading, callsError, activeCallsCount, missedCalls }: { activeCalls: Call[], callsLoading: boolean, callsError: string | null, activeCallsCount: number, missedCalls: number | string }) => {
+export const ActiveCalls = ({ activeCalls, callsLoading, callsError }: { activeCalls: Call[], callsLoading: boolean, callsError: string | null }) => {
   const renderActiveCalls = () => {
     if (callsLoading) {
       return (
@@ -64,16 +64,6 @@ export const ActiveCalls = ({ activeCalls, callsLoading, callsError, activeCalls
           <Phone className="w-6 h-6 text-blue-600" />
           Active Calls
         </h2>
-        <div className="flex gap-4">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-gray-900">{activeCallsCount}</p>
-            <p className="text-xs text-gray-500">Active</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-red-600">{missedCalls}</p>
-            <p className="text-xs text-gray-500">Missed</p>
-          </div>
-        </div>
       </div>
       {renderActiveCalls()}
     </div>

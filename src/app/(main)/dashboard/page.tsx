@@ -1,3 +1,4 @@
+
 'use client';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { Header } from '@/components/dashboard/Header';
@@ -24,9 +25,6 @@ export default function DashboardPage() {
     callsError 
   } = useDashboardData();
 
-  const activeCallsCount = activeCalls.length;
-  const missedCalls = kpiMetrics.find(k => k.id === 'missed_calls')?.value || 0;
-
   return (
     <div className="space-y-6">
       <Header />
@@ -41,8 +39,6 @@ export default function DashboardPage() {
             activeCalls={activeCalls} 
             callsLoading={callsLoading} 
             callsError={callsError} 
-            activeCallsCount={activeCallsCount} 
-            missedCalls={missedCalls} 
           />
         </div>
 
