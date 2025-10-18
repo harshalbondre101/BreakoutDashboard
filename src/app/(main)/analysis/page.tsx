@@ -282,7 +282,7 @@ export default function AnalysisPage() {
           
           <AdditionalAnalytics />
           <AiPerformance />
-          <QualityAssurance />
+          {/* <QualityAssurance /> */}
           <Alerts />
         </div>
       </div>

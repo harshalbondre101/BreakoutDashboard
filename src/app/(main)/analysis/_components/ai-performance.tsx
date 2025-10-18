@@ -77,7 +77,7 @@ export function AiPerformance() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {renderKpiCards()}
       </div>
-
+      {/*
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-gray-50 p-6 rounded-lg">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Intent Recognition Matrix</h3>
@@ -148,6 +148,7 @@ export function AiPerformance() {
           </div>
         </div>
       </div>
+      */}
     </div>
   );
 }
