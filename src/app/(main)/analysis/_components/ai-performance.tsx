@@ -29,7 +29,8 @@ export function AiPerformance() {
       try {
         const response = await fetch('https://breakout-project.onrender.com/kpis/llmkpi');
         if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+          const errorText = await response.text();
+          throw new Error(`Failed to fetch AI KPIs: ${response.status} ${errorText}`);
         }
         const data = await response.json();
         setMetrics(data.llmkpi || []);

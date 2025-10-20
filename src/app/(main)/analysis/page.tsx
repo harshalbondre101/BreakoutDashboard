@@ -11,6 +11,7 @@ import { AiPerformance } from './_components/ai-performance';
 import { QualityAssurance } from './_components/quality-assurance';
 import { Alerts } from './_components/alerts';
 import { AdditionalAnalytics } from './_components/additional-analytics';
+import { useAuth } from '@/context/AuthContext';
 
 const formatDurationFromSeconds = (seconds: number) => {
   if (seconds < 3600) {
@@ -28,31 +29,26 @@ export default function AnalysisPage() {
   const [executiveMetrics, setExecutiveMetrics] = useState<KPIMetric[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     const fetchKpis = async () => {
       setLoading(true);
       setError(null);
       try {
         const [kpiResponse, customerKpiResponse, leadsKpiResponse, bookingsKpiResponse] = await Promise.all([
             fetch(`${API_BASE_URL}/compute/kpis`),
-            fetch(`https://breakout-project.onrender.com/kpis/customers`),
-            fetch(`https://breakout-project.onrender.com/kpis/leads`),
-            fetch(`https://breakout-project.onrender.com/kpis/bookings`)
+            fetch(`${API_BASE_URL}/kpis/customers`),
+            fetch(`${API_BASE_URL}/kpis/leads`),
+            fetch(`${API_BASE_URL}/kpis/bookings`)
         ]);
 
-        if (!kpiResponse.ok) {
-          throw new Error(`HTTP error on main KPIs! Status: ${kpiResponse.status}`);
-        }
-        if (!customerKpiResponse.ok) {
-            throw new Error(`HTTP error on customer KPIs! Status: ${customerKpiResponse.status}`);
-        }
-        if (!leadsKpiResponse.ok) {
-            throw new Error(`HTTP error on leads KPIs! Status: ${leadsKpiResponse.status}`);
-        }
-        if (!bookingsKpiResponse.ok) {
-            throw new Error(`HTTP error on bookings KPIs! Status: ${bookingsKpiResponse.status}`);
-        }
+        if (!kpiResponse.ok) throw new Error(`HTTP error on main KPIs! Status: ${kpiResponse.status} ${await kpiResponse.text()}`);
+        if (!customerKpiResponse.ok) throw new Error(`HTTP error on customer KPIs! Status: ${customerKpiResponse.status} ${await customerKpiResponse.text()}`);
+        if (!leadsKpiResponse.ok) throw new Error(`HTTP error on leads KPIs! Status: ${leadsKpiResponse.status} ${await leadsKpiResponse.text()}`);
+        if (!bookingsKpiResponse.ok) throw new Error(`HTTP error on bookings KPIs! Status: ${bookingsKpiResponse.status} ${await bookingsKpiResponse.text()}`);
         
         const data: KpiApiResponse = await kpiResponse.json();
         const customerKpiData: {name: string, value: any, unit?: string}[] = await customerKpiResponse.json();
@@ -229,7 +225,7 @@ export default function AnalysisPage() {
     };
     
     fetchKpis();
-  }, []);
+  }, [isAuthenticated]);
 
   return (
     <div className="space-y-6">

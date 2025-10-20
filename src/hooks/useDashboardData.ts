@@ -81,7 +81,8 @@ export const useDashboardData = () => {
       try {
         const response = await fetch(`${API_BASE_URL}/compute/kpis`);
         if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+            const errorText = await response.text();
+            throw new Error(`Failed to fetch KPIs: ${response.status} ${errorText}`);
         }
         const data: KpiApiResponse = await response.json();
         const kpis = data.kpis;
@@ -194,7 +195,10 @@ export const useDashboardData = () => {
       setBookingsError(null);
       try {
         const response = await fetch(`${API_BASE_URL}/bookings/?skip=0&limit=100`);
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to fetch bookings: ${response.status} ${errorText}`);
+        }
         const data: Booking[] = await response.json();
         setRecentBookings(data);
       } catch (err) {
@@ -214,7 +218,8 @@ export const useDashboardData = () => {
       try {
         const response = await fetch(`${API_BASE_URL}/calls/`);
         if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+            const errorText = await response.text();
+            throw new Error(`Failed to fetch calls: ${response.status} ${errorText}`);
         }
         const data: Call[] = await response.json();
         setActiveCalls(data.slice(-5));
