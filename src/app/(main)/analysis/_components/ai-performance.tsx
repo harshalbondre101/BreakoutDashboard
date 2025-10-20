@@ -11,12 +11,6 @@ interface AiMetric {
   output_format: string;
 }
 
-const confusionMatrix = [
-  ['Booking', 0.92, 0.05, 0.03],
-  ['Pricing', 0.04, 0.94, 0.02],
-  ['Support', 0.03, 0.02, 0.95]
-];
-
 export function AiPerformance() {
   const [metrics, setMetrics] = useState<AiMetric[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,13 +38,13 @@ export function AiPerformance() {
   }, []);
 
   const renderKpiCards = () => {
-    if (loading) {
+    if (loading && metrics.length === 0) {
       return Array.from({ length: 4 }).map((_, index) => (
         <div key={index} className="p-4 bg-purple-50 rounded-lg border border-purple-100 h-24 animate-pulse" />
       ));
     }
     
-    if (error) {
+    if (error && metrics.length === 0) {
         return (
             <div className="col-span-full bg-red-50 text-red-700 p-4 rounded-lg text-center">
                 <p>Failed to load AI KPI data.</p>

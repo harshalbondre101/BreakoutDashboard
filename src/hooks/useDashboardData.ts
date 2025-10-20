@@ -77,7 +77,6 @@ export const useDashboardData = () => {
 
     const fetchKpis = async () => {
       setKpiLoading(true);
-      setKpiError(null);
       try {
         const response = await fetch(`${API_BASE_URL}/compute/kpis`);
         if (!response.ok) {
@@ -86,6 +85,7 @@ export const useDashboardData = () => {
         }
         const data: KpiApiResponse = await response.json();
         const kpis = data.kpis;
+        setKpiError(null);
 
         const kpiConfig: { id: 'first_call_resolution_pct' | 'avg_call_duration_sec' | 'call_abandon_rate_pct' | 'customer_satisfaction_avg_rating' | 'missed_calls' | 'customer_conversion_rate_pct' | 'overall_quality_score' | 'positive_sentiment_rate_pct'; label: string; target: string; higherIsBetter: boolean, unit: 'percentage' | 'seconds' | 'number' | 'rating' }[] = [
             { id: 'first_call_resolution_pct', label: 'First Call Resolution', target: '>90%', higherIsBetter: true, unit: 'percentage' },
@@ -192,7 +192,6 @@ export const useDashboardData = () => {
     
     const fetchBookings = async () => {
       setBookingsLoading(true);
-      setBookingsError(null);
       try {
         const response = await fetch(`${API_BASE_URL}/bookings/?skip=0&limit=100`);
         if (!response.ok) {
@@ -201,6 +200,7 @@ export const useDashboardData = () => {
         }
         const data: Booking[] = await response.json();
         setRecentBookings(data);
+        setBookingsError(null);
       } catch (err) {
         if (err instanceof Error) {
           setBookingsError(err.message);
@@ -214,7 +214,6 @@ export const useDashboardData = () => {
     
     const fetchCalls = async () => {
       setCallsLoading(true);
-      setCallsError(null);
       try {
         const response = await fetch(`${API_BASE_URL}/calls/`);
         if (!response.ok) {
@@ -222,6 +221,7 @@ export const useDashboardData = () => {
             throw new Error(`Failed to fetch calls: ${response.status} ${errorText}`);
         }
         const data: Call[] = await response.json();
+        setCallsError(null);
         setActiveCalls(data.slice(-5));
         
         const now = new Date();

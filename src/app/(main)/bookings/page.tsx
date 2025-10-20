@@ -14,14 +14,17 @@ export default function BookingsPage() {
   useEffect(() => {
     const fetchBookings = async () => {
       setLoading(true);
-      setError(null);
+      // Don't clear previous error, so UI can show stale data while retrying
+      // setError(null);
       try {
         const response = await fetch(`${API_BASE_URL}/bookings/`);
         if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+           const errorText = await response.text();
+           throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
         }
         const data: Booking[] = await response.json();
         setBookings(data);
+        setError(null); // Clear error on success
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
@@ -42,7 +45,7 @@ export default function BookingsPage() {
   const paymentMethods = { credit: 42, debit: 28, wallet: 15, bank: 15 };
 
   const renderBookingsTable = () => {
-    if (loading) {
+    if (loading && bookings.length === 0) {
       return (
         <div className="flex justify-center items-center h-64">
           <div className="w-12 h-12 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
@@ -50,7 +53,7 @@ export default function BookingsPage() {
       );
     }
 
-    if (error) {
+    if (error && bookings.length === 0) {
       return (
         <div className="flex justify-center items-center h-64 bg-red-50 rounded-lg">
           <div className="text-red-600 text-center">

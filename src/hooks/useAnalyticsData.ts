@@ -60,19 +60,20 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
   useEffect(() => {
     const fetchData = async (id: string, endpoint: string) => {
       setLoading(prev => ({ ...prev, [id]: true }));
-      setError(prev => ({ ...prev, [id]: null }));
 
       const dummyData = getDummyData(endpoint);
       if (dummyData) {
         setData(prev => ({ ...prev, [id]: dummyData }));
         setLoading(prev => ({ ...prev, [id]: false }));
+        setError(prev => ({ ...prev, [id]: null }));
         return;
       }
       
       try {
         const response = await fetch(`${API_CHARTS_BASE_URL}/${endpoint}`);
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorText = await response.text();
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
         }
         const result = await response.json();
         
@@ -90,6 +91,7 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
         }
 
         setData(prev => ({ ...prev, [id]: transformedData }));
+        setError(prev => ({ ...prev, [id]: null }));
       } catch (e) {
         setError(prev => ({ ...prev, [id]: e instanceof Error ? e.message : 'An error occurred' }));
       } finally {

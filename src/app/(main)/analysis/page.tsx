@@ -36,7 +36,8 @@ export default function AnalysisPage() {
 
     const fetchKpis = async () => {
       setLoading(true);
-      setError(null);
+      // Don't clear previous error, so UI can show stale data while retrying
+      // setError(null);
       try {
         const [kpiResponse, customerKpiResponse, leadsKpiResponse, bookingsKpiResponse] = await Promise.all([
             fetch(`${API_BASE_URL}/compute/kpis`),
@@ -90,6 +91,7 @@ export default function AnalysisPage() {
 
         // Merge all KPI sources
         const kpis = { ...data.kpis, ...customerKpisObject, ...leadsKpiObject, ...bookingsKpiObject };
+        setError(null); // Clear error on success
 
         const executiveKpiConfig: { id: keyof KpiApiResponse['kpis']; label: string; target: string; higherIsBetter: boolean, unit: 'percentage' | 'seconds' | 'number' | 'rating' }[] = [
             { id: 'first_call_resolution_pct', label: 'First Call Resolution', target: '>90%', higherIsBetter: true, unit: 'percentage' },

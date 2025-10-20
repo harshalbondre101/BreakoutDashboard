@@ -12,14 +12,17 @@ export default function ThemesPage() {
   useEffect(() => {
     const fetchThemes = async () => {
       setLoading(true);
-      setError(null);
+      // Don't clear previous error, so UI can show stale data while retrying
+      // setError(null);
       try {
         const response = await fetch(`${API_BASE_URL}/themes/`);
         if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+           const errorText = await response.text();
+           throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
         }
         const data: Theme[] = await response.json();
         setThemes(data);
+        setError(null); // Clear error on success
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
@@ -35,7 +38,7 @@ export default function ThemesPage() {
   }, []);
 
   const renderThemes = () => {
-    if (loading) {
+    if (loading && themes.length === 0) {
       return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -45,7 +48,7 @@ export default function ThemesPage() {
       );
     }
 
-    if (error) {
+    if (error && themes.length === 0) {
       return (
         <div className="col-span-full bg-red-50 text-red-700 p-4 rounded-lg text-center">
           <p className="font-bold">Failed to load theme data.</p>

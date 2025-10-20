@@ -45,7 +45,6 @@ export function KnowledgeBaseTab() {
 
     const fetchDocuments = async () => {
         setLoading(true);
-        setError(null);
         try {
             const response = await fetch(`${XI_BASE_URL}/knowledge-base`, {
                 headers: {
@@ -58,8 +57,10 @@ export function KnowledgeBaseTab() {
             }
             const data: ApiResponse = await response.json();
             setDocuments(data.documents || []);
+            setError(null); // Clear error on success
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Could not load knowledge base documents.');
+            const errorMessage = err instanceof Error ? err.message : 'Could not load knowledge base documents.';
+            setError(errorMessage);
             console.error(err);
         } finally {
             setLoading(false);
@@ -110,8 +111,8 @@ export function KnowledgeBaseTab() {
     );
 
     const renderDocumentList = () => {
-        if (loading) return <div className="text-center p-8">Loading documents...</div>;
-        if (error) return <div className="text-center p-8 text-red-500">{error}</div>;
+        if (loading && documents.length === 0) return <div className="text-center p-8">Loading documents...</div>;
+        if (error && documents.length === 0) return <div className="text-center p-8 text-red-500">{error}</div>;
         if (filteredDocuments.length === 0) return <div className="text-center p-8 text-gray-500">No documents found.</div>;
 
         return (
