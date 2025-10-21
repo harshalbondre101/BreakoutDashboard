@@ -94,21 +94,21 @@ export const ChartCard: React.FC<ChartCardProps> = ({
         return (
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
+            <XAxis dataKey={data[0]?.date ? "date" : "name"} />
             <YAxis />
             <Tooltip />
-            <Line type="monotone" dataKey="total_calls" stroke="#8884d8" />
+            <Line type="monotone" dataKey={data[0]?.total_calls ? "total_calls" : "value"} stroke="#8884d8" />
           </LineChart>
         );
        case 'bar':
         return (
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
+            <XAxis dataKey={data[0]?.date ? "date" : "name"} />
             <YAxis />
             <Tooltip />
             <Legend />
-            <Bar dataKey="bookings" fill="#8884d8" />
+            <Bar dataKey={data[0]?.bookings ? "bookings" : "value"} fill="#8884d8" />
           </BarChart>
         );
       case 'bar-line':

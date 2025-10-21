@@ -12,6 +12,7 @@ import { QualityAssurance } from './_components/quality-assurance';
 import { Alerts } from './_components/alerts';
 import { AdditionalAnalytics } from './_components/additional-analytics';
 import { useAuth } from '@/context/AuthContext';
+import { ApiCharts } from './_components/api-charts';
 
 const formatDurationFromSeconds = (seconds: number) => {
   if (seconds < 3600) {
@@ -109,7 +110,6 @@ export default function AnalysisPage() {
             { id: 'total_customers', label: 'Total Customers', target: '>1000', higherIsBetter: true, unit: 'number' },
             { id: 'new_customers', label: 'New Customers', target: '>50', higherIsBetter: true, unit: 'number' },
             { id: 'avg_spend_per_customer', label: 'Average Spend per Customer', target: '>$500', higherIsBetter: true, unit: 'currency' },
-            { id: 'customer_conversion_rate_pct', label: 'Customer Conversion Rate', target: '>10%', higherIsBetter: true, unit: 'percentage' },
             
             // Leads
             { id: 'total_leads_generated', label: 'Total Leads Generated', target: '>200', higherIsBetter: true, unit: 'number' },
@@ -255,7 +255,7 @@ export default function AnalysisPage() {
             <TabsContent value="customers">
               <KpiSection 
                 title="KPIs - Customers" 
-                kpiIds={['total_customers', 'new_customers', 'avg_spend_per_customer', 'customer_conversion_rate_pct']}
+                kpiIds={['total_customers', 'new_customers', 'avg_spend_per_customer']}
                 metrics={kpiMetrics}
                 loading={loading}
               />
@@ -279,6 +279,7 @@ export default function AnalysisPage() {
           </Tabs>
           
           <AdditionalAnalytics />
+          <ApiCharts />
           <AiPerformance />
           {/* <QualityAssurance /> */}
           <Alerts />
