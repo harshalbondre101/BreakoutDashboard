@@ -381,10 +381,10 @@ export default function CustomersHubPage() {
       }, {});
 
       return (
-        <div className="overflow-x-auto">
+        <div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             {Object.entries(leadsByStatus).map(([status, count], idx) => (
-              <div key={status ?? `lead-status-${idx}`} className="p-4 bg-gray-50 rounded-lg text-center">
+              <div key={status ?? `lead-status-${idx}`} className="p-4 bg-gray-50 rounded-lg border border-gray-200 text-center">
                 <p className="text-2xl font-bold text-gray-900">{count}</p>
                 <p className="text-xs text-gray-600 mt-1 capitalize">{status}</p>
               </div>
@@ -562,3 +562,5 @@ export default function CustomersHubPage() {
     </div>
   );
 }
+
+    
