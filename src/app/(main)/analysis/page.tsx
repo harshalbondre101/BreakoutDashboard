@@ -229,6 +229,8 @@ export default function AnalysisPage() {
     fetchKpis();
   }, [isAuthenticated]);
 
+  const allMetrics = [...executiveMetrics, ...kpiMetrics];
+
   return (
     <div className="space-y-6">
       <div>
@@ -282,11 +284,9 @@ export default function AnalysisPage() {
           <ApiCharts />
           <AiPerformance />
           {/* <QualityAssurance /> */}
-          <Alerts />
+          <Alerts metrics={allMetrics} loading={loading} />
         </div>
       </div>
     </div>
   );
 }
-
-    
