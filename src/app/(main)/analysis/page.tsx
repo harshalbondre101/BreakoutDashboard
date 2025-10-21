@@ -12,7 +12,6 @@ import { QualityAssurance } from './_components/quality-assurance';
 import { Alerts } from './_components/alerts';
 import { AdditionalAnalytics } from './_components/additional-analytics';
 import { useAuth } from '@/context/AuthContext';
-import { ApiCharts } from './_components/api-charts';
 
 const formatDurationFromSeconds = (seconds: number) => {
   if (seconds < 3600) {
@@ -281,7 +280,6 @@ export default function AnalysisPage() {
           </Tabs>
           
           <AdditionalAnalytics />
-          <ApiCharts />
           <AiPerformance />
           {/* <QualityAssurance /> */}
           <Alerts metrics={allMetrics} loading={loading} />
