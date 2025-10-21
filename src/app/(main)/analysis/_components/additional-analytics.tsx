@@ -71,7 +71,7 @@ export const AdditionalAnalytics = () => {
     <div className="bg-white rounded-lg shadow-sm p-6">
       <h2 className="text-xl font-bold text-gray-900 mb-4">Additional Analytics</h2>
       
-      {(error.lead-funnel || apiError) && (
+      {(error['lead-funnel'] || apiError) && (
         <div className="bg-red-50 text-red-700 p-4 rounded-lg text-center mb-6">
             <p>Failed to load some charts.</p>
             {error['lead-funnel'] && <p className="text-sm">{error['lead-funnel']}</p>}
