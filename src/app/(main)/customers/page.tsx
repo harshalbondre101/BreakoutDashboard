@@ -5,6 +5,12 @@ import { Users, Calendar, TrendingUp, Search, Filter, Download, ArrowDown, Arrow
 import { Customer, Lead, Event } from '@/lib/types';
 import { API_BASE_URL } from '@/lib/config';
 import { Button } from '@/components/ui/button';
+import { DateRange } from 'react-day-picker';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar as CalendarPicker } from '@/components/ui/calendar';
+import { format, subDays } from 'date-fns';
+
 
 type TabType = 'customers' | 'leads' | 'events';
 type SortDirection = 'ascending' | 'descending';
@@ -95,6 +101,8 @@ export default function CustomersHubPage() {
   
   // Filter states - Retaining for potential future use, though UI is removed.
   const [leadStatusFilter, setLeadStatusFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState('all');
+  const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>();
   
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: SortDirection } | null>({ key: 'Name', direction: 'ascending' });
@@ -167,7 +175,7 @@ export default function CustomersHubPage() {
   
   useEffect(() => {
     setCurrentPage(1);
-  }, [activeTab, searchTerm, leadStatusFilter]);
+  }, [activeTab, searchTerm, leadStatusFilter, dateFilter, customDateRange]);
 
   const requestSort = (key: string) => {
     let direction: SortDirection = 'ascending';
@@ -187,6 +195,21 @@ export default function CustomersHubPage() {
   const { filteredCustomers, filteredLeads, filteredEvents } = useMemo(() => {
     const q = String(searchTerm ?? '').toLowerCase();
     
+    const dateFilterFunc = (dateString: string) => {
+        if (!dateString) return true;
+        const itemDate = new Date(dateString);
+        if (isNaN(itemDate.getTime())) return true;
+        
+        const now = new Date();
+        if (dateFilter === 'today') return itemDate.toDateString() === now.toDateString();
+        if (dateFilter === '7d') return itemDate >= subDays(now, 7) && itemDate <= now;
+        if (dateFilter === '30d') return itemDate >= subDays(now, 30) && itemDate <= now;
+        if (dateFilter === 'custom' && customDateRange?.from && customDateRange?.to) {
+            return itemDate >= customDateRange.from && itemDate <= customDateRange.to;
+        }
+        return true;
+    }
+
     let sortedCustomers = [...customers];
     let sortedLeads = [...leads];
     let sortedEvents = [...events];
@@ -196,8 +219,10 @@ export default function CustomersHubPage() {
         const direction = sortConfig.direction === 'ascending' ? 1 : -1;
 
         const sortFn = (a: any, b: any) => {
-            if (a[key] < b[key]) return -1 * direction;
-            if (a[key] > b[key]) return 1 * direction;
+            const valA = a[key];
+            const valB = b[key];
+            if (valA < valB) return -1 * direction;
+            if (valA > valB) return 1 * direction;
             return 0;
         };
         sortedCustomers.sort(sortFn);
@@ -209,7 +234,7 @@ export default function CustomersHubPage() {
         const name = String(c?.Name ?? '').toLowerCase();
         const email = String(c?.Email ?? '').toLowerCase();
         const phone = String(c?.PhoneNumber ?? '').toLowerCase();
-        return name.includes(q) || email.includes(q) || phone.includes(q);
+        return (name.includes(q) || email.includes(q) || phone.includes(q)) && dateFilterFunc(c.CustomerSince);
     });
 
     const filteredLeads = sortedLeads.filter((l) => {
@@ -219,18 +244,18 @@ export default function CustomersHubPage() {
         const notes = String(l?.Notes ?? '').toLowerCase();
         const statusMatch = leadStatusFilter === 'all' || (l.Status || 'unknown').toLowerCase() === leadStatusFilter;
         const searchMatch = name.includes(q) || email.includes(q) || phone.includes(q) || notes.includes(q);
-        return statusMatch && searchMatch;
+        return statusMatch && searchMatch && dateFilterFunc(l.CreatedAt);
     });
 
     const filteredEvents = sortedEvents.filter((e) => {
         const type = String(e?.Event_type ?? '').toLowerCase();
         const notes = String(e?.Notes ?? '').toLowerCase();
         const agent = String(e?.Agent_ID ?? '').toLowerCase();
-        return type.includes(q) || notes.includes(q) || agent.includes(q);
+        return (type.includes(q) || notes.includes(q) || agent.includes(q)) && dateFilterFunc(e.Proposed_date);
     });
 
     return { filteredCustomers, filteredLeads, filteredEvents };
-  }, [customers, leads, events, searchTerm, sortConfig, leadStatusFilter]);
+  }, [customers, leads, events, searchTerm, sortConfig, leadStatusFilter, dateFilter, customDateRange]);
 
   const { currentData, totalPages } = useMemo(() => {
     let data;
@@ -382,9 +407,9 @@ export default function CustomersHubPage() {
 
       return (
         <div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            {Object.entries(leadsByStatus).map(([status, count], idx) => (
-              <div key={status ?? `lead-status-${idx}`} className="p-4 bg-gray-50 rounded-lg border border-gray-200 text-center">
+           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            {Object.entries(leadsByStatus).map(([status, count]) => (
+              <div key={status} className="p-4 bg-gray-50 rounded-lg border border-gray-200 text-center">
                 <p className="text-2xl font-bold text-gray-900">{count}</p>
                 <p className="text-xs text-gray-600 mt-1 capitalize">{status}</p>
               </div>
@@ -543,8 +568,8 @@ export default function CustomersHubPage() {
         </div>
 
         <div className="p-6">
-          <div className="flex gap-4 mb-6">
-            <div className="flex-1 relative">
+          <div className="flex flex-wrap gap-4 mb-6">
+            <div className="flex-1 relative min-w-[250px]">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
@@ -553,6 +578,47 @@ export default function CustomersHubPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+            </div>
+            <div className="flex items-center gap-4">
+                 <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                      <option value="all">All Dates</option>
+                      <option value="today">Today</option>
+                      <option value="7d">Last 7 Days</option>
+                      <option value="30d">Last 30 Days</option>
+                      <option value="custom">Custom Range</option>
+                  </select>
+                  {dateFilter === 'custom' && (
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                                id="date"
+                                variant={"outline"}
+                                className="w-[240px] justify-start text-left font-normal"
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {customDateRange?.from ? (
+                                    customDateRange.to ? (
+                                        `${format(customDateRange.from, 'LLL dd, y')} - ${format(customDateRange.to, 'LLL dd, y')}`
+                                    ) : (
+                                        format(customDateRange.from, 'LLL dd, y')
+                                    )
+                                ) : (
+                                    <span>Pick a date range</span>
+                                )}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarPicker
+                                initialFocus
+                                mode="range"
+                                defaultMonth={customDateRange?.from}
+                                selected={customDateRange}
+                                onSelect={setCustomDateRange}
+                                numberOfMonths={2}
+                            />
+                        </PopoverContent>
+                    </Popover>
+                  )}
             </div>
           </div>
           
