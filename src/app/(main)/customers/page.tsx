@@ -4,9 +4,11 @@ import { useState, useEffect, useMemo } from 'react';
 import { Users, Calendar, TrendingUp, Search, Filter, Download, ArrowDown, ArrowUp } from 'lucide-react';
 import { Customer, Lead, Event } from '@/lib/types';
 import { API_BASE_URL } from '@/lib/config';
+import { Button } from '@/components/ui/button';
 
 type TabType = 'customers' | 'leads' | 'events';
 type SortDirection = 'ascending' | 'descending';
+const ITEMS_PER_PAGE = 10;
 
 /**
  * Normalizers: convert API objects (possibly snake_case) -> shapes our UI expects.
@@ -98,6 +100,9 @@ export default function CustomersHubPage() {
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: SortDirection } | null>({ key: 'Name', direction: 'ascending' });
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
@@ -160,6 +165,10 @@ export default function CustomersHubPage() {
       cancelled = true;
     };
   }, []);
+  
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchTerm, leadStatusFilter]);
 
   const requestSort = (key: string) => {
     let direction: SortDirection = 'ascending';
@@ -176,7 +185,9 @@ export default function CustomersHubPage() {
     return sortConfig.direction === 'ascending' ? <ArrowUp className="w-3 h-3 ml-1" /> : <ArrowDown className="w-3 h-3 ml-1" />;
   };
 
-  const sortedAndFilteredData = useMemo(() => {
+  const { filteredCustomers, filteredLeads, filteredEvents } = useMemo(() => {
+    const q = String(searchTerm ?? '').toLowerCase();
+    
     let sortedCustomers = [...customers];
     let sortedLeads = [...leads];
     let sortedEvents = [...events];
@@ -190,14 +201,11 @@ export default function CustomersHubPage() {
             if (a[key] > b[key]) return 1 * direction;
             return 0;
         };
-
         sortedCustomers.sort(sortFn);
         sortedLeads.sort(sortFn);
         sortedEvents.sort(sortFn);
     }
     
-    const q = String(searchTerm ?? '').toLowerCase();
-
     const filteredCustomers = sortedCustomers.filter((c) => {
         const name = String(c?.Name ?? '').toLowerCase();
         const email = String(c?.Email ?? '').toLowerCase();
@@ -223,37 +231,51 @@ export default function CustomersHubPage() {
     });
 
     return { filteredCustomers, filteredLeads, filteredEvents };
-
   }, [customers, leads, events, searchTerm, sortConfig, leadStatusFilter]);
+
+  const { currentData, totalPages } = useMemo(() => {
+    let data;
+    switch(activeTab) {
+      case 'customers': data = filteredCustomers; break;
+      case 'leads': data = filteredLeads; break;
+      case 'events': data = filteredEvents; break;
+    }
+    const total = Math.ceil(data.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return {
+      currentData: data.slice(startIndex, startIndex + ITEMS_PER_PAGE),
+      totalPages: total,
+    };
+  }, [activeTab, currentPage, filteredCustomers, filteredLeads, filteredEvents]);
 
 
   const exportData = () => {
-    let data;
+    let dataToExport;
     let filename;
     switch (activeTab) {
       case 'customers':
-        data = sortedAndFilteredData.filteredCustomers;
+        dataToExport = filteredCustomers;
         filename = 'customers.csv';
         break;
       case 'leads':
-        data = sortedAndFilteredData.filteredLeads;
+        dataToExport = filteredLeads;
         filename = 'leads.csv';
         break;
       case 'events':
-        data = sortedAndFilteredData.filteredEvents;
+        dataToExport = filteredEvents;
         filename = 'events.csv';
         break;
       default:
         return;
     }
 
-    if (data.length === 0) {
+    if (dataToExport.length === 0) {
       console.warn("No data to export.");
       return;
     }
 
     const csvContent = "data:text/csv;charset=utf-8," 
-      + [Object.keys(data[0]).join(","), ...data.map(item => Object.values(item).join(","))].join("\n");
+      + [Object.keys(dataToExport[0]).join(","), ...dataToExport.map(item => Object.values(item).join(","))].join("\n");
 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -272,6 +294,17 @@ export default function CustomersHubPage() {
       </div>
     </th>
   );
+  
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+    return (
+        <div className="flex justify-between items-center mt-4">
+            <Button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>Previous</Button>
+            <span className="text-sm text-gray-600">Page {currentPage} of {totalPages}</span>
+            <Button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>Next</Button>
+        </div>
+    )
+  }
 
 
   const renderContent = () => {
@@ -299,6 +332,10 @@ export default function CustomersHubPage() {
       );
     }
 
+    const paginatedCustomers = currentData as Customer[];
+    const paginatedLeads = currentData as Lead[];
+    const paginatedEvents = currentData as Event[];
+
     if (activeTab === 'customers') {
       return (
         <div className="overflow-x-auto">
@@ -313,7 +350,7 @@ export default function CustomersHubPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {sortedAndFilteredData.filteredCustomers.map((customer, idx) => (
+              {paginatedCustomers.map((customer, idx) => (
                 <tr
                   key={customer.Customer_ID ?? `customer-${customer.Email ?? idx}-${idx}`}
                   className="hover:bg-gray-50 cursor-pointer"
@@ -331,7 +368,8 @@ export default function CustomersHubPage() {
               ))}
             </tbody>
           </table>
-          {sortedAndFilteredData.filteredCustomers.length === 0 && <p className="text-center text-gray-500 mt-4">No customers found.</p>}
+          {filteredCustomers.length === 0 && <p className="text-center text-gray-500 mt-4">No customers found.</p>}
+          {renderPagination()}
         </div>
       );
     }
@@ -366,7 +404,7 @@ export default function CustomersHubPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {sortedAndFilteredData.filteredLeads.map((lead, idx) => (
+                {paginatedLeads.map((lead, idx) => (
                   <tr key={lead.Lead_ID ?? `lead-${lead.Email ?? idx}-${idx}`} className="hover:bg-gray-50 cursor-pointer">
                     <td className="px-4 py-3 font-medium text-gray-900">{lead.Name || '—'}</td>
                     <td className="px-4 py-3 text-sm text-gray-600">
@@ -395,7 +433,8 @@ export default function CustomersHubPage() {
                 ))}
               </tbody>
             </table>
-            {sortedAndFilteredData.filteredLeads.length === 0 && <p className="text-center text-gray-500 mt-4">No leads found.</p>}
+            {filteredLeads.length === 0 && <p className="text-center text-gray-500 mt-4">No leads found.</p>}
+            {renderPagination()}
           </div>
         </div>
       );
@@ -417,7 +456,7 @@ export default function CustomersHubPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {sortedAndFilteredData.filteredEvents.map((event, idx) => (
+              {paginatedEvents.map((event, idx) => (
                 <tr
                   key={event.Event_ID ?? `event-${event.Customer_ID ?? idx}-${idx}`}
                   className="hover:bg-gray-50 cursor-pointer"
@@ -451,7 +490,8 @@ export default function CustomersHubPage() {
               ))}
             </tbody>
           </table>
-          {sortedAndFilteredData.filteredEvents.length === 0 && <p className="text-center text-gray-500 mt-4">No events found.</p>}
+          {filteredEvents.length === 0 && <p className="text-center text-gray-500 mt-4">No events found.</p>}
+          {renderPagination()}
         </div>
       );
     }
@@ -555,5 +595,3 @@ export default function CustomersHubPage() {
     </div>
   );
 }
-
-    

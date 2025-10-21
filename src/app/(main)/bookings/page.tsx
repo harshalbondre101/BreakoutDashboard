@@ -13,6 +13,7 @@ import { format, subDays } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 
 type SortDirection = 'ascending' | 'descending';
+const ITEMS_PER_PAGE = 10;
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -26,6 +27,9 @@ export default function BookingsPage() {
 
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{ key: keyof Booking; direction: SortDirection } | null>({ key: 'start_time', direction: 'descending' });
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -104,10 +108,19 @@ export default function BookingsPage() {
 
   }, [bookings, statusFilter, dateFilter, customDateRange, sortConfig]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, dateFilter, customDateRange]);
+
+  const paginatedBookings = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredAndSortedBookings.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredAndSortedBookings, currentPage]);
+
+  const totalPages = Math.ceil(filteredAndSortedBookings.length / ITEMS_PER_PAGE);
+
   const totalBookings = filteredAndSortedBookings.length;
   const confirmedBookings = filteredAndSortedBookings.filter(b => b.status === 'confirmed' || b.status === 'active').length;
-  
-  const paymentMethods = { credit: 42, debit: 28, wallet: 15, bank: 15 };
   
   const getSortIcon = (key: keyof Booking) => {
     if (!sortConfig || sortConfig.key !== key) return null;
@@ -165,7 +178,7 @@ export default function BookingsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {filteredAndSortedBookings.map((booking) => (
+            {paginatedBookings.map((booking) => (
               <tr key={booking.booking_id} className="hover:bg-gray-50 cursor-pointer">
                 <td className="px-4 py-3 text-sm font-medium text-gray-900">{booking.booking_id.slice(-8)}</td>
                 <td className="px-4 py-3 text-sm text-gray-600">{booking.customer_id.slice(-8)}</td>
@@ -190,6 +203,18 @@ export default function BookingsPage() {
         </table>
       </div>
     );
+  }
+  
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+    
+    return (
+        <div className="flex justify-between items-center mt-4">
+            <Button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>Previous</Button>
+            <span className="text-sm text-gray-600">Page {currentPage} of {totalPages}</span>
+            <Button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>Next</Button>
+        </div>
+    )
   }
 
   return (
@@ -216,7 +241,7 @@ export default function BookingsPage() {
         </div>
       </div>
       
-      <BookingHeatmap bookings={filteredAndSortedBookings} loading={loading} />
+      <BookingHeatmap bookings={bookings} loading={loading} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-6">
@@ -268,6 +293,7 @@ export default function BookingsPage() {
               </div>
           </div>
           {renderBookingsTable()}
+          {renderPagination()}
         </div>
 
         <div className="space-y-6">
@@ -302,5 +328,3 @@ export default function BookingsPage() {
     </div>
   );
 }
-
-    

@@ -7,51 +7,41 @@ import { API_BASE_URL } from '@/lib/config';
 import { CallList } from './_components/call-list';
 import { CallDetails } from './_components/call-details';
 
-const CALLS_PER_PAGE = 15;
+const ITEMS_PER_PAGE = 10;
 type SortDirection = 'ascending' | 'descending';
 
 export default function CallsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCall, setSelectedCall] = useState<Call | null>(null);
-  const [calls, setCalls] = useState<Call[]>([]);
+  const [allCalls, setAllCalls] = useState<Call[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [offset, setOffset] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
 
   // Filters
   const [intentFilter, setIntentFilter] = useState('all');
   const [timeFilter, setTimeFilter] = useState('all');
   const [sortConfig, setSortConfig] = useState<{ key: keyof Call; direction: SortDirection } | null>({ key: 'date_time', direction: 'descending' });
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const fetchMoreCalls = async (initialLoad = false) => {
-    if (loading && !initialLoad) return;
+  const fetchAllCalls = async () => {
     setLoading(true);
-    
+    setError(null);
     try {
-      const currentOffset = initialLoad ? 0 : offset;
-      const response = await fetch(`${API_BASE_URL}/calls/?skip=${currentOffset}&limit=${CALLS_PER_PAGE}`);
-      
+      const response = await fetch(`${API_BASE_URL}/calls/`);
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
       }
-      
       const data: Call[] = await response.json();
-      
-      if (data.length < CALLS_PER_PAGE) {
-        setHasMore(false);
-      }
-      
-      setCalls(prevCalls => initialLoad ? data : [...prevCalls, ...data]);
-      
-      if (initialLoad && data.length > 0) {
-        // Set selected call to the first one after initial sort
-      }
-      
-      setOffset(currentOffset + CALLS_PER_PAGE);
-      if(!initialLoad) setError(null);
+      setAllCalls(data);
 
+      if (data.length > 0) {
+        // Set selected call to the first one after initial sort
+        const sortedData = [...data].sort((a, b) => new Date(b.date_time).getTime() - new Date(a.date_time).getTime());
+        setSelectedCall(sortedData[0]);
+      }
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -64,13 +54,13 @@ export default function CallsPage() {
   };
 
   useEffect(() => {
-    fetchMoreCalls(true);
+    fetchAllCalls();
   }, []);
 
   const uniqueIntents = useMemo(() => {
-    const intents = new Set(calls.map(c => c.call_intent));
+    const intents = new Set(allCalls.map(c => c.call_intent));
     return ['all', ...Array.from(intents)];
-  }, [calls]);
+  }, [allCalls]);
 
   const requestSort = (key: keyof Call) => {
     let direction: SortDirection = 'ascending';
@@ -81,9 +71,9 @@ export default function CallsPage() {
   };
   
   const filteredAndSortedCalls = useMemo(() => {
-    let filtered = calls.filter(c =>
+    let filtered = allCalls.filter(c =>
         (c.conv_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.customer_id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(c.customer_id).toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.call_intent.toLowerCase().includes(searchTerm.toLowerCase())) &&
         (intentFilter === 'all' || c.call_intent === intentFilter)
     );
@@ -124,14 +114,23 @@ export default function CallsPage() {
     }
 
     return filtered;
-  }, [calls, searchTerm, intentFilter, timeFilter, sortConfig]);
+  }, [allCalls, searchTerm, intentFilter, timeFilter, sortConfig]);
 
   useEffect(() => {
-    if (filteredAndSortedCalls.length > 0 && !selectedCall) {
-        setSelectedCall(filteredAndSortedCalls[0]);
+    setCurrentPage(1);
+    if(filteredAndSortedCalls.length > 0 && !selectedCall) {
+        setSelectedCall(filteredAndSortedCalls[0])
     }
-  }, [filteredAndSortedCalls, selectedCall]);
+  }, [searchTerm, intentFilter, timeFilter]);
   
+  const paginatedCalls = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredAndSortedCalls.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredAndSortedCalls, currentPage]);
+
+  const totalPages = Math.ceil(filteredAndSortedCalls.length / ITEMS_PER_PAGE);
+
+
   const getSortIcon = (key: keyof Call) => {
     if (!sortConfig || sortConfig.key !== key) {
       return null;
@@ -151,24 +150,24 @@ export default function CallsPage() {
        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow-sm p-6">
           <p className="text-sm text-gray-600 mb-2">Total Calls</p>
-          <p className="text-3xl font-bold text-gray-900">{calls.length}</p>
+          <p className="text-3xl font-bold text-gray-900">{allCalls.length}</p>
         </div>
         <div className="bg-white rounded-lg shadow-sm p-6">
           <p className="text-sm text-gray-600 mb-2">Avg Duration</p>
           <p className="text-3xl font-bold text-gray-900">
-            {calls.length > 0 ? `${(calls.reduce((sum, c) => sum + c.duration, 0) / calls.length / 60).toFixed(1)} min` : 'N/A'}
+            {allCalls.length > 0 ? `${(allCalls.reduce((sum, c) => sum + c.duration, 0) / allCalls.length / 60).toFixed(1)} min` : 'N/A'}
           </p>
         </div>
         <div className="bg-white rounded-lg shadow-sm p-6">
           <p className="text-sm text-gray-600 mb-2">Total Credits Consumed</p>
           <p className="text-3xl font-bold text-gray-900">
-            {calls.reduce((sum, c) => sum + c.credits_consumed, 0).toFixed(2)}
+            {allCalls.reduce((sum, c) => sum + c.credits_consumed, 0).toFixed(2)}
           </p>
         </div>
          <div className="bg-white rounded-lg shadow-sm p-6">
           <p className="text-sm text-gray-600 mb-2">Unique Customers</p>
           <p className="text-3xl font-bold text-gray-900">
-            {new Set(calls.map(c => c.customer_id)).size}
+            {new Set(allCalls.map(c => c.customer_id)).size}
           </p>
         </div>
       </div>
@@ -213,13 +212,14 @@ export default function CallsPage() {
 
           <div className="flex-1 overflow-y-auto min-h-0">
             <CallList 
-              calls={filteredAndSortedCalls}
+              calls={paginatedCalls}
               selectedCall={selectedCall}
               onSelectCall={setSelectedCall}
-              loading={loading && calls.length === 0}
+              loading={loading && allCalls.length === 0}
               error={error}
-              hasMore={hasMore}
-              loadMore={fetchMoreCalls}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
             />
           </div>
 
@@ -232,5 +232,3 @@ export default function CallsPage() {
     </div>
   );
 }
-
-    
