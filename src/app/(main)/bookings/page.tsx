@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { IndianRupee, TrendingUp, Calendar, CreditCard, ArrowUp, ArrowDown } from 'lucide-react';
 import { Booking } from '@/lib/types';
 import { API_BASE_URL } from '@/lib/config';
-import { BookingHeatmap } from './_components/booking-heatmap';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
@@ -241,8 +240,6 @@ export default function BookingsPage() {
         </div>
       </div>
       
-      <BookingHeatmap bookings={bookings} loading={loading} />
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-6">
           <div className="flex flex-wrap gap-4 items-center justify-between mb-6">
@@ -273,7 +270,7 @@ export default function BookingsPage() {
                                     ) : (
                                         format(customDateRange.from, 'LLL dd, y')
                                     )
-                                ) : (
+                                 ) : (
                                     <span>Pick a date range</span>
                                 )}
                             </Button>
