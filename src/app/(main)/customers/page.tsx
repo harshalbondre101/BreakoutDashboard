@@ -1,11 +1,12 @@
 
 'use client';
-import { useState, useEffect } from 'react';
-import { Users, Calendar, TrendingUp, Search, Filter, Download } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Users, Calendar, TrendingUp, Search, Filter, Download, ArrowDown, ArrowUp } from 'lucide-react';
 import { Customer, Lead, Event } from '@/lib/types';
 import { API_BASE_URL } from '@/lib/config';
 
 type TabType = 'customers' | 'leads' | 'events';
+type SortDirection = 'ascending' | 'descending';
 
 /**
  * Normalizers: convert API objects (possibly snake_case) -> shapes our UI expects.
@@ -41,7 +42,6 @@ function safeDateString(value: any) {
 }
 
 function normalizeCustomer(apiObj: any): Customer {
-  // map various possible key names to our Customer type fields
   return {
     Customer_ID:
       pickNumber(apiObj, 'customer_id', 'Customer_ID', 'id', 'customerId') ?? undefined,
@@ -52,7 +52,6 @@ function normalizeCustomer(apiObj: any): Customer {
       pickNumber(apiObj, 'original_lead_id', 'Original_Lead_ID', 'originalLeadId', 'lead_id') ??
       undefined,
     CustomerSince: pickString(apiObj, 'customer_since', 'CustomerSince', 'customer_since_at', 'created_at') || '',
-    // keep raw object in case you later need additional fields
     _raw: apiObj,
   } as any;
 }
@@ -87,6 +86,7 @@ function normalizeEvent(apiObj: any): Event {
   } as any;
 }
 
+
 export default function CustomersHubPage() {
   const [activeTab, setActiveTab] = useState<TabType>('customers');
   const [searchTerm, setSearchTerm] = useState('');
@@ -94,11 +94,9 @@ export default function CustomersHubPage() {
 
   // Filter states
   const [leadStatusFilter, setLeadStatusFilter] = useState<string>('all');
-  const [eventStatusFilter, setEventStatusFilter] = useState<string>('all');
-  const [eventTypeFilter, setEventTypeFilter] = useState<string>('all');
-
+  
   // Sorting state
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'ascending' | 'descending' } | null>(null);
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: SortDirection } | null>({ key: 'Name', direction: 'ascending' });
 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -114,7 +112,6 @@ export default function CustomersHubPage() {
   useEffect(() => {
     let cancelled = false;
     const fetchData = async () => {
-      // Set loading true for all, but don't clear errors to show stale data
       setLoading({ customers: true, leads: true, events: true });
 
       try {
@@ -136,24 +133,21 @@ export default function CustomersHubPage() {
 
         if (cancelled) return;
         
-        setError(null); // Clear errors on full success
+        setError(null);
 
-        // Defensive: if API returns single object instead of array, coerce to array
         const customersArray = Array.isArray(customersDataRaw) ? customersDataRaw : [customersDataRaw];
         const leadsArray = Array.isArray(leadsDataRaw) ? leadsDataRaw : [leadsDataRaw];
         const eventsArray = Array.isArray(eventsDataRaw) ? eventsDataRaw : [eventsDataRaw];
 
-        const normalizedCustomers = customersArray.map(normalizeCustomer);
-        const normalizedLeads = leadsArray.map(normalizeLead);
-        const normalizedEvents = eventsArray.map(normalizeEvent);
-
-        setCustomers(normalizedCustomers);
-        setLeads(normalizedLeads);
-        setEvents(normalizedEvents);
+        setCustomers(customersArray.map(normalizeCustomer));
+        setLeads(leadsArray.map(normalizeLead));
+        setEvents(eventsArray.map(normalizeEvent));
 
       } catch (err) {
         console.error('❌ Error fetching data:', err);
-        setError(err instanceof Error ? err.message : 'An unexpected error occurred while fetching data.');
+        if (!cancelled) {
+            setError(err instanceof Error ? err.message : 'An unexpected error occurred while fetching data.');
+        }
       } finally {
         if (!cancelled) {
             setLoading({ customers: false, leads: false, events: false });
@@ -167,48 +161,86 @@ export default function CustomersHubPage() {
     };
   }, []);
 
-  const q = String(searchTerm ?? '').toLowerCase();
+  const requestSort = (key: string) => {
+    let direction: SortDirection = 'ascending';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
 
-  const filteredCustomers = customers.filter((c) => {
-    const name = String(c?.Name ?? '').toLowerCase();
-    const email = String(c?.Email ?? '').toLowerCase();
-    const phone = String(c?.PhoneNumber ?? '').toLowerCase();
-    return name.includes(q) || email.includes(q) || phone.includes(q);
-  });
+  const getSortIcon = (key: string) => {
+    if (!sortConfig || sortConfig.key !== key) {
+      return null;
+    }
+    return sortConfig.direction === 'ascending' ? <ArrowUp className="w-3 h-3 ml-1" /> : <ArrowDown className="w-3 h-3 ml-1" />;
+  };
 
-  const filteredLeads = leads.filter((l) => {
-    const name = String(l?.Name ?? '').toLowerCase();
-    const email = String(l?.Email ?? '').toLowerCase();
-    const phone = String(l?.PhoneNumber ?? '').toLowerCase();
-    const notes = String(l?.Notes ?? '').toLowerCase();
-    const statusMatch = leadStatusFilter === 'all' || (l.Status || 'unknown').toLowerCase() === leadStatusFilter;
-    const searchMatch = name.includes(q) || email.includes(q) || phone.includes(q) || notes.includes(q);
-    return statusMatch && searchMatch;
-  });
+  const sortedAndFilteredData = useMemo(() => {
+    let sortedCustomers = [...customers];
+    let sortedLeads = [...leads];
+    let sortedEvents = [...events];
+    
+    if (sortConfig !== null) {
+        const key = sortConfig.key as keyof (Customer | Lead | Event);
+        const direction = sortConfig.direction === 'ascending' ? 1 : -1;
 
-  const filteredEvents = events
-    .filter((e) => {
-      const type = String(e?.Event_type ?? '').toLowerCase();
-      const notes = String(e?.Notes ?? '').toLowerCase();
-      const agent = String(e?.Agent_ID ?? '').toLowerCase();
-      return type.includes(q) || notes.includes(q) || agent.includes(q);
-    })
-    .slice(0, 50);
+        const sortFn = (a: any, b: any) => {
+            if (a[key] < b[key]) return -1 * direction;
+            if (a[key] > b[key]) return 1 * direction;
+            return 0;
+        };
+
+        sortedCustomers.sort(sortFn);
+        sortedLeads.sort(sortFn);
+        sortedEvents.sort(sortFn);
+    }
+    
+    const q = String(searchTerm ?? '').toLowerCase();
+
+    const filteredCustomers = sortedCustomers.filter((c) => {
+        const name = String(c?.Name ?? '').toLowerCase();
+        const email = String(c?.Email ?? '').toLowerCase();
+        const phone = String(c?.PhoneNumber ?? '').toLowerCase();
+        return name.includes(q) || email.includes(q) || phone.includes(q);
+    });
+
+    const filteredLeads = sortedLeads.filter((l) => {
+        const name = String(l?.Name ?? '').toLowerCase();
+        const email = String(l?.Email ?? '').toLowerCase();
+        const phone = String(l?.PhoneNumber ?? '').toLowerCase();
+        const notes = String(l?.Notes ?? '').toLowerCase();
+        const statusMatch = leadStatusFilter === 'all' || (l.Status || 'unknown').toLowerCase() === leadStatusFilter;
+        const searchMatch = name.includes(q) || email.includes(q) || phone.includes(q) || notes.includes(q);
+        return statusMatch && searchMatch;
+    });
+
+    const filteredEvents = sortedEvents.filter((e) => {
+        const type = String(e?.Event_type ?? '').toLowerCase();
+        const notes = String(e?.Notes ?? '').toLowerCase();
+        const agent = String(e?.Agent_ID ?? '').toLowerCase();
+        return type.includes(q) || notes.includes(q) || agent.includes(q);
+    });
+
+    return { filteredCustomers, filteredLeads, filteredEvents };
+
+  }, [customers, leads, events, searchTerm, sortConfig, leadStatusFilter]);
+
 
   const exportData = () => {
     let data;
     let filename;
     switch (activeTab) {
       case 'customers':
-        data = filteredCustomers;
+        data = sortedAndFilteredData.filteredCustomers;
         filename = 'customers.csv';
         break;
       case 'leads':
-        data = filteredLeads;
+        data = sortedAndFilteredData.filteredLeads;
         filename = 'leads.csv';
         break;
       case 'events':
-        data = filteredEvents;
+        data = sortedAndFilteredData.filteredEvents;
         filename = 'events.csv';
         break;
       default:
@@ -231,6 +263,16 @@ export default function CustomersHubPage() {
     link.click();
     document.body.removeChild(link);
   };
+  
+  const SortableHeader = ({ sortKey, children }: { sortKey: string, children: React.ReactNode }) => (
+    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer" onClick={() => requestSort(sortKey)}>
+      <div className="flex items-center">
+        {children}
+        {getSortIcon(sortKey)}
+      </div>
+    </th>
+  );
+
 
   const renderContent = () => {
     const isLoading =
@@ -263,15 +305,15 @@ export default function CustomersHubPage() {
           <table className="w-full table-auto">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                <SortableHeader sortKey="Name">Name</SortableHeader>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lead ID</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer Since</th>
+                <SortableHeader sortKey="Original_Lead_ID">Lead ID</SortableHeader>
+                <SortableHeader sortKey="CustomerSince">Customer Since</SortableHeader>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredCustomers.map((customer, idx) => (
+              {sortedAndFilteredData.filteredCustomers.map((customer, idx) => (
                 <tr
                   key={customer.Customer_ID ?? `customer-${customer.Email ?? idx}-${idx}`}
                   className="hover:bg-gray-50 cursor-pointer"
@@ -289,7 +331,7 @@ export default function CustomersHubPage() {
               ))}
             </tbody>
           </table>
-          {filteredCustomers.length === 0 && <p className="text-center text-gray-500 mt-4">No customers found.</p>}
+          {sortedAndFilteredData.filteredCustomers.length === 0 && <p className="text-center text-gray-500 mt-4">No customers found.</p>}
         </div>
       );
     }
@@ -303,7 +345,7 @@ export default function CustomersHubPage() {
 
       return (
         <div className="overflow-x-auto">
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             {Object.entries(leadsByStatus).map(([status, count], idx) => (
               <div key={status ?? `lead-status-${idx}`} className="p-4 bg-gray-50 rounded-lg text-center">
                 <p className="text-2xl font-bold text-gray-900">{count}</p>
@@ -315,16 +357,16 @@ export default function CustomersHubPage() {
             <table className="w-full table-auto">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                  <SortableHeader sortKey="Name">Name</SortableHeader>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lead Type</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <SortableHeader sortKey="Source">Source</SortableHeader>
+                  <SortableHeader sortKey="LeadType">Lead Type</SortableHeader>
+                  <SortableHeader sortKey="Priority">Priority</SortableHeader>
+                  <SortableHeader sortKey="Status">Status</SortableHeader>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredLeads.map((lead, idx) => (
+                {sortedAndFilteredData.filteredLeads.map((lead, idx) => (
                   <tr key={lead.Lead_ID ?? `lead-${lead.Email ?? idx}-${idx}`} className="hover:bg-gray-50 cursor-pointer">
                     <td className="px-4 py-3 font-medium text-gray-900">{lead.Name || '—'}</td>
                     <td className="px-4 py-3 text-sm text-gray-600">
@@ -353,7 +395,7 @@ export default function CustomersHubPage() {
                 ))}
               </tbody>
             </table>
-            {filteredLeads.length === 0 && <p className="text-center text-gray-500 mt-4">No leads found.</p>}
+            {sortedAndFilteredData.filteredLeads.length === 0 && <p className="text-center text-gray-500 mt-4">No leads found.</p>}
           </div>
         </div>
       );
@@ -365,17 +407,17 @@ export default function CustomersHubPage() {
           <table className="w-full table-auto">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer ID</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                <SortableHeader sortKey="Customer_ID">Customer ID</SortableHeader>
+                <SortableHeader sortKey="Event_type">Type</SortableHeader>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Notes</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Proposed Date</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Guest Count</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Agent ID</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <SortableHeader sortKey="Proposed_date">Proposed Date</SortableHeader>
+                <SortableHeader sortKey="Guest_count">Guest Count</SortableHeader>
+                <SortableHeader sortKey="Agent_ID">Agent ID</SortableHeader>
+                <SortableHeader sortKey="Status">Status</SortableHeader>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredEvents.map((event, idx) => (
+              {sortedAndFilteredData.filteredEvents.map((event, idx) => (
                 <tr
                   key={event.Event_ID ?? `event-${event.Customer_ID ?? idx}-${idx}`}
                   className="hover:bg-gray-50 cursor-pointer"
@@ -409,7 +451,7 @@ export default function CustomersHubPage() {
               ))}
             </tbody>
           </table>
-          {filteredEvents.length === 0 && <p className="text-center text-gray-500 mt-4">No events found.</p>}
+          {sortedAndFilteredData.filteredEvents.length === 0 && <p className="text-center text-gray-500 mt-4">No events found.</p>}
         </div>
       );
     }
@@ -498,7 +540,12 @@ export default function CustomersHubPage() {
                     </select>
                   </div>
                 )}
-                {/* Add other filters here */}
+                {activeTab === 'customers' && (
+                   <div className="text-sm text-gray-500 col-span-full">No filters available for customers yet.</div>
+                )}
+                 {activeTab === 'events' && (
+                   <div className="text-sm text-gray-500 col-span-full">No filters available for events yet.</div>
+                )}
               </div>
             </div>
           )}

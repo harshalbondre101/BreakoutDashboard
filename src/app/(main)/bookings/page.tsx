@@ -1,21 +1,35 @@
 
 'use client';
-import { useState, useEffect } from 'react';
-import { IndianRupee, TrendingUp, Calendar, CreditCard } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { IndianRupee, TrendingUp, Calendar, CreditCard, ArrowUp, ArrowDown } from 'lucide-react';
 import { Booking } from '@/lib/types';
 import { API_BASE_URL } from '@/lib/config';
 import { BookingHeatmap } from './_components/booking-heatmap';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar as CalendarPicker } from '@/components/ui/calendar';
+import { Button } from '@/components/ui/button';
+import { format, subDays } from 'date-fns';
+import { DateRange } from 'react-day-picker';
+
+type SortDirection = 'ascending' | 'descending';
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Filtering states
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all');
+  const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>();
+
+  // Sorting state
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Booking; direction: SortDirection } | null>({ key: 'start_time', direction: 'descending' });
 
   useEffect(() => {
     const fetchBookings = async () => {
       setLoading(true);
-      // Don't clear previous error, so UI can show stale data while retrying
-      // setError(null);
       try {
         const response = await fetch(`${API_BASE_URL}/bookings/`);
         if (!response.ok) {
@@ -24,7 +38,7 @@ export default function BookingsPage() {
         }
         const data: Booking[] = await response.json();
         setBookings(data);
-        setError(null); // Clear error on success
+        setError(null);
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
@@ -39,10 +53,75 @@ export default function BookingsPage() {
     fetchBookings();
   }, []);
 
-  const totalBookings = bookings.length;
-  const confirmedBookings = bookings.filter(b => b.status === 'confirmed' || b.status === 'active').length;
+  const uniqueStatuses = useMemo(() => ['all', ...Array.from(new Set(bookings.map(b => b.status)))], [bookings]);
+
+  const requestSort = (key: keyof Booking) => {
+    let direction: SortDirection = 'ascending';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+  
+  const filteredAndSortedBookings = useMemo(() => {
+    let filtered = bookings.filter(b => {
+      if (statusFilter !== 'all' && b.status !== statusFilter) {
+        return false;
+      }
+      const bookingDate = new Date(b.start_time);
+      const now = new Date();
+
+      if(dateFilter === 'today') {
+        return bookingDate.toDateString() === now.toDateString();
+      }
+      if(dateFilter === '7d') {
+        return bookingDate >= subDays(now, 7) && bookingDate <= now;
+      }
+      if(dateFilter === '30d') {
+        return bookingDate >= subDays(now, 30) && bookingDate <= now;
+      }
+      if(dateFilter === 'custom' && customDateRange?.from && customDateRange?.to) {
+        return bookingDate >= customDateRange.from && bookingDate <= customDateRange.to;
+      }
+      return true; // 'all'
+    });
+
+    if (sortConfig !== null) {
+      filtered.sort((a, b) => {
+        const aValue = a[sortConfig.key];
+        const bValue = b[sortConfig.key];
+        if (aValue < bValue) {
+          return sortConfig.direction === 'ascending' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    
+    return filtered;
+
+  }, [bookings, statusFilter, dateFilter, customDateRange, sortConfig]);
+
+  const totalBookings = filteredAndSortedBookings.length;
+  const confirmedBookings = filteredAndSortedBookings.filter(b => b.status === 'confirmed' || b.status === 'active').length;
   
   const paymentMethods = { credit: 42, debit: 28, wallet: 15, bank: 15 };
+  
+  const getSortIcon = (key: keyof Booking) => {
+    if (!sortConfig || sortConfig.key !== key) return null;
+    return sortConfig.direction === 'ascending' ? <ArrowUp className="w-3 h-3 ml-1" /> : <ArrowDown className="w-3 h-3 ml-1" />;
+  };
+
+  const SortableHeader = ({ sortKey, children }: { sortKey: keyof Booking, children: React.ReactNode }) => (
+    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer" onClick={() => requestSort(sortKey)}>
+      <div className="flex items-center">
+        {children}
+        {getSortIcon(sortKey)}
+      </div>
+    </th>
+  );
 
   const renderBookingsTable = () => {
     if (loading && bookings.length === 0) {
@@ -63,6 +142,14 @@ export default function BookingsPage() {
         </div>
       );
     }
+
+    if (filteredAndSortedBookings.length === 0) {
+        return (
+            <div className="flex justify-center items-center h-64 text-gray-500">
+                <p>No bookings found matching your criteria.</p>
+            </div>
+        );
+    }
     
     return (
       <div className="overflow-x-auto">
@@ -72,13 +159,13 @@ export default function BookingsPage() {
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Booking ID</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer ID</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Event ID</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start Time</th>
+              <SortableHeader sortKey="start_time">Start Time</SortableHeader>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Conversation ID</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              <SortableHeader sortKey="status">Status</SortableHeader>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {bookings.map((booking) => (
+            {filteredAndSortedBookings.map((booking) => (
               <tr key={booking.booking_id} className="hover:bg-gray-50 cursor-pointer">
                 <td className="px-4 py-3 text-sm font-medium text-gray-900">{booking.booking_id.slice(-8)}</td>
                 <td className="px-4 py-3 text-sm text-gray-600">{booking.customer_id.slice(-8)}</td>
@@ -119,32 +206,67 @@ export default function BookingsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-gray-600">Total Bookings</p>
-            <Calendar className="w-5 h-5 text-blue-600" />
-          </div>
+          <p className="text-sm text-gray-600 mb-2">Total Bookings (Filtered)</p>
           <p className="text-3xl font-bold text-gray-900">{totalBookings}</p>
-          <div className="mt-2 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-emerald-600" />
-            <p className="text-xs text-emerald-600">+22.5% conversion</p>
-          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-gray-600">Confirmed/Active</p>
-            <Calendar className="w-5 h-5 text-emerald-600" />
-          </div>
+          <p className="text-sm text-gray-600 mb-2">Confirmed/Active (Filtered)</p>
           <p className="text-3xl font-bold text-gray-900">{confirmedBookings}</p>
-          <p className="text-xs text-gray-500 mt-2">{totalBookings > 0 ? ((confirmedBookings / totalBookings) * 100).toFixed(1) : '0.0'}% completion rate</p>
         </div>
       </div>
       
-      <BookingHeatmap bookings={bookings} loading={loading} />
+      <BookingHeatmap bookings={filteredAndSortedBookings} loading={loading} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Recent Bookings</h2>
+          <div className="flex flex-wrap gap-4 items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Recent Bookings</h2>
+              <div className="flex flex-wrap gap-4">
+                  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                      {uniqueStatuses.map(s => <option key={s} value={s}>{s === 'all' ? 'All Statuses' : s}</option>)}
+                  </select>
+                  <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                      <option value="all">All Dates</option>
+                      <option value="today">Today</option>
+                      <option value="7d">Last 7 Days</option>
+                      <option value="30d">Last 30 Days</option>
+                      <option value="custom">Custom Range</option>
+                  </select>
+                  {dateFilter === 'custom' && (
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                                id="date"
+                                variant={"outline"}
+                                className="w-[240px] justify-start text-left font-normal"
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {customDateRange?.from ? (
+                                    customDateRange.to ? (
+                                        `${format(customDateRange.from, 'LLL dd, y')} - ${format(customDateRange.to, 'LLL dd, y')}`
+                                    ) : (
+                                        format(customDateRange.from, 'LLL dd, y')
+                                    )
+                                ) : (
+                                    <span>Pick a date range</span>
+                                )}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarPicker
+                                initialFocus
+                                mode="range"
+                                defaultMonth={customDateRange?.from}
+                                selected={customDateRange}
+                                onSelect={setCustomDateRange}
+                                numberOfMonths={2}
+                            />
+                        </PopoverContent>
+                    </Popover>
+                  )}
+              </div>
+          </div>
           {renderBookingsTable()}
         </div>
 
@@ -163,54 +285,6 @@ export default function BookingsPage() {
                   <div className="h-full bg-emerald-500" style={{ width: '97.8%' }} />
                 </div>
               </div>
-
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-2">Avg Processing Time</p>
-                <p className="text-2xl font-bold text-gray-900">28s</p>
-                <p className="text-xs text-blue-600 mt-1">-12% improvement</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-600 mb-3">Payment Methods</p>
-                <div className="space-y-2">
-                  <div>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-600">Credit Card</span>
-                      <span className="font-medium text-gray-900">{paymentMethods.credit} ({((paymentMethods.credit / 100) * 100).toFixed(0)}%)</span>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-blue-500" style={{ width: `${(paymentMethods.credit / 100) * 100}%` }} />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-600">Debit Card</span>
-                      <span className="font-medium text-gray-900">{paymentMethods.debit} ({((paymentMethods.debit / 100) * 100).toFixed(0)}%)</span>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-emerald-500" style={{ width: `${(paymentMethods.debit / 100) * 100}%` }} />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-600">Wallet</span>
-                      <span className="font-medium text-gray-900">{paymentMethods.wallet} ({((paymentMethods.wallet / 100) * 100).toFixed(0)}%)</span>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-purple-500" style={{ width: `${(paymentMethods.wallet / 100) * 100}%` }} />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-600">Bank Transfer</span>
-                      <span className="font-medium text-gray-900">{paymentMethods.bank} ({((paymentMethods.bank / 100) * 100).toFixed(0)}%)</span>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-amber-500" style={{ width: `${(paymentMethods.bank / 100) * 100}%` }} />
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -218,20 +292,8 @@ export default function BookingsPage() {
             <h3 className="text-lg font-bold text-gray-900 mb-4">Key Metrics (mock)</h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                <span className="text-sm text-gray-600">Modification Rate</span>
-                <span className="font-bold text-gray-900">18.3%</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
                 <span className="text-sm text-gray-600">Cancellation Rate</span>
-                <span className="font-bold text-gray-900">12.8%</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                <span className="text-sm text-gray-600">No-Show Rate</span>
-                <span className="font-bold text-gray-900">7.2%</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-emerald-50 rounded">
-                <span className="text-sm text-gray-600">Rebooking Rate</span>
-                <span className="font-bold text-emerald-600">34%</span>
+                <span className="font-bold text-gray-900">{bookings.length > 0 ? ((bookings.filter(b => b.status === 'cancelled').length / bookings.length) * 100).toFixed(1) : '0.0'}%</span>
               </div>
             </div>
           </div>

@@ -1,5 +1,6 @@
 
 'use client';
+import InfiniteScroll from 'react-infinite-scroll-component';
 import { ApiCall as Call } from '@/lib/types';
 
 interface CallListProps {
@@ -8,10 +9,12 @@ interface CallListProps {
   onSelectCall: (call: Call) => void;
   loading: boolean;
   error: string | null;
+  hasMore: boolean;
+  loadMore: () => void;
 }
 
-export function CallList({ calls, selectedCall, onSelectCall, loading, error }: CallListProps) {
-  if (loading && calls.length === 0) { // Only show skeleton on initial load
+export function CallList({ calls, selectedCall, onSelectCall, loading, error, hasMore, loadMore }: CallListProps) {
+  if (loading) {
     return (
       <div className="space-y-3">
         {Array.from({ length: 5 }).map((_, i) => (
@@ -31,9 +34,25 @@ export function CallList({ calls, selectedCall, onSelectCall, loading, error }: 
       </div>
     );
   }
+  
+  if (calls.length === 0) {
+    return (
+        <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
+            <p>No calls found matching your criteria.</p>
+        </div>
+    );
+  }
 
   return (
-    <div className="space-y-3">
+    <InfiniteScroll
+        dataLength={calls.length}
+        next={loadMore}
+        hasMore={hasMore}
+        loader={<div className="text-center p-4">Loading more calls...</div>}
+        endMessage={<div className="text-center p-4 text-gray-500">No more calls to load.</div>}
+        height="100%"
+        className="space-y-3"
+    >
       {calls.map((call) => (
         <div
           key={call.conv_id}
@@ -46,7 +65,7 @@ export function CallList({ calls, selectedCall, onSelectCall, loading, error }: 
         >
           <div className="flex justify-between items-start mb-2">
             <div>
-              <p className="font-semibold text-gray-900">Conversation: {call.conv_id}</p>
+              <p className="font-semibold text-gray-900">Conversation: {call.conv_id.slice(-8)}</p>
               <p className="text-sm text-gray-600">
                 Customer ID: {call.customer_id}
               </p>
@@ -65,6 +84,8 @@ export function CallList({ calls, selectedCall, onSelectCall, loading, error }: 
           </div>
         </div>
       ))}
-    </div>
+    </InfiniteScroll>
   );
 }
+
+    

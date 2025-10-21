@@ -1,13 +1,14 @@
 
 'use client';
-import { useState, useEffect } from 'react';
-import { Search, Filter } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Search, Filter, ArrowUp, ArrowDown } from 'lucide-react';
 import { ApiCall as Call } from '@/lib/types';
 import { API_BASE_URL } from '@/lib/config';
 import { CallList } from './_components/call-list';
 import { CallDetails } from './_components/call-details';
 
 const CALLS_PER_PAGE = 15;
+type SortDirection = 'ascending' | 'descending';
 
 export default function CallsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,6 +18,11 @@ export default function CallsPage() {
   const [error, setError] = useState<string | null>(null);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+
+  // Filters
+  const [intentFilter, setIntentFilter] = useState('all');
+  const [timeFilter, setTimeFilter] = useState('all');
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Call; direction: SortDirection } | null>({ key: 'date_time', direction: 'descending' });
 
   const fetchMoreCalls = async (initialLoad = false) => {
     if (loading && !initialLoad) return;
@@ -40,11 +46,11 @@ export default function CallsPage() {
       setCalls(prevCalls => initialLoad ? data : [...prevCalls, ...data]);
       
       if (initialLoad && data.length > 0) {
-        setSelectedCall(data[0]);
+        // Set selected call to the first one after initial sort
       }
       
       setOffset(currentOffset + CALLS_PER_PAGE);
-      setError(null); // Clear error on successful fetch
+      if(!initialLoad) setError(null);
 
     } catch (err) {
       if (err instanceof Error) {
@@ -61,13 +67,80 @@ export default function CallsPage() {
     fetchMoreCalls(true);
   }, []);
 
-  const filteredCalls = calls.filter(c =>
-    c.conv_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.call_intent.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const uniqueIntents = useMemo(() => {
+    const intents = new Set(calls.map(c => c.call_intent));
+    return ['all', ...Array.from(intents)];
+  }, [calls]);
+
+  const requestSort = (key: keyof Call) => {
+    let direction: SortDirection = 'ascending';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+  
+  const filteredAndSortedCalls = useMemo(() => {
+    let filtered = calls.filter(c =>
+        (c.conv_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.customer_id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.call_intent.toLowerCase().includes(searchTerm.toLowerCase())) &&
+        (intentFilter === 'all' || c.call_intent === intentFilter)
+    );
+
+    if (timeFilter !== 'all') {
+        const now = new Date();
+        filtered = filtered.filter(c => {
+            const callDate = new Date(c.date_time);
+            if (timeFilter === 'today') {
+                return callDate.toDateString() === now.toDateString();
+            }
+            const daysAgo = {
+                '7d': 7,
+                '30d': 30,
+            }[timeFilter];
+
+            if(daysAgo) {
+                const filterDate = new Date();
+                filterDate.setDate(now.getDate() - daysAgo);
+                return callDate >= filterDate;
+            }
+            return true;
+        });
+    }
+
+    if (sortConfig !== null) {
+      filtered.sort((a, b) => {
+        const aValue = a[sortConfig.key];
+        const bValue = b[sortConfig.key];
+        if (aValue < bValue) {
+          return sortConfig.direction === 'ascending' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [calls, searchTerm, intentFilter, timeFilter, sortConfig]);
+
+  useEffect(() => {
+    if (filteredAndSortedCalls.length > 0 && !selectedCall) {
+        setSelectedCall(filteredAndSortedCalls[0]);
+    }
+  }, [filteredAndSortedCalls, selectedCall]);
+  
+  const getSortIcon = (key: keyof Call) => {
+    if (!sortConfig || sortConfig.key !== key) {
+      return null;
+    }
+    return sortConfig.direction === 'ascending' ? <ArrowUp className="w-3 h-3 ml-1" /> : <ArrowDown className="w-3 h-3 ml-1" />;
+  };
 
   return (
-    <div className="space-y-6 h-full">
+    <div className="space-y-6 h-full flex flex-col">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Call Management</h1>
@@ -100,11 +173,10 @@ export default function CallsPage() {
         </div>
       </div>
 
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
         <div className="lg:col-span-1 bg-white rounded-lg shadow-sm p-6 flex flex-col">
-          <div className="flex gap-4 mb-6">
-            <div className="flex-1 relative">
+          <div className="flex flex-col gap-4 mb-6">
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
@@ -114,19 +186,40 @@ export default function CallsPage() {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
-              <Filter className="w-4 h-4" />
-              Filters
-            </button>
+            <div className="grid grid-cols-2 gap-4">
+               <div>
+                  <label className="text-sm font-medium text-gray-700">Intent</label>
+                  <select value={intentFilter} onChange={e => setIntentFilter(e.target.value)} className="w-full mt-1 pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      {uniqueIntents.map(intent => <option key={intent} value={intent}>{intent === 'all' ? 'All Intents' : intent}</option>)}
+                  </select>
+              </div>
+               <div>
+                  <label className="text-sm font-medium text-gray-700">Time</label>
+                  <select value={timeFilter} onChange={e => setTimeFilter(e.target.value)} className="w-full mt-1 pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      <option value="all">All Time</option>
+                      <option value="today">Today</option>
+                      <option value="7d">Last 7 Days</option>
+                      <option value="30d">Last 30 Days</option>
+                  </select>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-4 text-sm">
+                <span className="text-gray-600">Sort by:</span>
+                <button onClick={() => requestSort('date_time')} className="flex items-center font-medium">Date {getSortIcon('date_time')}</button>
+                <button onClick={() => requestSort('duration')} className="flex items-center font-medium">Duration {getSortIcon('duration')}</button>
+                <button onClick={() => requestSort('call_intent')} className="flex items-center font-medium">Intent {getSortIcon('call_intent')}</button>
+            </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto min-h-0">
             <CallList 
-              calls={filteredCalls}
+              calls={filteredAndSortedCalls}
               selectedCall={selectedCall}
               onSelectCall={setSelectedCall}
-              loading={loading}
+              loading={loading && calls.length === 0}
               error={error}
+              hasMore={hasMore}
+              loadMore={fetchMoreCalls}
             />
           </div>
 
