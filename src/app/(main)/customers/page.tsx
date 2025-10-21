@@ -92,9 +92,8 @@ function normalizeEvent(apiObj: any): Event {
 export default function CustomersHubPage() {
   const [activeTab, setActiveTab] = useState<TabType>('customers');
   const [searchTerm, setSearchTerm] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
-
-  // Filter states
+  
+  // Filter states - Retaining for potential future use, though UI is removed.
   const [leadStatusFilter, setLeadStatusFilter] = useState<string>('all');
   
   // Sorting state
@@ -555,40 +554,8 @@ export default function CustomersHubPage() {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <button onClick={() => setShowFilters(!showFilters)} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
-              <Filter className="w-4 h-4" />
-              Filters
-            </button>
           </div>
-          {showFilters && (
-            <div className="bg-gray-50 p-4 rounded-lg mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {activeTab === 'leads' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Lead Status</label>
-                    <select
-                      value={leadStatusFilter}
-                      onChange={(e) => setLeadStatusFilter(e.target.value)}
-                      className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="all">All Statuses</option>
-                      <option value="won">Won</option>
-                      <option value="lost">Lost</option>
-                      <option value="contacted">Contacted</option>
-                      <option value="new">New</option>
-                      <option value="unqualified">Unqualified</option>
-                    </select>
-                  </div>
-                )}
-                {activeTab === 'customers' && (
-                   <div className="text-sm text-gray-500 col-span-full">No filters available for customers yet.</div>
-                )}
-                 {activeTab === 'events' && (
-                   <div className="text-sm text-gray-500 col-span-full">No filters available for events yet.</div>
-                )}
-              </div>
-            </div>
-          )}
+          
           {renderContent()}
         </div>
       </div>
