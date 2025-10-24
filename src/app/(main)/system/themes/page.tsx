@@ -60,27 +60,27 @@ export default function ThemesPage() {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {themes.map((theme) => (
-          <div key={theme.Theme_ID} className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+          <div key={theme.theme_id} className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div className="h-32 bg-gradient-to-br from-blue-500 to-purple-600"></div>
             <div className="p-6">
               <div className="flex items-start justify-between mb-3">
-                <h3 className="font-bold text-gray-900">{theme.Name}</h3>
+                <h3 className="font-bold text-gray-900">{theme.name}</h3>
               </div>
 
-              <p className="text-sm text-gray-600 mb-4 h-20 overflow-hidden">{theme.Description}</p>
+              <p className="text-sm text-gray-600 mb-4 h-20 overflow-hidden">{theme.description}</p>
 
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Price per Person</span>
-                  <span className="font-bold text-gray-900">₹{formatNumber(theme.Price_per_person)}</span>
+                  <span className="font-bold text-gray-900">₹{formatNumber(theme.price_per_person)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Duration</span>
-                  <span className="font-bold text-gray-900">{theme.Duration ?? '-'} min</span>
+                  <span className="font-bold text-gray-900">{theme.duration_minutes ?? '-'} min</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Min. Players</span>
-                  <span className="font-bold text-gray-900">{theme.Minimum_players ?? '-'}</span>
+                  <span className="font-bold text-gray-900">{theme.booking_limit_min ?? '-'}</span>
                 </div>
               </div>
             </div>
@@ -113,5 +113,3 @@ export default function ThemesPage() {
     </div>
   );
 }
-
-    
