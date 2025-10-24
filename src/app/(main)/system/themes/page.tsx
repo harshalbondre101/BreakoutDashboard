@@ -3,37 +3,37 @@
 import { useState, useEffect } from 'react';
 import { Theme } from '@/lib/types';
 import { API_BASE_URL } from '@/lib/config';
+import { CreateThemeDialog } from './_components/create-theme-dialog';
 
 export default function ThemesPage() {
   const [themes, setThemes] = useState<Theme[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCreateOpen, setCreateOpen] = useState(false);
+
+  const fetchThemes = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/themes/`);
+      if (!response.ok) {
+         const errorText = await response.text();
+         throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
+      }
+      const data: Theme[] = await response.json();
+      setThemes(data);
+      setError(null);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unexpected error occurred while fetching themes.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchThemes = async () => {
-      setLoading(true);
-      // Don't clear previous error, so UI can show stale data while retrying
-      // setError(null);
-      try {
-        const response = await fetch(`${API_BASE_URL}/themes/`);
-        if (!response.ok) {
-           const errorText = await response.text();
-           throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
-        }
-        const data: Theme[] = await response.json();
-        setThemes(data);
-        setError(null); // Clear error on success
-      } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError('An unexpected error occurred while fetching themes.');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchThemes();
   }, []);
 
@@ -105,11 +105,16 @@ export default function ThemesPage() {
           <h1 className="text-3xl font-bold text-gray-900">Themes & Packages</h1>
           <p className="text-gray-500 mt-1">Manage event packages and pricing</p>
         </div>
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+        <button onClick={() => setCreateOpen(true)} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
           + Create Theme
         </button>
       </div>
       {renderThemes()}
+      <CreateThemeDialog
+        open={isCreateOpen}
+        onOpenChange={setCreateOpen}
+        onSuccess={fetchThemes}
+      />
     </div>
   );
 }
