@@ -15,7 +15,6 @@ import { API_BASE_URL } from '@/lib/config';
 const themeSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
-  price_per_person: z.coerce.number().min(0, 'Price must be a positive number'),
   duration_minutes: z.coerce.number().int().min(1, 'Duration must be at least 1 minute'),
   booking_limit_min: z.coerce.number().int().min(1, 'Min players must be at least 1'),
   booking_limit_max: z.coerce.number().int().min(1, 'Max players must be at least 1'),
@@ -46,12 +45,18 @@ export function CreateThemeDialog({ open, onOpenChange, onSuccess }: CreateTheme
 
     const onSubmit: SubmitHandler<ThemeFormValues> = async (data) => {
         try {
+            const payload = {
+                ...data,
+                description: data.description || "",
+                theme_id: Math.random().toString(36).substring(2, 15).toUpperCase(), // Generate a random theme_id
+            };
+
             const response = await fetch(`${API_BASE_URL}/themes/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(data),
+                body: JSON.stringify(payload),
             });
 
             if (!response.ok) {
@@ -96,17 +101,10 @@ export function CreateThemeDialog({ open, onOpenChange, onSuccess }: CreateTheme
                             <Textarea id="description" {...register('description')} />
                             {errors.description && <p className="text-xs text-red-600">{errors.description.message}</p>}
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="price_per_person">Price per Person</Label>
-                                <Input id="price_per_person" type="number" {...register('price_per_person')} />
-                                {errors.price_per_person && <p className="text-xs text-red-600">{errors.price_per_person.message}</p>}
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="duration_minutes">Duration (minutes)</Label>
-                                <Input id="duration_minutes" type="number" {...register('duration_minutes')} />
-                                {errors.duration_minutes && <p className="text-xs text-red-600">{errors.duration_minutes.message}</p>}
-                            </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="duration_minutes">Duration (minutes)</Label>
+                            <Input id="duration_minutes" type="number" {...register('duration_minutes')} />
+                            {errors.duration_minutes && <p className="text-xs text-red-600">{errors.duration_minutes.message}</p>}
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                              <div className="space-y-2">
