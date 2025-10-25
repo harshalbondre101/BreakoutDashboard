@@ -9,8 +9,10 @@ import { SentimentDistribution } from '@/components/dashboard/SentimentDistribut
 import { RecentBookings } from '@/components/dashboard/RecentBookings';
 import { SystemAlerts } from '@/components/dashboard/SystemAlerts';
 import { AnalyticsOverview } from '@/components/analytics-overview';
+import { DashboardFilterProvider, useDashboardFilter } from '@/context/DashboardFilterContext';
 
-export default function DashboardPage() {
+function DashboardContent() {
+  const { dateRange } = useDashboardFilter();
   const { 
     kpiMetrics, 
     recentBookings, 
@@ -23,7 +25,7 @@ export default function DashboardPage() {
     kpiError, 
     bookingsError, 
     callsError 
-  } = useDashboardData();
+  } = useDashboardData(dateRange);
 
   return (
     <div className="space-y-6">
@@ -53,4 +55,13 @@ export default function DashboardPage() {
       </div>
     </div>
   );
+}
+
+
+export default function DashboardPage() {
+  return (
+    <DashboardFilterProvider>
+      <DashboardContent />
+    </DashboardFilterProvider>
+  )
 }

@@ -56,7 +56,7 @@ const getKpiStatus = (value: number, target: string, higherIsBetter: boolean, un
     return isGood ? 'good' : 'warning';
 };
 
-export const useDashboardData = () => {
+export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month') => {
   const { isAuthenticated } = useAuth();
   const [kpiMetrics, setKpiMetrics] = useState<KPIMetric[]>([]);
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
@@ -75,10 +75,29 @@ export const useDashboardData = () => {
   useEffect(() => {
     if (!isAuthenticated) return;
 
+    const getDateParams = () => {
+        const endDate = new Date();
+        let startDate = new Date();
+        switch(dateRange) {
+            case 'today':
+                startDate.setHours(0, 0, 0, 0);
+                break;
+            case 'last_week':
+                startDate.setDate(endDate.getDate() - 7);
+                break;
+            case 'last_month':
+                startDate.setMonth(endDate.getMonth() - 1);
+                break;
+        }
+        return `start_date=${startDate.toISOString()}&end_date=${endDate.toISOString()}`;
+    }
+
+    const dateParams = getDateParams();
+
     const fetchKpis = async () => {
       setKpiLoading(true);
       try {
-        const response = await fetch(`${API_BASE_URL}/compute/kpis`);
+        const response = await fetch(`${API_BASE_URL}/compute/kpis?${dateParams}`);
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Failed to fetch KPIs: ${response.status} ${errorText}`);
@@ -193,7 +212,7 @@ export const useDashboardData = () => {
     const fetchBookings = async () => {
       setBookingsLoading(true);
       try {
-        const response = await fetch(`${API_BASE_URL}/bookings/?skip=0&limit=100`);
+        const response = await fetch(`${API_BASE_URL}/bookings/?${dateParams}&skip=0&limit=100`);
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Failed to fetch bookings: ${response.status} ${errorText}`);
@@ -215,7 +234,7 @@ export const useDashboardData = () => {
     const fetchCalls = async () => {
       setCallsLoading(true);
       try {
-        const response = await fetch(`${API_BASE_URL}/calls/`);
+        const response = await fetch(`${API_BASE_URL}/calls/?${dateParams}`);
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Failed to fetch calls: ${response.status} ${errorText}`);
@@ -252,7 +271,7 @@ export const useDashboardData = () => {
     fetchKpis();
     fetchBookings();
     fetchCalls();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, dateRange]);
 
   return { kpiMetrics, recentBookings, activeCalls, callVolume, alerts, kpiLoading, bookingsLoading, callsLoading, kpiError, bookingsError, callsError };
 };
