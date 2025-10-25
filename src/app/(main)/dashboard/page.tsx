@@ -1,13 +1,11 @@
 
 'use client';
 import { useDashboardData } from '@/hooks/useDashboardData';
-import { Header } from '@/components/dashboard/Header';
-import { KpiGrid } from '@/components/dashboard/KpiGrid';
-import { ActiveCalls } from '@/components/dashboard/ActiveCalls';
-import { CallVolume } from '@/components/dashboard/CallVolume';
-import { SentimentDistribution } from '@/components/dashboard/SentimentDistribution';
-import { RecentBookings } from '@/components/dashboard/RecentBookings';
-import { SystemAlerts } from '@/components/dashboard/SystemAlerts';
+import { Header } from './_components/Header';
+import { KpiGrid } from './_components/kpi-grid';
+import { ActiveCalls } from './_components/active-calls';
+import { RecentBookings } from './_components/recent-bookings';
+import { SystemAlerts } from './_components/system-alerts';
 import { AnalyticsOverview } from '@/components/analytics-overview';
 import { DashboardFilterProvider, useDashboardFilter } from '@/context/DashboardFilterContext';
 
