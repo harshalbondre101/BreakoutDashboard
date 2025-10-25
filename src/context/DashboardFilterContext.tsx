@@ -1,7 +1,7 @@
 'use client';
 import { createContext, useContext, useState, ReactNode } from 'react';
 
-type DateRange = 'today' | 'last_week' | 'last_month';
+type DateRange = 'today' | 'last_week' | 'last_month' | 'all_time';
 
 interface DashboardFilterContextValue {
   dateRange: DateRange;

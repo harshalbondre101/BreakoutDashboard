@@ -56,7 +56,7 @@ const getKpiStatus = (value: number, target: string, higherIsBetter: boolean, un
     return isGood ? 'good' : 'warning';
 };
 
-export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month') => {
+export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month' | 'all_time') => {
   const { isAuthenticated } = useAuth();
   const [kpiMetrics, setKpiMetrics] = useState<KPIMetric[]>([]);
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
@@ -76,6 +76,9 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
     if (!isAuthenticated) return;
 
     const getDateParams = () => {
+        if (dateRange === 'all_time') {
+            return '';
+        }
         const endDate = new Date();
         let startDate = new Date();
         switch(dateRange) {

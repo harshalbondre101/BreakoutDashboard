@@ -21,7 +21,7 @@ export const Header = () => {
         <p className="text-gray-500 mt-1">Real-time operational overview</p>
       </div>
       <div className="flex gap-3 items-center">
-        <Select value={dateRange} onValueChange={setDateRange}>
+        <Select value={dateRange} onValueChange={(value) => setDateRange(value as any)}>
             <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select a date range" />
             </SelectTrigger>
@@ -29,6 +29,7 @@ export const Header = () => {
                 <SelectItem value="today">Today</SelectItem>
                 <SelectItem value="last_week">Last Week</SelectItem>
                 <SelectItem value="last_month">Last Month</SelectItem>
+                <SelectItem value="all_time">All Time</SelectItem>
             </SelectContent>
         </Select>
         <div className="px-4 py-2 bg-emerald-100 text-emerald-800 rounded-lg font-medium">
