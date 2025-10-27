@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react';
 import { API_CHARTS_BASE_URL } from '@/lib/config';
 
 const defaultChartsConfig = [
-  { id: 'calls-trend', title: 'Calls Trend (Last 7 Days)', chartType: 'line', endpoint: 'calls-trend' },
+  { id: 'calls-trend', title: 'Calls Trend', chartType: 'line', endpoint: 'calls-trend' },
   { id: 'bookings-revenue', title: 'Bookings Trend', chartType: 'bar', endpoint: 'bookings-trend' },
   { id: 'call-sentiment', title: 'Call Sentiment Distribution', chartType: 'call-sentiment', endpoint: 'sentiment-summary' },
-  { id: 'customer-growth', title: 'Customer Growth Over Time', chartType: 'area', endpoint: 'customer-growth' },
+  { id: 'customer-growth', title: 'Customer Growth', chartType: 'area', endpoint: 'customer-growth' },
   { id: 'customer-rating', title: 'Customer Rating Distribution', chartType: 'pie', endpoint: 'dummy-customer-rating' },
   { id: 'intent-distribution', title: 'Intent Distribution', chartType: 'pie', endpoint: 'dummy-intent-distribution' },
 ];
@@ -19,6 +19,8 @@ type ChartConfigItem = {
     chartType: string;
     endpoint: string;
 };
+
+type FilterType = 'daily' | 'weekly' | 'quarterly' | 'half_yearly' | 'yearly';
 
 // Data transformation functions
 const transformCallsTrend = (data: any) => data.dates.map((date: string, index: number) => ({ date, total_calls: data.calls[index] }));
@@ -52,7 +54,7 @@ const getDummyData = (endpoint: string) => {
     return null;
 }
 
-export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultChartsConfig) => {
+export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultChartsConfig, filter?: FilterType) => {
   const [data, setData] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<Record<string, string | null>>({});
@@ -70,7 +72,8 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
       }
       
       try {
-        const response = await fetch(`${API_CHARTS_BASE_URL}/${endpoint}`);
+        const url = filter ? `${API_CHARTS_BASE_URL}/${endpoint}?filter=${filter}` : `${API_CHARTS_BASE_URL}/${endpoint}`;
+        const response = await fetch(url);
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
@@ -100,7 +103,7 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
     };
 
     chartsConfig.forEach(chart => fetchData(chart.id, chart.endpoint));
-  }, [JSON.stringify(chartsConfig)]);
+  }, [JSON.stringify(chartsConfig), filter]);
 
   return { data, loading, error, chartsConfig };
 };
