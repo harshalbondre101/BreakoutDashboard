@@ -1,8 +1,8 @@
-
 'use client';
 import { useAnalyticsData } from '@/hooks/useAnalyticsData';
 import { ChartCard } from '@/components/analytics/ChartCard';
 import { useState, useEffect } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const chartComponents = {
   line: "line",
@@ -30,19 +30,22 @@ const movedChartsConfig = [
   { id: 'lead-funnel', title: 'Lead Conversion Funnel', chartType: 'horizontal-bar', endpoint: 'lead-funnel' },
 ];
 
+type FilterType = 'daily' | 'weekly' | 'quarterly' | 'half_yearly' | 'yearly';
+
 export const AdditionalAnalytics = () => {
   const { data, loading, error } = useAnalyticsData(movedChartsConfig);
 
   const [apiCharts, setApiCharts] = useState<ApiChart[]>([]);
   const [apiLoading, setApiLoading] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<FilterType>('weekly');
 
   useEffect(() => {
     const fetchCharts = async () => {
       setApiLoading(true);
       setApiError(null);
       try {
-        const response = await fetch('https://breakout-project.onrender.com/kpis/charts');
+        const response = await fetch(`https://breakout-project.onrender.com/kpis/charts?filter=${filter}`);
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(`Failed to fetch charts: ${response.status} ${errorText}`);
@@ -56,7 +59,7 @@ export const AdditionalAnalytics = () => {
       }
     };
     fetchCharts();
-  }, []);
+  }, [filter]);
 
   const transformData = (chart: ApiChart) => {
     return chart.x_axis.map((x, index) => ({
@@ -69,7 +72,21 @@ export const AdditionalAnalytics = () => {
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">Additional Analytics</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold text-gray-900">Additional Analytics</h2>
+        <Select value={filter} onValueChange={(value: FilterType) => setFilter(value)}>
+            <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select a filter" />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="daily">Daily</SelectItem>
+                <SelectItem value="weekly">Weekly</SelectItem>
+                <SelectItem value="quarterly">Quarterly</SelectItem>
+                <SelectItem value="half_yearly">Half-Yearly</SelectItem>
+                <SelectItem value="yearly">Yearly</SelectItem>
+            </SelectContent>
+        </Select>
+      </div>
       
       {(error['lead-funnel'] || apiError) && (
         <div className="bg-red-50 text-red-700 p-4 rounded-lg text-center mb-6">
