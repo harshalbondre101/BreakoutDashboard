@@ -13,7 +13,7 @@ import { Alerts } from './_components/alerts';
 import { AdditionalAnalytics } from './_components/additional-analytics';
 import { useAuth } from '@/context/AuthContext';
 
-type DateRange = 'today' | 'last_week' | 'last_month' | 'all_time';
+type DateRange = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'half_yearly' | 'yearly' | 'all_time';
 
 const formatDurationFromSeconds = (seconds: number) => {
   if (seconds < 3600) {
@@ -32,7 +32,7 @@ export default function AnalysisPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
-  const [dateRange, setDateRange] = useState<DateRange>('last_week');
+  const [dateRange, setDateRange] = useState<DateRange>('weekly');
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -41,7 +41,12 @@ export default function AnalysisPage() {
         if (dateRange === 'all_time') {
             return baseUrl;
         }
-        return `${baseUrl}?filter=${dateRange}`;
+        let filterValue = dateRange;
+        if (dateRange === 'monthly') {
+          // The old dashboard used 'last_month', some APIs might expect that.
+          // Let's check if the API is flexible. Assuming 'monthly' is the new standard.
+        }
+        return `${baseUrl}?filter=${filterValue}`;
     }
 
     const fetchKpis = async () => {
@@ -252,9 +257,12 @@ export default function AnalysisPage() {
                 <SelectValue placeholder="Select a date range" />
             </SelectTrigger>
             <SelectContent>
-                <SelectItem value="today">Today</SelectItem>
-                <SelectItem value="last_week">Last Week</SelectItem>
-                <SelectItem value="last_month">Last Month</SelectItem>
+                <SelectItem value="daily">Daily</SelectItem>
+                <SelectItem value="weekly">Weekly</SelectItem>
+                <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="quarterly">Quarterly</SelectItem>
+                <SelectItem value="half_yearly">Half-Yearly</SelectItem>
+                <SelectItem value="yearly">Yearly</SelectItem>
                 <SelectItem value="all_time">All Time</SelectItem>
             </SelectContent>
         </Select>
@@ -311,3 +319,5 @@ export default function AnalysisPage() {
     </div>
   );
 }
+
+    
