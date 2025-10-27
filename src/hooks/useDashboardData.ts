@@ -75,19 +75,27 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const getFilterParam = () => {
-        if (dateRange === 'all_time') {
-            return '';
+    const getUrlWithFilter = (baseUrl: string, otherParams: string = '') => {
+        let url = baseUrl;
+        const params = new URLSearchParams(otherParams);
+        
+        if (dateRange !== 'all_time') {
+            params.append('filter', dateRange);
         }
-        return `filter=${dateRange}`;
+
+        const paramString = params.toString();
+        if (paramString) {
+            url += `?${paramString}`;
+        }
+        return url;
     }
 
-    const filterParam = getFilterParam();
 
     const fetchKpis = async () => {
       setKpiLoading(true);
       try {
-        const response = await fetch(`${API_BASE_URL}/compute/kpis?${filterParam}`);
+        const url = getUrlWithFilter(`${API_BASE_URL}/compute/kpis`);
+        const response = await fetch(url);
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Failed to fetch KPIs: ${response.status} ${errorText}`);
@@ -202,7 +210,8 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
     const fetchBookings = async () => {
       setBookingsLoading(true);
       try {
-        const response = await fetch(`${API_BASE_URL}/bookings/?${filterParam}&skip=0&limit=100`);
+        const url = getUrlWithFilter(`${API_BASE_URL}/bookings/`, 'skip=0&limit=100');
+        const response = await fetch(url);
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Failed to fetch bookings: ${response.status} ${errorText}`);
@@ -224,7 +233,8 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
     const fetchCalls = async () => {
       setCallsLoading(true);
       try {
-        const response = await fetch(`${API_BASE_URL}/calls/?${filterParam}`);
+        const url = getUrlWithFilter(`${API_BASE_URL}/calls/`);
+        const response = await fetch(url);
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Failed to fetch calls: ${response.status} ${errorText}`);
