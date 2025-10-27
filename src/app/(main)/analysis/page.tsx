@@ -5,13 +5,15 @@ import { KPIMetric, KpiApiResponse } from '@/lib/types';
 import { API_BASE_URL } from '@/lib/config';
 import { BarChart3 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ExecutiveOverview } from './_components/executive-overview';
 import { KpiSection } from './_components/kpi-section';
 import { AiPerformance } from './_components/ai-performance';
-import { QualityAssurance } from './_components/quality-assurance';
 import { Alerts } from './_components/alerts';
 import { AdditionalAnalytics } from './_components/additional-analytics';
 import { useAuth } from '@/context/AuthContext';
+
+type DateRange = 'today' | 'last_week' | 'last_month' | 'all_time';
 
 const formatDurationFromSeconds = (seconds: number) => {
   if (seconds < 3600) {
@@ -30,9 +32,17 @@ export default function AnalysisPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
+  const [dateRange, setDateRange] = useState<DateRange>('last_week');
 
   useEffect(() => {
     if (!isAuthenticated) return;
+
+    const getUrlWithFilter = (baseUrl: string) => {
+        if (dateRange === 'all_time') {
+            return baseUrl;
+        }
+        return `${baseUrl}?filter=${dateRange}`;
+    }
 
     const fetchKpis = async () => {
       setLoading(true);
@@ -40,10 +50,10 @@ export default function AnalysisPage() {
       // setError(null);
       try {
         const [kpiResponse, customerKpiResponse, leadsKpiResponse, bookingsKpiResponse] = await Promise.all([
-            fetch(`${API_BASE_URL}/compute/kpis`),
-            fetch(`${API_BASE_URL}/kpis/customers`),
-            fetch(`${API_BASE_URL}/kpis/leads`),
-            fetch(`${API_BASE_URL}/kpis/bookings`)
+            fetch(getUrlWithFilter(`${API_BASE_URL}/compute/kpis`)),
+            fetch(getUrlWithFilter(`${API_BASE_URL}/kpis/customers`)),
+            fetch(getUrlWithFilter(`${API_BASE_URL}/kpis/leads`)),
+            fetch(getUrlWithFilter(`${API_BASE_URL}/kpis/bookings`))
         ]);
 
         if (!kpiResponse.ok) throw new Error(`HTTP error on main KPIs! Status: ${kpiResponse.status} ${await kpiResponse.text()}`);
@@ -97,7 +107,7 @@ export default function AnalysisPage() {
             { id: 'first_call_resolution_pct', label: 'First Call Resolution', target: '>90%', higherIsBetter: true, unit: 'percentage' },
             { id: 'avg_call_duration_sec', label: 'Avg Call Duration', target: '<5 min', higherIsBetter: false, unit: 'seconds' },
             { id: 'call_abandon_rate_pct', label: 'Call Abandon Rate', target: '<5%', higherIsBetter: false, unit: 'percentage' },
-            { id: 'customer_satisfaction_avg_rating', label: 'Customer Satisfaction', target: '>4.5', higherIsBetter: true, unit: 'rating' },
+            { id: 'customer_satisfaction_avg_rating', label: 'Customer Satisfaction', target: '>4.0', higherIsBetter: true, unit: 'rating' },
             { id: 'missed_calls', label: 'Missed Calls', target: '0', higherIsBetter: false, unit: 'number' },
             { id: 'customer_conversion_rate_pct', label: 'Customer Conversion Rate', target: '>10%', higherIsBetter: true, unit: 'percentage' },
             { id: 'overall_quality_score', label: 'Overall Quality Score', target: '>85', higherIsBetter: true, unit: 'number' },
@@ -226,15 +236,28 @@ export default function AnalysisPage() {
     };
     
     fetchKpis();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, dateRange]);
 
   const allMetrics = [...executiveMetrics, ...kpiMetrics];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Business Intelligence Hub</h1>
-        <p className="text-gray-500 mt-1">Deep dive analytics and AI performance metrics</p>
+      <div className="flex justify-between items-center">
+        <div>
+            <h1 className="text-3xl font-bold text-gray-900">Business Intelligence Hub</h1>
+            <p className="text-gray-500 mt-1">Deep dive analytics and AI performance metrics</p>
+        </div>
+        <Select value={dateRange} onValueChange={(value: DateRange) => setDateRange(value)}>
+            <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select a date range" />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="last_week">Last Week</SelectItem>
+                <SelectItem value="last_month">Last Month</SelectItem>
+                <SelectItem value="all_time">All Time</SelectItem>
+            </SelectContent>
+        </Select>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols gap-6">
