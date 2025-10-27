@@ -37,15 +37,11 @@ export default function AnalysisPage() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const getUrlWithFilter = (baseUrl: string) => {
-        if (dateRange === 'all_time') {
+    const getUrlWithFilter = (baseUrl: string, useFilter: boolean = true) => {
+        if (!useFilter || dateRange === 'all_time') {
             return baseUrl;
         }
         let filterValue = dateRange;
-        if (dateRange === 'monthly') {
-          // The old dashboard used 'last_month', some APIs might expect that.
-          // Let's check if the API is flexible. Assuming 'monthly' is the new standard.
-        }
         return `${baseUrl}?filter=${filterValue}`;
     }
 
@@ -56,9 +52,9 @@ export default function AnalysisPage() {
       try {
         const [kpiResponse, customerKpiResponse, leadsKpiResponse, bookingsKpiResponse] = await Promise.all([
             fetch(getUrlWithFilter(`${API_BASE_URL}/compute/kpis`)),
-            fetch(getUrlWithFilter(`${API_BASE_URL}/kpis/customers`)),
-            fetch(getUrlWithFilter(`${API_BASE_URL}/kpis/leads`)),
-            fetch(getUrlWithFilter(`${API_BASE_URL}/kpis/bookings`))
+            fetch(getUrlWithFilter(`${API_BASE_URL}/kpis/customers`, false)), // Do not pass filter to this endpoint
+            fetch(getUrlWithFilter(`${API_BASE_URL}/kpis/leads`, false)), // Do not pass filter to this endpoint
+            fetch(getUrlWithFilter(`${API_BASE_URL}/kpis/bookings`, false)) // Do not pass filter to this endpoint
         ]);
 
         if (!kpiResponse.ok) throw new Error(`HTTP error on main KPIs! Status: ${kpiResponse.status} ${await kpiResponse.text()}`);
@@ -319,5 +315,3 @@ export default function AnalysisPage() {
     </div>
   );
 }
-
-    
