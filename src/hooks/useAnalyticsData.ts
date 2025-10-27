@@ -62,12 +62,13 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
   useEffect(() => {
     const fetchData = async (id: string, endpoint: string) => {
       setLoading(prev => ({ ...prev, [id]: true }));
+      setError(prev => ({ ...prev, [id]: null }));
+
 
       const dummyData = getDummyData(endpoint);
       if (dummyData) {
         setData(prev => ({ ...prev, [id]: dummyData }));
         setLoading(prev => ({ ...prev, [id]: false }));
-        setError(prev => ({ ...prev, [id]: null }));
         return;
       }
       
@@ -80,23 +81,30 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
         }
         const result = await response.json();
         
+        // Handle cases where API returns a message instead of data
+        if (result.message && result.message.includes("No data available")) {
+            setData(prev => ({...prev, [id]: []}));
+            setLoading(prev => ({...prev, [id]: false }));
+            return;
+        }
+        
         let transformedData;
         switch(id) {
-          case 'calls-trend': transformedData = transformCallsTrend(result); break;
-          case 'bookings-revenue': transformedData = transformBookingsTrend(result); break;
-          case 'lead-funnel': transformedData = transformLeadFunnel(result); break;
-          case 'lead-sources': transformedData = transformLeadSources(result); break;
-          case 'customer-growth': transformedData = transformCustomerGrowth(result); break;
-          case 'revenue-summary': transformedData = transformRevenueSummary(result); break;
-          case 'payments-status': transformedData = transformPaymentsStatus(result); break;
-          case 'call-sentiment': transformedData = transformCallSentiment(result); break;
-          default: transformedData = result;
+          case 'calls-trend': transformedData = result.dates ? transformCallsTrend(result) : []; break;
+          case 'bookings-revenue': transformedData = result.dates ? transformBookingsTrend(result) : []; break;
+          case 'lead-funnel': transformedData = result.stages ? transformLeadFunnel(result) : []; break;
+          case 'lead-sources': transformedData = result.sources ? transformLeadSources(result) : []; break;
+          case 'customer-growth': transformedData = result.dates ? transformCustomerGrowth(result) : []; break;
+          case 'revenue-summary': transformedData = result.dates ? transformRevenueSummary(result) : []; break;
+          case 'payments-status': transformedData = Object.keys(result).length > 0 ? transformPaymentsStatus(result) : []; break;
+          case 'call-sentiment': transformedData = Object.keys(result).length > 0 ? transformCallSentiment(result) : []; break;
+          default: transformedData = result.charts || result || [];
         }
 
-        setData(prev => ({ ...prev, [id]: transformedData }));
-        setError(prev => ({ ...prev, [id]: null }));
+        setData(prev => ({ ...prev, [id]: Array.isArray(transformedData) ? transformedData : [] }));
       } catch (e) {
         setError(prev => ({ ...prev, [id]: e instanceof Error ? e.message : 'An error occurred' }));
+        setData(prev => ({ ...prev, [id]: [] })); // Clear data on error
       } finally {
         setLoading(prev => ({ ...prev, [id]: false }));
       }
