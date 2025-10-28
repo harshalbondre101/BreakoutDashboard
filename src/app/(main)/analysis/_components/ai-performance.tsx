@@ -21,9 +21,7 @@ export function AiPerformance({ filter }: { filter: string }) {
       setLoading(true);
       setError(null);
       try {
-        const url = filter === 'all_time'
-            ? 'https://breakout-project.onrender.com/kpis/llmkpi'
-            : `https://breakout-project.onrender.com/kpis/llmkpi?filter=${filter}`;
+        const url = `https://breakout-project.onrender.com/kpis/llmkpi?filter=${filter}`;
             
         const response = await fetch(url);
         if (!response.ok) {

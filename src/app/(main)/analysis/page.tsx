@@ -38,9 +38,6 @@ export default function AnalysisPage() {
     if (!isAuthenticated) return;
 
     const getUrlWithFilter = (baseUrl: string) => {
-        if (dateRange === 'all_time') {
-            return baseUrl;
-        }
         return `${baseUrl}?filter=${dateRange}`;
     }
 

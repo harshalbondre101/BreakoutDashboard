@@ -43,9 +43,7 @@ export const AdditionalAnalytics = ({ filter }: { filter: string }) => {
       setApiLoading(true);
       setApiError(null);
       try {
-        const url = filter === 'all_time'
-            ? `https://breakout-project.onrender.com/kpis/charts`
-            : `https://breakout-project.onrender.com/kpis/charts?filter=${filter}`;
+        const url = `https://breakout-project.onrender.com/kpis/charts?filter=${filter}`;
             
         const response = await fetch(url);
         if (!response.ok) {
