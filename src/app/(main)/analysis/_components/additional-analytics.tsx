@@ -1,3 +1,4 @@
+
 'use client';
 import { useAnalyticsData } from '@/hooks/useAnalyticsData';
 import { ChartCard } from '@/components/analytics/ChartCard';
@@ -30,22 +31,23 @@ const movedChartsConfig = [
   { id: 'lead-funnel', title: 'Lead Conversion Funnel', chartType: 'horizontal-bar', endpoint: 'lead-funnel' },
 ];
 
-type FilterType = 'daily' | 'weekly' | 'quarterly' | 'half_yearly' | 'yearly';
-
-export const AdditionalAnalytics = () => {
+export const AdditionalAnalytics = ({ filter }: { filter: string }) => {
   const { data, loading, error } = useAnalyticsData(movedChartsConfig);
 
   const [apiCharts, setApiCharts] = useState<ApiChart[]>([]);
   const [apiLoading, setApiLoading] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<FilterType>('weekly');
-
+  
   useEffect(() => {
     const fetchCharts = async () => {
       setApiLoading(true);
       setApiError(null);
       try {
-        const response = await fetch(`https://breakout-project.onrender.com/kpis/charts?filter=${filter}`);
+        const url = filter === 'all_time'
+            ? `https://breakout-project.onrender.com/kpis/charts`
+            : `https://breakout-project.onrender.com/kpis/charts?filter=${filter}`;
+            
+        const response = await fetch(url);
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(`Failed to fetch charts: ${response.status} ${errorText}`);
@@ -74,18 +76,6 @@ export const AdditionalAnalytics = () => {
     <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold text-gray-900">Additional Analytics</h2>
-        <Select value={filter} onValueChange={(value: FilterType) => setFilter(value)}>
-            <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select a filter" />
-            </SelectTrigger>
-            <SelectContent>
-                <SelectItem value="daily">Daily</SelectItem>
-                <SelectItem value="weekly">Weekly</SelectItem>
-                <SelectItem value="quarterly">Quarterly</SelectItem>
-                <SelectItem value="half_yearly">Half-Yearly</SelectItem>
-                <SelectItem value="yearly">Yearly</SelectItem>
-            </SelectContent>
-        </Select>
       </div>
       
       {(error['lead-funnel'] || apiError) && (

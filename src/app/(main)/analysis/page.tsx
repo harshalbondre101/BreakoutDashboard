@@ -13,7 +13,7 @@ import { Alerts } from './_components/alerts';
 import { AdditionalAnalytics } from './_components/additional-analytics';
 import { useAuth } from '@/context/AuthContext';
 
-type DateRange = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'half_yearly' | 'yearly' | 'all_time';
+type DateRange = 'today' | 'last_week' | 'last_month' | 'all_time';
 
 const formatDurationFromSeconds = (seconds: number) => {
   if (seconds < 3600) {
@@ -32,7 +32,7 @@ export default function AnalysisPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
-  const [dateRange, setDateRange] = useState<DateRange>('weekly');
+  const [dateRange, setDateRange] = useState<DateRange>('last_week');
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -51,9 +51,9 @@ export default function AnalysisPage() {
       try {
         const [kpiResponse, customerKpiResponse, leadsKpiResponse, bookingsKpiResponse] = await Promise.all([
             fetch(getUrlWithFilter(`${API_BASE_URL}/compute/kpis`)),
-            fetch(`${API_BASE_URL}/kpis/customers`), // Do not pass filter to this endpoint
-            fetch(`${API_BASE_URL}/kpis/leads`), // Do not pass filter to this endpoint
-            fetch(`${API_BASE_URL}/kpis/bookings`) // Do not pass filter to this endpoint
+            fetch(getUrlWithFilter(`${API_BASE_URL}/kpis/customers`)),
+            fetch(getUrlWithFilter(`${API_BASE_URL}/kpis/leads`)),
+            fetch(getUrlWithFilter(`${API_BASE_URL}/kpis/bookings`))
         ]);
 
         if (!kpiResponse.ok) throw new Error(`HTTP error on main KPIs! Status: ${kpiResponse.status} ${await kpiResponse.text()}`);
@@ -252,12 +252,9 @@ export default function AnalysisPage() {
                 <SelectValue placeholder="Select a date range" />
             </SelectTrigger>
             <SelectContent>
-                <SelectItem value="daily">Daily</SelectItem>
-                <SelectItem value="weekly">Weekly</SelectItem>
-                <SelectItem value="monthly">Monthly</SelectItem>
-                <SelectItem value="quarterly">Quarterly</SelectItem>
-                <SelectItem value="half_yearly">Half-Yearly</SelectItem>
-                <SelectItem value="yearly">Yearly</SelectItem>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="last_week">Last Week</SelectItem>
+                <SelectItem value="last_month">Last Month</SelectItem>
                 <SelectItem value="all_time">All Time</SelectItem>
             </SelectContent>
         </Select>
@@ -305,8 +302,8 @@ export default function AnalysisPage() {
             </TabsContent>
           </Tabs>
           
-          <AdditionalAnalytics />
-          <AiPerformance />
+          <AdditionalAnalytics filter={dateRange} />
+          <AiPerformance filter={dateRange} />
           {/* <QualityAssurance /> */}
           <Alerts metrics={allMetrics} loading={loading} />
         </div>
@@ -314,7 +311,3 @@ export default function AnalysisPage() {
     </div>
   );
 }
-
-    
-
-    

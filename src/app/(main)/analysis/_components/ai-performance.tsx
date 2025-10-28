@@ -11,7 +11,7 @@ interface AiMetric {
   output_format: string;
 }
 
-export function AiPerformance() {
+export function AiPerformance({ filter }: { filter: string }) {
   const [metrics, setMetrics] = useState<AiMetric[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +21,11 @@ export function AiPerformance() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch('https://breakout-project.onrender.com/kpis/llmkpi');
+        const url = filter === 'all_time'
+            ? 'https://breakout-project.onrender.com/kpis/llmkpi'
+            : `https://breakout-project.onrender.com/kpis/llmkpi?filter=${filter}`;
+            
+        const response = await fetch(url);
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(`Failed to fetch AI KPIs: ${response.status} ${errorText}`);
@@ -35,20 +39,28 @@ export function AiPerformance() {
       }
     };
     fetchAiKpis();
-  }, []);
+  }, [filter]);
 
   const renderKpiCards = () => {
-    if (loading && metrics.length === 0) {
+    if (loading) {
       return Array.from({ length: 4 }).map((_, index) => (
         <div key={index} className="p-4 bg-purple-50 rounded-lg border border-purple-100 h-24 animate-pulse" />
       ));
     }
     
-    if (error && metrics.length === 0) {
+    if (error) {
         return (
             <div className="col-span-full bg-red-50 text-red-700 p-4 rounded-lg text-center">
                 <p>Failed to load AI KPI data.</p>
                 <p className="text-sm">{error}</p>
+            </div>
+        )
+    }
+    
+    if (metrics.length === 0) {
+        return (
+             <div className="col-span-full text-gray-500 p-4 rounded-lg text-center">
+                <p>No AI KPI data available for this period.</p>
             </div>
         )
     }
