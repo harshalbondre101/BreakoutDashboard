@@ -50,7 +50,7 @@ export default function AnalysisPage() {
             fetch(getUrlWithFilter(`${API_BASE_URL}/compute/kpis`)),
             fetch(getUrlWithFilter(`${API_BASE_URL}/kpis/customers`)),
             fetch(getUrlWithFilter(`${API_BASE_URL}/kpis/leads`)),
-            fetch(getUrlWithFilter(`${API_BASE_URL}/kpis/bookings`))
+            fetch(getUrlWithFilter(`${API_BASE_URL}/kpis/booking`))
         ]);
 
         if (!kpiResponse.ok) throw new Error(`HTTP error on main KPIs! Status: ${kpiResponse.status} ${await kpiResponse.text()}`);
