@@ -43,8 +43,7 @@ export default function AnalysisPage() {
 
     const fetchKpis = async () => {
       setLoading(true);
-      // Don't clear previous error, so UI can show stale data while retrying
-      // setError(null);
+      setError(null);
       try {
         const [kpiResponse, customerKpiResponse, leadsKpiResponse, bookingsKpiResponse] = await Promise.all([
             fetch(getUrlWithFilter(`${API_BASE_URL}/compute/kpis`)),
@@ -54,22 +53,24 @@ export default function AnalysisPage() {
         ]);
 
         if (!kpiResponse.ok) throw new Error(`HTTP error on main KPIs! Status: ${kpiResponse.status} ${await kpiResponse.text()}`);
-        if (!customerKpiResponse.ok) throw new Error(`HTTP error on customer KPIs! Status: ${customerKpiResponse.status} ${await customerKpiResponse.text()}`);
-        if (!leadsKpiResponse.ok) throw new Error(`HTTP error on leads KPIs! Status: ${leadsKpiResponse.status} ${await leadsKpiResponse.text()}`);
-        if (!bookingsKpiResponse.ok) throw new Error(`HTTP error on bookings KPIs! Status: ${bookingsKpiResponse.status} ${await bookingsKpiResponse.text()}`);
-        
+        if (!customerKpiResponse.ok) console.warn(`Warning on customer KPIs: Status: ${customerKpiResponse.status}`);
+        if (!leadsKpiResponse.ok) console.warn(`Warning on leads KPIs: Status: ${leadsKpiResponse.status}`);
+        if (!bookingsKpiResponse.ok) console.warn(`Warning on bookings KPIs: Status: ${bookingsKpiResponse.status}`);
+
         const data: KpiApiResponse = await kpiResponse.json();
-        const customerKpiData: {name: string, value: any, unit?: string}[] = await customerKpiResponse.json();
-        const leadsKpiData: {name: string, value: any, unit?: string}[] = await leadsKpiResponse.json();
-        const bookingsKpiData: {name: string, value: any, unit?: string}[] = await bookingsKpiResponse.json();
         
-        const customerKpisObject = customerKpiData.reduce((acc, item) => {
+        // Use .json() and handle potential errors gracefully
+        const customerKpiData = customerKpiResponse.ok ? await customerKpiResponse.json() : [];
+        const leadsKpiData = leadsKpiResponse.ok ? await leadsKpiResponse.json() : [];
+        const bookingsKpiData = bookingsKpiResponse.ok ? await bookingsKpiResponse.json() : [];
+
+        const customerKpisObject = Array.isArray(customerKpiData) ? customerKpiData.reduce((acc, item) => {
             const key = item.name === 'customer_conversion_rate' ? 'customer_conversion_rate_pct' : item.name;
             acc[key] = item.value;
             return acc;
-        }, {} as Record<string, any>);
+        }, {} as Record<string, any>) : {};
         
-        const leadsKpiObject = leadsKpiData.reduce((acc, item) => {
+        const leadsKpiObject = Array.isArray(leadsKpiData) ? leadsKpiData.reduce((acc, item) => {
             const keyMap: Record<string, string> = {
                 'lead_conversion_rate': 'lead_conversion_rate_pct',
                 'avg_lead_response_time': 'lead_response_time_sec',
@@ -83,9 +84,9 @@ export default function AnalysisPage() {
             }
             acc[key] = value;
             return acc;
-        }, {} as Record<string, any>);
+        }, {} as Record<string, any>) : {};
 
-        const bookingsKpiObject = bookingsKpiData.reduce((acc, item) => {
+        const bookingsKpiObject = Array.isArray(bookingsKpiData) ? bookingsKpiData.reduce((acc, item) => {
              const keyMap: Record<string, string> = {
                 'booking_conversion_rate': 'booking_conversion_rate_pct',
                 'cancellation_rate': 'cancellation_rate_pct',
@@ -94,13 +95,12 @@ export default function AnalysisPage() {
             const key = keyMap[item.name] || item.name;
             acc[key] = item.value;
             return acc;
-        }, {} as Record<string, any>);
+        }, {} as Record<string, any>) : {};
 
         // Merge all KPI sources
         const kpis = { ...data.kpis, ...customerKpisObject, ...leadsKpiObject, ...bookingsKpiObject };
-        setError(null); // Clear error on success
 
-        const executiveKpiConfig: { id: keyof KpiApiResponse['kpis']; label: string; target: string; higherIsBetter: boolean, unit: 'percentage' | 'seconds' | 'number' | 'rating' }[] = [
+        const executiveKpiConfig: { id: keyof typeof kpis; label: string; target: string; higherIsBetter: boolean, unit: 'percentage' | 'seconds' | 'number' | 'rating' }[] = [
             { id: 'first_call_resolution_pct', label: 'First Call Resolution', target: '>90%', higherIsBetter: true, unit: 'percentage' },
             { id: 'avg_call_duration_sec', label: 'Avg Call Duration', target: '<5 min', higherIsBetter: false, unit: 'seconds' },
             { id: 'call_abandon_rate_pct', label: 'Call Abandon Rate', target: '<5%', higherIsBetter: false, unit: 'percentage' },
@@ -111,7 +111,7 @@ export default function AnalysisPage() {
             { id: 'positive_sentiment_rate_pct', label: 'Positive Sentiment Rate', target: '>80%', higherIsBetter: true, unit: 'percentage' },
         ];
 
-        const detailedKpiConfig: { id: keyof KpiApiResponse['kpis']; label: string; target: string; higherIsBetter: boolean, unit: 'percentage' | 'seconds' | 'number' | 'rating' | 'currency' | 'string' }[] = [
+        const detailedKpiConfig: { id: keyof typeof kpis; label: string; target: string; higherIsBetter: boolean, unit: 'percentage' | 'seconds' | 'number' | 'rating' | 'currency' | 'string' }[] = [
             // Customers
             { id: 'total_customers', label: 'Total Customers', target: '>1000', higherIsBetter: true, unit: 'number' },
             { id: 'new_customers', label: 'New Customers', target: '>50', higherIsBetter: true, unit: 'number' },
