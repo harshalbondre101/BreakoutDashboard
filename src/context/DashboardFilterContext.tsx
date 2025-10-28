@@ -1,3 +1,4 @@
+
 'use client';
 import { createContext, useContext, useState, ReactNode } from 'react';
 
@@ -11,7 +12,7 @@ interface DashboardFilterContextValue {
 const DashboardFilterContext = createContext<DashboardFilterContextValue | undefined>(undefined);
 
 export function DashboardFilterProvider({ children }: { children: ReactNode }) {
-  const [dateRange, setDateRange] = useState<DateRange>('last_week');
+  const [dateRange, setDateRange] = useState<DateRange>('all_time');
 
   return (
     <DashboardFilterContext.Provider value={{ dateRange, setDateRange }}>

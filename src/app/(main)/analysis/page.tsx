@@ -32,7 +32,7 @@ export default function AnalysisPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
-  const [dateRange, setDateRange] = useState<DateRange>('last_week');
+  const [dateRange, setDateRange] = useState<DateRange>('all_time');
 
   useEffect(() => {
     if (!isAuthenticated) return;
