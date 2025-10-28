@@ -21,12 +21,12 @@ export const ActiveCalls = ({ activeCalls, callsLoading, callsError }: { activeC
       );
     }
 
-    if (callsError) {
+    if (callsError || activeCalls.length === 0) {
       return (
-        <div className="max-h-96 flex items-center justify-center bg-gray-50 rounded-lg">
-          <div className="text-red-500 text-center">
-            <p>Failed to load active calls.</p>
-            <p className="text-sm">{callsError}</p>
+        <div className="max-h-96 h-60 flex items-center justify-center bg-gray-50 rounded-lg">
+          <div className="text-gray-500 text-center">
+            <p>No Data to Show</p>
+             {callsError && <p className="text-sm text-red-500">{callsError}</p>}
           </div>
         </div>
       );
