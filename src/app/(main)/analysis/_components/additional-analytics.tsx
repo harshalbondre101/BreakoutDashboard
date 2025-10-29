@@ -39,13 +39,16 @@ export const AdditionalAnalytics = ({ filter }: { filter: string }) => {
   const [apiError, setApiError] = useState<string | null>(null);
   
   useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+
     const fetchCharts = async () => {
       setApiLoading(true);
       setApiError(null);
       try {
         const url = `https://breakout-project.onrender.com/kpis/charts?filter=${filter}`;
             
-        const response = await fetch(url);
+        const response = await fetch(url, { signal });
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(`Failed to fetch charts: ${response.status} ${errorText || response.statusText}`);
@@ -53,12 +56,21 @@ export const AdditionalAnalytics = ({ filter }: { filter: string }) => {
         const data = await response.json();
         setApiCharts(data.charts || []);
       } catch (err) {
+        if ((err as Error).name === 'AbortError') {
+            console.log('Fetch additional charts aborted');
+            return;
+        }
         setApiError(err instanceof Error ? err.message : 'An unknown error occurred while fetching additional charts.');
       } finally {
         setApiLoading(false);
       }
     };
+
     fetchCharts();
+
+    return () => {
+      controller.abort();
+    };
   }, [filter]);
 
   const transformData = (chart: ApiChart) => {
@@ -116,3 +128,5 @@ export const AdditionalAnalytics = ({ filter }: { filter: string }) => {
     </div>
   );
 };
+
+    

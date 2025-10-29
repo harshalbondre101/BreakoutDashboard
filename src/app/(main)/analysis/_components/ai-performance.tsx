@@ -17,13 +17,16 @@ export function AiPerformance({ filter }: { filter: string }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+
     const fetchAiKpis = async () => {
       setLoading(true);
       setError(null);
       try {
         const url = `https://breakout-project.onrender.com/kpis/llmkpi?filter=${filter}`;
             
-        const response = await fetch(url);
+        const response = await fetch(url, { signal });
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(`Failed to fetch AI KPIs: ${response.status} ${errorText || response.statusText}`);
@@ -31,12 +34,21 @@ export function AiPerformance({ filter }: { filter: string }) {
         const data = await response.json();
         setMetrics(data.llmkpi || []);
       } catch (err) {
+        if ((err as Error).name === 'AbortError') {
+          console.log('Fetch AI KPIs aborted');
+          return;
+        }
         setError(err instanceof Error ? err.message : 'An unknown error occurred while fetching AI KPIs.');
       } finally {
         setLoading(false);
       }
     };
+
     fetchAiKpis();
+
+    return () => {
+      controller.abort();
+    };
   }, [filter]);
 
   const renderKpiCards = () => {
@@ -157,3 +169,5 @@ export function AiPerformance({ filter }: { filter: string }) {
     </div>
   );
 }
+
+    

@@ -36,6 +36,9 @@ export default function AnalysisPage() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
+    
+    const controller = new AbortController();
+    const signal = controller.signal;
 
     const fetchKpis = async () => {
       setLoading(true);
@@ -47,7 +50,7 @@ export default function AnalysisPage() {
       try {
         // Fetch main KPIs first
         const mainKpiUrl = `${API_BASE_URL}/compute/kpis?filter=${dateRange}`;
-        const mainKpiResponse = await fetch(mainKpiUrl);
+        const mainKpiResponse = await fetch(mainKpiUrl, { signal });
         if (!mainKpiResponse.ok) {
             const errorText = await mainKpiResponse.text();
             throw new Error(`Failed to fetch main KPIs: ${mainKpiResponse.status} ${errorText || mainKpiResponse.statusText}`);
@@ -62,7 +65,7 @@ export default function AnalysisPage() {
         };
 
         const supplementalResponses = await Promise.all(
-            Object.values(supplementalUrls).map(url => fetch(url).catch(e => e))
+            Object.values(supplementalUrls).map(url => fetch(url, { signal }).catch(e => e))
         );
 
         const [customerKpiResponse, leadsKpiResponse, bookingsKpiResponse] = supplementalResponses;
@@ -245,6 +248,10 @@ export default function AnalysisPage() {
         setExecutiveMetrics(execKpis);
         setKpiMetrics(allOtherKpis);
       } catch (err) {
+        if ((err as Error).name === 'AbortError') {
+          console.log('Fetch aborted');
+          return;
+        }
         if (err instanceof Error) {
           setError(`Failed to load key analytics: ${err.message}`);
         } else {
@@ -256,6 +263,10 @@ export default function AnalysisPage() {
     };
     
     fetchKpis();
+
+    return () => {
+      controller.abort();
+    };
   }, [isAuthenticated, dateRange]);
 
   const allMetrics = [...executiveMetrics, ...kpiMetrics];
@@ -336,3 +347,5 @@ export default function AnalysisPage() {
     </div>
   );
 }
+
+    
