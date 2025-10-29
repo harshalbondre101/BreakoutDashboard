@@ -5,7 +5,7 @@ import { ChartCard } from '@/components/analytics/ChartCard';
 import { useState, useEffect } from 'react';
 import { KPICard } from '@/components/kpi-card';
 import { KPIMetric } from '@/lib/types';
-import { API_CHARTS_BASE_URL } from '@/lib/config';
+import { API_BASE_URL } from '@/lib/config';
 
 const chartComponents = {
   line: "line",
@@ -48,7 +48,7 @@ export const AdditionalAnalytics = ({ filter }: { filter: string }) => {
       setApiLoading(true);
       setApiError(null);
       try {
-        const url = `${API_CHARTS_BASE_URL}/charts?filter=${filter}`;
+        const url = `${API_BASE_URL}/kpis/charts?filter=${filter}`;
         const response = await fetch(url, { signal });
         if (!response.ok) {
           const errorText = await response.text();
