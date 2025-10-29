@@ -37,10 +37,6 @@ export default function AnalysisPage() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const getUrlWithFilter = (baseUrl: string) => {
-        return `${baseUrl}?filter=${dateRange}`;
-    }
-
     const fetchKpis = async () => {
       setLoading(true);
       setError(null);
@@ -49,31 +45,39 @@ export default function AnalysisPage() {
       setKpiMetrics([]);
 
       try {
-        const bookingsUrl = `${API_BASE_URL}/kpis/booking?filter=${dateRange}&interval=full`;
+        // Fetch main KPIs first
+        const mainKpiUrl = `${API_BASE_URL}/compute/kpis?filter=${dateRange}`;
+        const mainKpiResponse = await fetch(mainKpiUrl);
+        if (!mainKpiResponse.ok) {
+            throw new Error(`Failed to fetch main KPIs: ${mainKpiResponse.status} ${await mainKpiResponse.text()}`);
+        }
+        const mainKpiData: KpiApiResponse = await mainKpiResponse.json();
 
-        const [kpiResponse, customerKpiResponse, leadsKpiResponse, bookingsKpiResponse] = await Promise.all([
-            fetch(getUrlWithFilter(`${API_BASE_URL}/compute/kpis`)),
-            fetch(getUrlWithFilter(`${API_BASE_URL}/kpis/customers`)),
-            fetch(getUrlWithFilter(`${API_BASE_URL}/kpis/leads`)),
-            fetch(bookingsUrl)
-        ]);
+        // Fetch supplemental KPIs gracefully
+        const supplementalUrls = {
+            customers: `${API_BASE_URL}/kpis/customers?filter=${dateRange}`,
+            leads: `${API_BASE_URL}/kpis/leads?filter=${dateRange}`,
+            bookings: `${API_BASE_URL}/kpis/booking?filter=${dateRange}&interval=full`,
+        };
 
-        if (!kpiResponse.ok) throw new Error(`HTTP error on main KPIs! Status: ${kpiResponse.status} ${await kpiResponse.text()}`);
+        const supplementalResponses = await Promise.all(
+            Object.values(supplementalUrls).map(url => fetch(url).catch(e => e))
+        );
+
+        const [customerKpiResponse, leadsKpiResponse, bookingsKpiResponse] = supplementalResponses;
         
-        // Gracefully handle failures for supplemental KPIs
-        const customerKpiData = customerKpiResponse.ok ? await customerKpiResponse.json() : [];
-        const leadsKpiData = leadsKpiResponse.ok ? await leadsKpiResponse.json() : [];
-        const bookingsKpiData = bookingsKpiResponse.ok ? await bookingsKpiResponse.json() : [];
+        // Process supplemental data if the fetch was successful
+        const customerKpiData = (customerKpiResponse instanceof Response && customerKpiResponse.ok) ? await customerKpiResponse.json() : null;
+        const leadsKpiData = (leadsKpiResponse instanceof Response && leadsKpiResponse.ok) ? await leadsKpiResponse.json() : null;
+        const bookingsKpiData = (bookingsKpiResponse instanceof Response && bookingsKpiResponse.ok) ? await bookingsKpiResponse.json() : null;
 
-        const mainKpiData: KpiApiResponse = await kpiResponse.json();
-
-        const customerKpisObject = Array.isArray(customerKpiData) ? customerKpiData.reduce((acc, item) => {
+        const customerKpisObject = customerKpiData && Array.isArray(customerKpiData) ? customerKpiData.reduce((acc, item) => {
             const key = item.name === 'customer_conversion_rate' ? 'customer_conversion_rate_pct' : item.name;
             acc[key] = item.value;
             return acc;
         }, {} as Record<string, any>) : {};
         
-        const leadsKpiObject = Array.isArray(leadsKpiData) ? leadsKpiData.reduce((acc, item) => {
+        const leadsKpiObject = leadsKpiData && Array.isArray(leadsKpiData) ? leadsKpiData.reduce((acc, item) => {
             const keyMap: Record<string, string> = {
                 'lead_conversion_rate': 'lead_conversion_rate_pct',
                 'avg_lead_response_time': 'lead_response_time_sec',
@@ -89,8 +93,8 @@ export default function AnalysisPage() {
             return acc;
         }, {} as Record<string, any>) : {};
 
-        const bookingsKpiObject = Array.isArray(bookingsKpiData) ? bookingsKpiData.reduce((acc, item) => {
-             const keyMap: Record<string, string> = {
+        const bookingsKpiObject = bookingsKpiData && Array.isArray(bookingsKpiData) ? bookingsKpiData.reduce((acc, item) => {
+            const keyMap: Record<string, string> = {
                 'booking_conversion_rate': 'booking_conversion_rate_pct',
                 'cancellation_rate': 'cancellation_rate_pct',
                 'repeat_booking_rate': 'repeat_booking_rate_pct',
@@ -241,7 +245,7 @@ export default function AnalysisPage() {
         setKpiMetrics(allOtherKpis);
       } catch (err) {
         if (err instanceof Error) {
-          setError(err.message);
+          setError(`Failed to load key analytics: ${err.message}`);
         } else {
           setError('An unexpected error occurred');
         }
@@ -331,7 +335,3 @@ export default function AnalysisPage() {
     </div>
   );
 }
-
-    
-
-    
