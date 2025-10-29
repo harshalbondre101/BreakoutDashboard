@@ -6,9 +6,10 @@ import { API_BASE_URL } from '@/lib/config';
 import { useAuth } from '@/context/AuthContext';
 
 const formatDurationFromSeconds = (seconds: number) => {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, '0')} min`;
+  const hours = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = Math.round(seconds % 60);
+  return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 };
 
 // Helper function to generate plausible sparkline data
@@ -42,8 +43,7 @@ const getKpiStatus = (value: number, target: string, higherIsBetter: boolean, un
     let isGood = false;
 
     if (unit === 'seconds') {
-        // For seconds, the target is in minutes, so we convert it
-        isGood = higherIsBetter ? value >= targetValue * 60 : value <= targetValue * 60;
+        isGood = higherIsBetter ? value >= targetValue : value <= targetValue;
     } else {
         isGood = higherIsBetter ? value >= targetValue : value <= targetValue;
     }
@@ -106,7 +106,7 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
 
         const kpiConfig: { id: 'first_call_resolution_pct' | 'avg_call_duration_sec' | 'call_abandon_rate_pct' | 'customer_satisfaction_avg_rating' | 'missed_calls' | 'customer_conversion_rate_pct' | 'overall_quality_score' | 'positive_sentiment_rate_pct'; label: string; target: string; higherIsBetter: boolean, unit: 'percentage' | 'seconds' | 'number' | 'rating' }[] = [
             { id: 'first_call_resolution_pct', label: 'First Call Resolution', target: '>90%', higherIsBetter: true, unit: 'percentage' },
-            { id: 'avg_call_duration_sec', label: 'Avg Call Duration', target: '<5 min', higherIsBetter: false, unit: 'seconds' },
+            { id: 'avg_call_duration_sec', label: 'Avg Call Duration', target: '<300s', higherIsBetter: false, unit: 'seconds' },
             { id: 'call_abandon_rate_pct', label: 'Call Abandon Rate', target: '<5%', higherIsBetter: false, unit: 'percentage' },
             { id: 'customer_satisfaction_avg_rating', label: 'Customer Satisfaction', target: '>4.0', higherIsBetter: true, unit: 'rating' },
             { id: 'missed_calls', label: 'Missed Calls', target: '0', higherIsBetter: false, unit: 'number' },

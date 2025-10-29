@@ -14,14 +14,10 @@ import { useAuth } from '@/context/AuthContext';
 import { useDashboardFilter } from '@/context/DashboardFilterContext';
 
 const formatDurationFromSeconds = (seconds: number) => {
-  if (seconds < 3600) {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.round(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')} min`;
-  }
   const hours = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
-  return `${hours}h ${mins}m`;
+  const secs = Math.round(seconds % 60);
+  return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 };
 
 export default function AnalysisPage() {
@@ -111,7 +107,7 @@ export default function AnalysisPage() {
 
         const executiveKpiConfig: { id: keyof typeof kpis; label: string; target: string; higherIsBetter: boolean, unit: 'percentage' | 'seconds' | 'number' | 'rating' }[] = [
             { id: 'first_call_resolution_pct', label: 'First Call Resolution', target: '>90%', higherIsBetter: true, unit: 'percentage' },
-            { id: 'avg_call_duration_sec', label: 'Avg Call Duration', target: '<5 min', higherIsBetter: false, unit: 'seconds' },
+            { id: 'avg_call_duration_sec', label: 'Avg Call Duration', target: '<300s', higherIsBetter: false, unit: 'seconds' },
             { id: 'call_abandon_rate_pct', label: 'Call Abandon Rate', target: '<5%', higherIsBetter: false, unit: 'percentage' },
             { id: 'missed_calls', label: 'Missed Calls', target: '0', higherIsBetter: false, unit: 'number' },
             { id: 'overall_quality_score', label: 'Overall Quality Score', target: '>85', higherIsBetter: true, unit: 'number' },
@@ -129,7 +125,7 @@ export default function AnalysisPage() {
             // Leads
             { id: 'total_leads_generated', label: 'Total Leads Generated', target: '>200', higherIsBetter: true, unit: 'number' },
             { id: 'lead_conversion_rate_pct', label: 'Lead Conversion Rate', target: '>15%', higherIsBetter: true, unit: 'percentage' },
-            { id: 'lead_response_time_sec', label: 'Lead Response Time', target: '<1hr', higherIsBetter: false, unit: 'seconds' },
+            { id: 'lead_response_time_sec', label: 'Lead Response Time', target: '<3600s', higherIsBetter: false, unit: 'seconds' },
             { id: 'lead_source_effectiveness', label: 'Lead Source Effectiveness', target: 'N/A', higherIsBetter: true, unit: 'string' },
             { id: 'qualified_lead_ratio_pct', label: 'Qualified Lead Ratio (SQL/MQL)', target: '>60%', higherIsBetter: true, unit: 'percentage' },
 
@@ -171,11 +167,10 @@ export default function AnalysisPage() {
                             : (Number(value) <= targetValue ? 'good' : 'warning');
                         break;
                     case 'seconds':
-                        const targetInSeconds = conf.target.includes('hr') ? targetValue * 3600 : targetValue * 60;
                         displayValue = formatDurationFromSeconds(Number(value));
                         status = conf.higherIsBetter 
-                            ? (Number(value) >= targetInSeconds ? 'good' : 'warning') 
-                            : (Number(value) <= targetInSeconds ? 'good' : 'warning');
+                            ? (Number(value) >= targetValue ? 'good' : 'warning') 
+                            : (Number(value) <= targetValue ? 'good' : 'warning');
                         break;
                     case 'rating':
                         displayValue = `${Number(value).toFixed(2)}/5`;
