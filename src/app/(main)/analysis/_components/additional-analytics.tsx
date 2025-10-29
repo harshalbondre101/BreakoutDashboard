@@ -3,8 +3,9 @@
 import { useAnalyticsData } from '@/hooks/useAnalyticsData';
 import { ChartCard } from '@/components/analytics/ChartCard';
 import { useState, useEffect } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { API_BASE_URL } from '@/lib/config';
+import { KPICard } from '@/components/kpi-card';
+import { KPIMetric } from '@/lib/types';
+import { API_CHARTS_BASE_URL } from '@/lib/config';
 
 const chartComponents = {
   line: "line",
@@ -27,18 +28,18 @@ interface ApiChart {
 }
 
 const movedChartsConfig = [
-  { id: 'revenue-summary', title: 'Revenue vs Refunds', chartType: 'dual-bar', endpoint: 'revenue-summary' },
   { id: 'payments-status', title: 'Payments Status Breakdown', chartType: 'donut', endpoint: 'payments-status' },
+  { id: 'revenue-summary', title: 'Revenue vs Refunds', chartType: 'dual-bar', endpoint: 'revenue-summary' },
   { id: 'lead-funnel', title: 'Lead Conversion Funnel', chartType: 'horizontal-bar', endpoint: 'lead-funnel' },
 ];
 
 export const AdditionalAnalytics = ({ filter }: { filter: string }) => {
-  const { data, loading, error } = useAnalyticsData(movedChartsConfig);
+  const { data, loading, error, isRetrying } = useAnalyticsData(movedChartsConfig, filter);
 
   const [apiCharts, setApiCharts] = useState<ApiChart[]>([]);
   const [apiLoading, setApiLoading] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
-  
+
   useEffect(() => {
     const controller = new AbortController();
     const signal = controller.signal;
@@ -47,8 +48,7 @@ export const AdditionalAnalytics = ({ filter }: { filter: string }) => {
       setApiLoading(true);
       setApiError(null);
       try {
-        const url = `${API_BASE_URL}/kpis/charts?filter=${filter}`;
-            
+        const url = `${API_CHARTS_BASE_URL}/charts?filter=${filter}`;
         const response = await fetch(url, { signal });
         if (!response.ok) {
           const errorText = await response.text();
@@ -66,7 +66,7 @@ export const AdditionalAnalytics = ({ filter }: { filter: string }) => {
         setApiLoading(false);
       }
     };
-
+    
     fetchCharts();
 
     return () => {
@@ -82,6 +82,7 @@ export const AdditionalAnalytics = ({ filter }: { filter: string }) => {
   };
 
   const allChartsLoading = Object.values(loading).some(Boolean) || apiLoading;
+  const anyChartError = Object.values(error).some(Boolean) || apiError;
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
@@ -89,10 +90,10 @@ export const AdditionalAnalytics = ({ filter }: { filter: string }) => {
         <h2 className="text-xl font-bold text-gray-900">Additional Analytics</h2>
       </div>
       
-      {(error['lead-funnel'] || apiError) && (
+      {anyChartError && (
         <div className="bg-red-50 text-red-700 p-4 rounded-lg text-center mb-6">
             <p>Failed to load some charts.</p>
-            {error['lead-funnel'] && <p className="text-sm">{error['lead-funnel']}</p>}
+            {Object.entries(error).map(([key, value]) => value && <p key={key} className="text-sm">{value}</p>)}
             {apiError && <p className="text-sm">{apiError}</p>}
         </div>
       )}
@@ -105,7 +106,8 @@ export const AdditionalAnalytics = ({ filter }: { filter: string }) => {
             chartType={chart.chartType as keyof typeof chartComponents}
             data={data[chart.id] || []}
             isLoading={loading[chart.id]}
-            error={!loading[chart.id] ? error[chart.id] : undefined} // Don't show individual error if we have a general one
+            error={!loading[chart.id] ? error[chart.id] : undefined}
+            isRetrying={isRetrying[chart.id]}
           />
         ))}
 
@@ -129,5 +131,3 @@ export const AdditionalAnalytics = ({ filter }: { filter: string }) => {
     </div>
   );
 };
-
-    
