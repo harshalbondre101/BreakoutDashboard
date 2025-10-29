@@ -133,9 +133,9 @@ export default function CustomersHubPage() {
           fetch(`${API_BASE_URL}/events/?skip=0&limit=100`),
         ]);
 
-        if (!customersResponse.ok) throw new Error(`HTTP error on customers: ${customersResponse.status} ${await customersResponse.text()}`);
-        if (!leadsResponse.ok) throw new Error(`HTTP error on leads: ${leadsResponse.status} ${await leadsResponse.text()}`);
-        if (!eventsResponse.ok) throw new Error(`HTTP error on events: ${eventsResponse.status} ${await eventsResponse.text()}`);
+        if (!customersResponse.ok) throw new Error(`HTTP error on customers: ${customersResponse.status} ${await customersResponse.text() || customersResponse.statusText}`);
+        if (!leadsResponse.ok) throw new Error(`HTTP error on leads: ${leadsResponse.status} ${await leadsResponse.text() || leadsResponse.statusText}`);
+        if (!eventsResponse.ok) throw new Error(`HTTP error on events: ${eventsResponse.status} ${await eventsResponse.text() || eventsResponse.statusText}`);
 
         const [customersDataRaw, leadsDataRaw, eventsDataRaw] = await Promise.all([
           customersResponse.json(),

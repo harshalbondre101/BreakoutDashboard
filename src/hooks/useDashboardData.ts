@@ -98,7 +98,7 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
         const response = await fetch(url);
         if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Failed to fetch KPIs: ${response.status} ${errorText}`);
+            throw new Error(`Failed to fetch KPIs: ${response.status} ${errorText || response.statusText}`);
         }
         const data: KpiApiResponse = await response.json();
         const kpis = data.kpis;
@@ -214,7 +214,7 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
         const response = await fetch(url);
         if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Failed to fetch bookings: ${response.status} ${errorText}`);
+            throw new Error(`Failed to fetch bookings: ${response.status} ${errorText || response.statusText}`);
         }
         const data: Booking[] = await response.json();
         setRecentBookings(data);
@@ -237,7 +237,7 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
         const response = await fetch(url);
         if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Failed to fetch calls: ${response.status} ${errorText}`);
+            throw new Error(`Failed to fetch calls: ${response.status} ${errorText || response.statusText}`);
         }
         const data: Call[] = await response.json();
         setCallsError(null);

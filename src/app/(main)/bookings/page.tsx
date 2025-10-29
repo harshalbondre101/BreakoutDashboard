@@ -37,7 +37,7 @@ export default function BookingsPage() {
         const response = await fetch(`${API_BASE_URL}/bookings/`);
         if (!response.ok) {
            const errorText = await response.text();
-           throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
+           throw new Error(`HTTP error! Status: ${response.status} - ${errorText || response.statusText}`);
         }
         const data: Booking[] = await response.json();
         setBookings(data);

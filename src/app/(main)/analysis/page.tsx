@@ -49,7 +49,8 @@ export default function AnalysisPage() {
         const mainKpiUrl = `${API_BASE_URL}/compute/kpis?filter=${dateRange}`;
         const mainKpiResponse = await fetch(mainKpiUrl);
         if (!mainKpiResponse.ok) {
-            throw new Error(`Failed to fetch main KPIs: ${mainKpiResponse.status} ${await mainKpiResponse.text()}`);
+            const errorText = await mainKpiResponse.text();
+            throw new Error(`Failed to fetch main KPIs: ${mainKpiResponse.status} ${errorText || mainKpiResponse.statusText}`);
         }
         const mainKpiData: KpiApiResponse = await mainKpiResponse.json();
 
@@ -247,7 +248,7 @@ export default function AnalysisPage() {
         if (err instanceof Error) {
           setError(`Failed to load key analytics: ${err.message}`);
         } else {
-          setError('An unexpected error occurred');
+          setError('An unexpected error occurred. Please check the console for more details.');
         }
       } finally {
         setLoading(false);

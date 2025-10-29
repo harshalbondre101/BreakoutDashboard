@@ -26,12 +26,12 @@ export function AiPerformance({ filter }: { filter: string }) {
         const response = await fetch(url);
         if (!response.ok) {
           const errorText = await response.text();
-          throw new Error(`Failed to fetch AI KPIs: ${response.status} ${errorText}`);
+          throw new Error(`Failed to fetch AI KPIs: ${response.status} ${errorText || response.statusText}`);
         }
         const data = await response.json();
         setMetrics(data.llmkpi || []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load AI KPIs.');
+        setError(err instanceof Error ? err.message : 'An unknown error occurred while fetching AI KPIs.');
       } finally {
         setLoading(false);
       }

@@ -32,7 +32,7 @@ export default function CallsPage() {
       const response = await fetch(`${API_BASE_URL}/calls/`);
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
+        throw new Error(`HTTP error! Status: ${response.status} - ${errorText || response.statusText}`);
       }
       const data: Call[] = await response.json();
       setAllCalls(data);

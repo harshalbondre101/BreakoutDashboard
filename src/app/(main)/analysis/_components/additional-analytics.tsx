@@ -48,12 +48,12 @@ export const AdditionalAnalytics = ({ filter }: { filter: string }) => {
         const response = await fetch(url);
         if (!response.ok) {
           const errorText = await response.text();
-          throw new Error(`Failed to fetch charts: ${response.status} ${errorText}`);
+          throw new Error(`Failed to fetch charts: ${response.status} ${errorText || response.statusText}`);
         }
         const data = await response.json();
         setApiCharts(data.charts || []);
       } catch (err) {
-        setApiError(err instanceof Error ? err.message : 'Failed to load charts.');
+        setApiError(err instanceof Error ? err.message : 'An unknown error occurred while fetching additional charts.');
       } finally {
         setApiLoading(false);
       }

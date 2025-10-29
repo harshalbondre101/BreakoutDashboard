@@ -80,7 +80,7 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
         const response = await fetch(url);
         if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText || response.statusText}`);
         }
         const result = await response.json();
         
@@ -106,7 +106,7 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
         setRetrying(prev => ({ ...prev, [id]: false }));
 
       } catch (e) {
-        const errorMessage = e instanceof Error ? e.message : 'An error occurred';
+        const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred while fetching analytics data.';
         setError(prev => ({ ...prev, [id]: errorMessage }));
         
         if (attempt < 5) { // Retry up to 5 times

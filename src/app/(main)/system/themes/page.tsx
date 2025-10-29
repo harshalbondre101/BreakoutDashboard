@@ -25,7 +25,7 @@ export default function ThemesPage() {
       const response = await fetch(`${API_BASE_URL}/themes/`);
       if (!response.ok) {
          const errorText = await response.text();
-         throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
+         throw new Error(`HTTP error! Status: ${response.status} - ${errorText || response.statusText}`);
       }
       const data: Theme[] = await response.json();
       setThemes(data);
@@ -55,7 +55,7 @@ export default function ThemesPage() {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Failed to delete theme: ${response.status} ${errorText}`);
+        throw new Error(`Failed to delete theme: ${response.status} ${errorText || response.statusText}`);
       }
 
       toast({
