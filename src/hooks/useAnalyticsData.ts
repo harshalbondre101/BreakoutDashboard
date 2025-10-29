@@ -9,7 +9,7 @@ const defaultChartsConfig = [
   { id: 'call-sentiment', title: 'Call Sentiment Distribution', chartType: 'call-sentiment', endpoint: 'sentiment-summary' },
   { id: 'customer-growth', title: 'Customer Growth', chartType: 'area', endpoint: 'customer-growth' },
   { id: 'customer-rating', title: 'Customer Rating Distribution', chartType: 'pie', endpoint: 'customer-rating-summary' },
-  { id: 'intent-distribution', title: 'Intent Distribution', chartType: 'pie', endpoint: 'dummy-intent-distribution' },
+  { id: 'intent-distribution', title: 'Intent Distribution', chartType: 'pie', endpoint: 'call-intent-summary' },
 ];
 
 
@@ -31,6 +31,7 @@ const transformCustomerGrowth = (data: any) => data.dates.map((date: string, ind
 const transformPaymentsStatus = (data: any) => Object.entries(data).map(([name, value]) => ({ name, value: value as number }));
 const transformCallSentiment = (data: any) => Object.entries(data).map(([name, value]) => ({ name, value: value as number }));
 const transformCustomerRating = (data: any) => data.ratings.map((rating: number, index: number) => ({ name: `${rating} Stars`, value: data.counts[index] }));
+const transformIntentDistribution = (data: any) => data.intents.map((intent: string, index: number) => ({ name: intent, value: data.counts[index] }));
 
 
 const getDummyData = (endpoint: string) => {
@@ -60,7 +61,7 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
       setError(prev => ({ ...prev, [id]: null }));
 
       const dummyData = getDummyData(endpoint);
-      if (dummyData) {
+      if (dummyData && endpoint === 'dummy-intent-distribution') {
         setData(prev => ({ ...prev, [id]: dummyData }));
         setLoading(prev => ({ ...prev, [id]: false }));
         setRetrying(prev => ({ ...prev, [id]: false }));
@@ -89,6 +90,7 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
               case 'payments-status': transformedData = Object.keys(result).length > 0 ? transformPaymentsStatus(result) : []; break;
               case 'call-sentiment': transformedData = Object.keys(result).length > 0 ? transformCallSentiment(result) : []; break;
               case 'customer-rating': transformedData = result.ratings ? transformCustomerRating(result) : []; break;
+              case 'intent-distribution': transformedData = result.intents ? transformIntentDistribution(result) : []; break;
               default: transformedData = result.charts || result || [];
             }
             setData(prev => ({ ...prev, [id]: Array.isArray(transformedData) ? transformedData : [] }));
