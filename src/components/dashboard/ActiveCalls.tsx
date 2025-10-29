@@ -47,9 +47,6 @@ export const ActiveCalls = ({ activeCalls, callsLoading, callsError }: { activeC
             </div>
             <div className="text-right">
               <p className="text-lg font-bold text-gray-900">{formatDuration(call.duration)}</p>
-              <p className={`text-xs font-medium mt-1 text-emerald-600`}>
-                ACTIVE
-              </p>
             </div>
           </div>
         ))}
