@@ -1,9 +1,8 @@
 
 'use client';
-import { useState } from 'react';
 import { useAnalyticsData } from '@/hooks/useAnalyticsData';
 import { ChartCard } from './analytics/ChartCard';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useDashboardFilter } from '@/context/DashboardFilterContext';
 
 const chartComponents = {
   line: "line",
@@ -20,11 +19,9 @@ const chartComponents = {
   treemap: "treemap",
 };
 
-type FilterType = 'daily' | 'weekly' | 'quarterly' | 'half_yearly' | 'yearly';
-
 export const AnalyticsOverview = () => {
-  const [filter, setFilter] = useState<FilterType>('weekly');
-  const { data, loading, error, chartsConfig, isRetrying } = useAnalyticsData(undefined, filter);
+  const { dateRange } = useDashboardFilter();
+  const { data, loading, error, chartsConfig, isRetrying } = useAnalyticsData(undefined, dateRange);
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">

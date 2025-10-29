@@ -1,13 +1,12 @@
 
 'use client';
 import { useDashboardData } from '@/hooks/useDashboardData';
-import { Header } from './_components/Header';
 import { KpiGrid } from '@/components/dashboard/KpiGrid';
 import { ActiveCalls } from '@/components/dashboard/ActiveCalls';
 import { RecentBookings } from '@/components/dashboard/RecentBookings';
 import { SystemAlerts } from '@/components/dashboard/SystemAlerts';
 import { AnalyticsOverview } from '@/components/analytics-overview';
-import { DashboardFilterProvider, useDashboardFilter } from '@/context/DashboardFilterContext';
+import { useDashboardFilter } from '@/context/DashboardFilterContext';
 import { CallVolume } from '@/components/dashboard/CallVolume';
 import { SentimentDistribution } from '@/components/dashboard/SentimentDistribution';
 
@@ -29,8 +28,6 @@ function DashboardContent() {
 
   return (
     <div className="space-y-6">
-      <Header />
-
       <KpiGrid kpiMetrics={kpiMetrics} kpiLoading={kpiLoading} kpiError={kpiError} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -59,8 +56,6 @@ function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <DashboardFilterProvider>
-      <DashboardContent />
-    </DashboardFilterProvider>
+    <DashboardContent />
   )
 }

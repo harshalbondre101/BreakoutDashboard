@@ -15,7 +15,7 @@ export const Header = () => {
   }, []);
 
   return (
-    <div className="flex justify-between items-center">
+    <div className="flex justify-between items-center mb-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Command Center</h1>
         <p className="text-gray-500 mt-1">Real-time operational overview</p>

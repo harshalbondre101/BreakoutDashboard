@@ -5,15 +5,13 @@ import { KPIMetric, KpiApiResponse } from '@/lib/types';
 import { API_BASE_URL } from '@/lib/config';
 import { BarChart3 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ExecutiveOverview } from './_components/executive-overview';
 import { KpiSection } from './_components/kpi-section';
 import { AiPerformance } from './_components/ai-performance';
 import { Alerts } from './_components/alerts';
 import { AdditionalAnalytics } from './_components/additional-analytics';
 import { useAuth } from '@/context/AuthContext';
-
-type DateRange = 'today' | 'last_week' | 'last_month' | 'all_time';
+import { useDashboardFilter } from '@/context/DashboardFilterContext';
 
 const formatDurationFromSeconds = (seconds: number) => {
   if (seconds < 3600) {
@@ -32,7 +30,7 @@ export default function AnalysisPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
-  const [dateRange, setDateRange] = useState<DateRange>('all_time');
+  const { dateRange } = useDashboardFilter();
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -283,17 +281,6 @@ export default function AnalysisPage() {
             <h1 className="text-3xl font-bold text-gray-900">Business Intelligence Hub</h1>
             <p className="text-gray-500 mt-1">Deep dive analytics and AI performance metrics</p>
         </div>
-        <Select value={dateRange} onValueChange={(value: DateRange) => setDateRange(value)}>
-            <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select a date range" />
-            </SelectTrigger>
-            <SelectContent>
-                <SelectItem value="today">Today</SelectItem>
-                <SelectItem value="last_week">Last Week</SelectItem>
-                <SelectItem value="last_month">Last Month</SelectItem>
-                <SelectItem value="all_time">All Time</SelectItem>
-            </SelectContent>
-        </Select>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols gap-6">
@@ -347,5 +334,3 @@ export default function AnalysisPage() {
     </div>
   );
 }
-
-    
