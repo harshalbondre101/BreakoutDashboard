@@ -170,5 +170,3 @@ export function AiPerformance({ filter }: { filter: string }) {
     </div>
   );
 }
-
-    

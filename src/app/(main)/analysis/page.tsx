@@ -165,7 +165,7 @@ export default function AnalysisPage() {
 
                 switch (conf.unit) {
                     case 'percentage':
-                        displayValue = `${Number(value).toFixed(1)}%`;
+                        displayValue = `${Number(value).toFixed(2)}%`;
                         status = conf.higherIsBetter 
                             ? (Number(value) >= targetValue ? 'good' : 'warning') 
                             : (Number(value) <= targetValue ? 'good' : 'warning');
@@ -178,7 +178,7 @@ export default function AnalysisPage() {
                             : (Number(value) <= targetInSeconds ? 'good' : 'warning');
                         break;
                     case 'rating':
-                        displayValue = `${Number(value).toFixed(1)}/5`;
+                        displayValue = `${Number(value).toFixed(2)}/5`;
                         status = Number(value) >= targetValue ? 'good' : 'warning';
                         break;
                     case 'currency':
@@ -197,7 +197,7 @@ export default function AnalysisPage() {
                         status = 'good';
                         break;
                     default: // number
-                        displayValue = value.toString();
+                        displayValue = Number.isInteger(value) ? value.toString() : Number(value).toFixed(2);
                         status = conf.higherIsBetter
                           ? (Number(value) >= targetValue ? 'good' : 'warning')
                           : (Number(value) <= targetValue ? 'good' : 'warning');
