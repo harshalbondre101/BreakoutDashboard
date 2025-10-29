@@ -8,7 +8,7 @@ const defaultChartsConfig = [
   { id: 'bookings-revenue', title: 'Bookings Trend', chartType: 'bar', endpoint: 'bookings-trend' },
   { id: 'call-sentiment', title: 'Call Sentiment Distribution', chartType: 'call-sentiment', endpoint: 'sentiment-summary' },
   { id: 'customer-growth', title: 'Customer Growth', chartType: 'area', endpoint: 'customer-growth' },
-  { id: 'customer-rating', title: 'Customer Rating Distribution', chartType: 'pie', endpoint: 'dummy-customer-rating' },
+  { id: 'customer-rating', title: 'Customer Rating Distribution', chartType: 'pie', endpoint: 'customer-rating-summary' },
   { id: 'intent-distribution', title: 'Intent Distribution', chartType: 'pie', endpoint: 'dummy-intent-distribution' },
 ];
 
@@ -20,7 +20,7 @@ type ChartConfigItem = {
     endpoint: string;
 };
 
-type FilterType = 'daily' | 'weekly' | 'quarterly' | 'half_yearly' | 'yearly';
+type FilterType = 'daily' | 'weekly' | 'quarterly' | 'half_yearly' | 'yearly' | 'today' | 'last_week' | 'last_month' | 'all_time';
 
 // Data transformation functions
 const transformCallsTrend = (data: any) => data.dates.map((date: string, index: number) => ({ date, total_calls: data.calls[index] }));
@@ -28,20 +28,12 @@ const transformBookingsTrend = (data: any) => data.dates.map((date: string, inde
 const transformLeadFunnel = (data: any) => data.stages.map((stage: string, index: number) => ({ stage, count: data.counts[index] }));
 const transformLeadSources = (data: any) => data.sources.map((source: string, index: number) => ({ name: source, value: data.conversions[index] }));
 const transformCustomerGrowth = (data: any) => data.dates.map((date: string, index: number) => ({ date, total_customers: data.total[index] }));
-const transformRevenueSummary = (data: any) => data.dates.map((date: string, index: number) => ({ date, revenue: data.revenue[index], refunds: data.refunds[index] }));
 const transformPaymentsStatus = (data: any) => Object.entries(data).map(([name, value]) => ({ name, value: value as number }));
 const transformCallSentiment = (data: any) => Object.entries(data).map(([name, value]) => ({ name, value: value as number }));
+const transformCustomerRating = (data: any) => data.ratings.map((rating: number, index: number) => ({ name: `${rating} Stars`, value: data.counts[index] }));
+
 
 const getDummyData = (endpoint: string) => {
-    if (endpoint === 'dummy-customer-rating') {
-        return [
-            { name: '5 Stars', value: 400 },
-            { name: '4 Stars', value: 300 },
-            { name: '3 Stars', value: 200 },
-            { name: '2 Stars', value: 100 },
-            { name: '1 Star', value: 50 },
-        ];
-    }
     if (endpoint === 'dummy-intent-distribution') {
         return [
             { name: 'Booking', value: 250 },
@@ -94,9 +86,9 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
               case 'lead-funnel': transformedData = result.stages ? transformLeadFunnel(result) : []; break;
               case 'lead-sources': transformedData = result.sources ? transformLeadSources(result) : []; break;
               case 'customer-growth': transformedData = result.dates ? transformCustomerGrowth(result) : []; break;
-              case 'revenue-summary': transformedData = result.dates ? transformRevenueSummary(result) : []; break;
               case 'payments-status': transformedData = Object.keys(result).length > 0 ? transformPaymentsStatus(result) : []; break;
               case 'call-sentiment': transformedData = Object.keys(result).length > 0 ? transformCallSentiment(result) : []; break;
+              case 'customer-rating': transformedData = result.ratings ? transformCustomerRating(result) : []; break;
               default: transformedData = result.charts || result || [];
             }
             setData(prev => ({ ...prev, [id]: Array.isArray(transformedData) ? transformedData : [] }));
