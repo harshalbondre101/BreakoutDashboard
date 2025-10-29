@@ -57,7 +57,7 @@ export default function AnalysisPage() {
         const supplementalUrls = {
             customers: `${API_BASE_URL}/kpis/customers?filter=${dateRange}`,
             leads: `${API_BASE_URL}/kpis/leads?filter=${dateRange}`,
-            bookings: `${API_BASE_URL}/kpis/booking?filter=${dateRange}`,
+            bookings: `${API_BASE_URL}/kpis/bookings?filter=${dateRange}`,
         };
 
         const supplementalResponses = await Promise.all(
