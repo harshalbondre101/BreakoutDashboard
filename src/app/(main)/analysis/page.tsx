@@ -44,6 +44,10 @@ export default function AnalysisPage() {
     const fetchKpis = async () => {
       setLoading(true);
       setError(null);
+      // Reset state on new fetch
+      setExecutiveMetrics([]);
+      setKpiMetrics([]);
+
       try {
         const [kpiResponse, customerKpiResponse, leadsKpiResponse, bookingsKpiResponse] = await Promise.all([
             fetch(getUrlWithFilter(`${API_BASE_URL}/compute/kpis`)),
@@ -53,16 +57,13 @@ export default function AnalysisPage() {
         ]);
 
         if (!kpiResponse.ok) throw new Error(`HTTP error on main KPIs! Status: ${kpiResponse.status} ${await kpiResponse.text()}`);
-        if (!customerKpiResponse.ok) console.warn(`Warning on customer KPIs: Status: ${customerKpiResponse.status}`);
-        if (!leadsKpiResponse.ok) console.warn(`Warning on leads KPIs: Status: ${leadsKpiResponse.status}`);
-        if (!bookingsKpiResponse.ok) console.warn(`Warning on bookings KPIs: Status: ${bookingsKpiResponse.status}`);
-
-        const data: KpiApiResponse = await kpiResponse.json();
         
-        // Use .json() and handle potential errors gracefully
+        // Gracefully handle failures for supplemental KPIs
         const customerKpiData = customerKpiResponse.ok ? await customerKpiResponse.json() : [];
         const leadsKpiData = leadsKpiResponse.ok ? await leadsKpiResponse.json() : [];
         const bookingsKpiData = bookingsKpiResponse.ok ? await bookingsKpiResponse.json() : [];
+
+        const mainKpiData: KpiApiResponse = await kpiResponse.json();
 
         const customerKpisObject = Array.isArray(customerKpiData) ? customerKpiData.reduce((acc, item) => {
             const key = item.name === 'customer_conversion_rate' ? 'customer_conversion_rate_pct' : item.name;
@@ -98,7 +99,7 @@ export default function AnalysisPage() {
         }, {} as Record<string, any>) : {};
 
         // Merge all KPI sources
-        const kpis = { ...data.kpis, ...customerKpisObject, ...leadsKpiObject, ...bookingsKpiObject };
+        const kpis = { ...mainKpiData.kpis, ...customerKpisObject, ...leadsKpiObject, ...bookingsKpiObject };
 
         const executiveKpiConfig: { id: keyof typeof kpis; label: string; target: string; higherIsBetter: boolean, unit: 'percentage' | 'seconds' | 'number' | 'rating' }[] = [
             { id: 'first_call_resolution_pct', label: 'First Call Resolution', target: '>90%', higherIsBetter: true, unit: 'percentage' },
@@ -134,7 +135,21 @@ export default function AnalysisPage() {
 
         const processKpis = (config: any[]): KPIMetric[] => {
             return config.map(conf => {
-                const value = kpis[conf.id as keyof typeof kpis] ?? 0;
+                const value = kpis[conf.id as keyof typeof kpis];
+                
+                // If value is missing or null, return a placeholder
+                if (value === undefined || value === null) {
+                    return {
+                        id: conf.id,
+                        label: conf.label,
+                        value: '-',
+                        target: conf.target,
+                        trend: 'stable',
+                        status: 'warning',
+                        sparklineData: Array(8).fill(0),
+                    };
+                }
+
                 let displayValue: string;
                 let status: 'good' | 'warning' | 'critical';
 
@@ -160,7 +175,7 @@ export default function AnalysisPage() {
                         break;
                     case 'currency':
                         const kValue = (Number(value)/1000);
-                        if (kValue > 0) {
+                        if (Math.abs(kValue) >= 1) {
                             displayValue = `$${kValue.toFixed(1)}k`;
                         } else {
                              displayValue = `$${Number(value).toFixed(2)}`;
@@ -182,6 +197,7 @@ export default function AnalysisPage() {
                 }
                 
                 const generateSparklineData = (currentValue: number, points: number = 8) => {
+                  if (currentValue === 0) return Array(points).fill(0);
                   const data = [currentValue];
                   for (let i = 1; i < points; i++) {
                     const fluctuation = (Math.random() - 0.5) * (currentValue * 0.2);
@@ -213,14 +229,14 @@ export default function AnalysisPage() {
                     status: status,
                     sparklineData: sparklineData,
                 };
-            });
+            }).filter(Boolean) as KPIMetric[];
         }
         
-        const executiveKpis = processKpis(executiveKpiConfig);
-        const allKpis = processKpis(detailedKpiConfig);
+        const execKpis = processKpis(executiveKpiConfig);
+        const allOtherKpis = processKpis(detailedKpiConfig);
 
-        setExecutiveMetrics(executiveKpis);
-        setKpiMetrics(allKpis);
+        setExecutiveMetrics(execKpis);
+        setKpiMetrics(allOtherKpis);
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
@@ -236,6 +252,11 @@ export default function AnalysisPage() {
   }, [isAuthenticated, dateRange]);
 
   const allMetrics = [...executiveMetrics, ...kpiMetrics];
+  
+  const customerKpiIds = ['total_customers', 'new_customers', 'avg_spend_per_customer', 'customer_satisfaction_avg_rating', 'customer_conversion_rate_pct'];
+  const leadKpiIds = ['total_leads_generated', 'lead_conversion_rate_pct', 'lead_response_time_sec', 'lead_source_effectiveness', 'qualified_lead_ratio_pct'];
+  const bookingKpiIds = ['total_bookings', 'booking_conversion_rate_pct', 'avg_booking_value', 'cancellation_rate_pct', 'repeat_booking_rate_pct'];
+
 
   return (
     <div className="space-y-6">
@@ -276,7 +297,7 @@ export default function AnalysisPage() {
             <TabsContent value="customers">
               <KpiSection 
                 title="KPIs - Customers" 
-                kpiIds={['total_customers', 'new_customers', 'avg_spend_per_customer', 'customer_satisfaction_avg_rating', 'customer_conversion_rate_pct']}
+                kpiIds={customerKpiIds}
                 metrics={kpiMetrics}
                 loading={loading}
               />
@@ -284,7 +305,7 @@ export default function AnalysisPage() {
             <TabsContent value="leads">
               <KpiSection 
                 title="KPIs - Leads"
-                kpiIds={['total_leads_generated', 'lead_conversion_rate_pct', 'lead_response_time_sec', 'lead_source_effectiveness', 'qualified_lead_ratio_pct']}
+                kpiIds={leadKpiIds}
                 metrics={kpiMetrics}
                 loading={loading}
               />
@@ -292,7 +313,7 @@ export default function AnalysisPage() {
             <TabsContent value="bookings">
               <KpiSection
                 title="KPIs - Bookings"
-                kpiIds={['total_bookings', 'booking_conversion_rate_pct', 'avg_booking_value', 'cancellation_rate_pct', 'repeat_booking_rate_pct']}
+                kpiIds={bookingKpiIds}
                 metrics={kpiMetrics}
                 loading={loading}
               />
