@@ -49,11 +49,13 @@ export default function AnalysisPage() {
       setKpiMetrics([]);
 
       try {
+        const bookingsUrl = `${API_BASE_URL}/kpis/booking?filter=${dateRange}&interval=full`;
+
         const [kpiResponse, customerKpiResponse, leadsKpiResponse, bookingsKpiResponse] = await Promise.all([
             fetch(getUrlWithFilter(`${API_BASE_URL}/compute/kpis`)),
             fetch(getUrlWithFilter(`${API_BASE_URL}/kpis/customers`)),
             fetch(getUrlWithFilter(`${API_BASE_URL}/kpis/leads`)),
-            fetch(getUrlWithFilter(`${API_BASE_URL}/kpis/booking`))
+            fetch(bookingsUrl)
         ]);
 
         if (!kpiResponse.ok) throw new Error(`HTTP error on main KPIs! Status: ${kpiResponse.status} ${await kpiResponse.text()}`);
@@ -329,3 +331,5 @@ export default function AnalysisPage() {
     </div>
   );
 }
+
+    
