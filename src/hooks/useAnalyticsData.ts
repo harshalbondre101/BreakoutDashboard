@@ -31,7 +31,22 @@ const transformCustomerGrowth = (data: any) => data.dates.map((date: string, ind
 const transformPaymentsStatus = (data: any) => Object.entries(data).map(([name, value]) => ({ name, value: value as number }));
 const transformCallSentiment = (data: any) => Object.entries(data).map(([name, value]) => ({ name, value: value as number }));
 const transformCustomerRating = (data: any) => data.ratings.map((rating: number, index: number) => ({ name: `${rating} Stars`, value: data.counts[index] }));
-const transformIntentDistribution = (data: any) => data.intents.map((intent: string, index: number) => ({ name: intent, value: data.counts[index] }));
+const transformIntentDistribution = (data: any) => {
+    const combined = data.intents.map((intent: string, index: number) => ({
+      name: intent,
+      value: data.counts[index],
+    }));
+
+    combined.sort((a: { value: number }, b: { value: number }) => b.value - a.value);
+
+    if (combined.length > 5) {
+        const top5 = combined.slice(0, 5);
+        const otherSum = combined.slice(5).reduce((acc: number, curr: { value: number }) => acc + curr.value, 0);
+        return [...top5, { name: 'Other', value: otherSum }];
+    }
+
+    return combined;
+};
 
 
 const getDummyData = (endpoint: string) => {
