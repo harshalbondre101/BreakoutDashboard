@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Brain } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/config';
 
 interface AiMetric {
   name: string;
@@ -24,7 +25,7 @@ export function AiPerformance({ filter }: { filter: string }) {
       setLoading(true);
       setError(null);
       try {
-        const url = `https://breakout-project.onrender.com/kpis/llmkpi?filter=${filter}`;
+        const url = `${API_BASE_URL}/kpis/llmkpi?filter=${filter}`;
             
         const response = await fetch(url, { signal });
         if (!response.ok) {

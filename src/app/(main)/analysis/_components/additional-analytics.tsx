@@ -4,6 +4,7 @@ import { useAnalyticsData } from '@/hooks/useAnalyticsData';
 import { ChartCard } from '@/components/analytics/ChartCard';
 import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { API_BASE_URL } from '@/lib/config';
 
 const chartComponents = {
   line: "line",
@@ -46,7 +47,7 @@ export const AdditionalAnalytics = ({ filter }: { filter: string }) => {
       setApiLoading(true);
       setApiError(null);
       try {
-        const url = `https://breakout-project.onrender.com/kpis/charts?filter=${filter}`;
+        const url = `${API_BASE_URL}/kpis/charts?filter=${filter}`;
             
         const response = await fetch(url, { signal });
         if (!response.ok) {
