@@ -4,6 +4,16 @@ import { useAnalyticsData } from '@/hooks/useAnalyticsData';
 import { ChartCard } from './analytics/ChartCard';
 import { useDashboardFilter } from '@/context/DashboardFilterContext';
 
+const overviewChartsConfig = [
+  { id: 'calls_trend', title: 'Calls Trend', chartType: 'line', endpoint: 'overview' },
+  { id: 'bookings_trend', title: 'Bookings Trend', chartType: 'bar', endpoint: 'overview' },
+  { id: 'sentiment_summary', title: 'Call Sentiment Distribution', chartType: 'call-sentiment', endpoint: 'overview' },
+  { id: 'customer_growth', title: 'Customer Growth', chartType: 'area', endpoint: 'overview' },
+  { id: 'customer_rating', title: 'Customer Rating Distribution', chartType: 'pie', endpoint: 'overview' },
+  { id: 'call_intent', title: 'Intent Distribution', chartType: 'pie', endpoint: 'overview' },
+];
+
+
 const chartComponents = {
   line: "line",
   bar: "bar",
@@ -21,7 +31,7 @@ const chartComponents = {
 
 export const AnalyticsOverview = () => {
   const { dateRange } = useDashboardFilter();
-  const { data, loading, error, chartsConfig, isRetrying } = useAnalyticsData(undefined, dateRange);
+  const { data, loading, error, chartsConfig, isRetrying } = useAnalyticsData(overviewChartsConfig, dateRange);
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
