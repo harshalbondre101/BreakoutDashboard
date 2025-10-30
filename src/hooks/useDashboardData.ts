@@ -75,6 +75,9 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
   useEffect(() => {
     if (!isAuthenticated) return;
 
+    const controller = new AbortController();
+    const signal = controller.signal;
+
     const getUrlWithFilter = (baseUrl: string, otherParams: string = '') => {
         let url = baseUrl;
         const params = new URLSearchParams(otherParams);
@@ -93,16 +96,16 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
 
     const fetchKpis = async () => {
       setKpiLoading(true);
+      setKpiError(null);
       try {
         const url = getUrlWithFilter(`${API_BASE_URL}/compute/kpis`);
-        const response = await fetch(url);
+        const response = await fetch(url, { signal });
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Failed to fetch KPIs: ${response.status} ${errorText || response.statusText}`);
         }
         const data: KpiApiResponse = await response.json();
         const kpis = data.kpis;
-        setKpiError(null);
 
         const kpiConfig: { id: 'first_call_resolution_pct' | 'avg_call_duration_sec' | 'call_abandon_rate_pct' | 'customer_satisfaction_avg_rating' | 'missed_calls' | 'customer_conversion_rate_pct' | 'overall_quality_score' | 'positive_sentiment_rate_pct'; label: string; target: string; higherIsBetter: boolean, unit: 'percentage' | 'seconds' | 'number' | 'rating' }[] = [
             { id: 'first_call_resolution_pct', label: 'First Call Resolution', target: '>90%', higherIsBetter: true, unit: 'percentage' },
@@ -197,6 +200,7 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
         setAlerts(newAlerts);
 
       } catch (err) {
+        if ((err as Error).name === 'AbortError') return;
         if (err instanceof Error) {
           setKpiError(err.message);
         } else {
@@ -209,17 +213,18 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
     
     const fetchBookings = async () => {
       setBookingsLoading(true);
+      setBookingsError(null);
       try {
         const url = getUrlWithFilter(`${API_BASE_URL}/bookings/`, 'skip=0&limit=100');
-        const response = await fetch(url);
+        const response = await fetch(url, { signal });
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Failed to fetch bookings: ${response.status} ${errorText || response.statusText}`);
         }
         const data: Booking[] = await response.json();
         setRecentBookings(data);
-        setBookingsError(null);
       } catch (err) {
+        if ((err as Error).name === 'AbortError') return;
         if (err instanceof Error) {
           setBookingsError(err.message);
         } else {
@@ -232,15 +237,15 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
     
     const fetchCalls = async () => {
       setCallsLoading(true);
+      setCallsError(null);
       try {
         const url = getUrlWithFilter(`${API_BASE_URL}/calls/`);
-        const response = await fetch(url);
+        const response = await fetch(url, { signal });
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Failed to fetch calls: ${response.status} ${errorText || response.statusText}`);
         }
         const data: Call[] = await response.json();
-        setCallsError(null);
         setActiveCalls(data.slice(-5));
         
         const now = new Date();
@@ -257,6 +262,7 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
 
         setCallVolume(hourlyCounts);
       } catch (err) {
+        if ((err as Error).name === 'AbortError') return;
         if (err instanceof Error) {
           setCallsError(err.message);
         } else {
@@ -271,6 +277,10 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
     fetchKpis();
     fetchBookings();
     fetchCalls();
+
+    return () => {
+      controller.abort();
+    }
   }, [isAuthenticated, dateRange]);
 
   return { kpiMetrics, recentBookings, activeCalls, callVolume, alerts, kpiLoading, bookingsLoading, callsLoading, kpiError, bookingsError, callsError };
