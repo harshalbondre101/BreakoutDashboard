@@ -29,8 +29,8 @@ function DashboardContent() {
   return (
     <div className="space-y-6">
       <KpiGrid kpiMetrics={kpiMetrics} kpiLoading={kpiLoading} kpiError={kpiError} />
-
-      <AnalyticsOverview />
+      
+      {!kpiLoading && <AnalyticsOverview />}
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
