@@ -50,22 +50,9 @@ const transformIntentDistribution = (data: any) => {
 };
 
 
-const getDummyData = (endpoint: string) => {
-    if (endpoint === 'dummy-intent-distribution') {
-        return [
-            { name: 'Booking', value: 250 },
-            { name: 'Inquiry', value: 450 },
-            { name: 'Complaint', value: 80 },
-            { name: 'Modification', value: 120 },
-            { name: 'Other', value: 50 },
-        ];
-    }
-    return null;
-}
-
 const dataTransformers: Record<string, (data: any) => any[]> = {
-    'calls-trend': transformCallsTrend,
-    'bookings-trend': transformBookingsTrend,
+    'calls_trend': transformCallsTrend,
+    'bookings_trend': transformBookingsTrend,
     'sentiment_summary': transformCallSentiment,
     'customer_growth': transformCustomerGrowth,
     'customer_rating': transformCustomerRating,
@@ -86,119 +73,65 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
   useEffect(() => {
     const isOverview = chartsConfig.some(c => c.endpoint === 'overview');
 
-    if (isOverview) {
-        // Single fetch for overview
-        const fetchOverview = async (attempt = 1) => {
-            setLoading(prev => chartsConfig.reduce((acc, c) => ({ ...acc, [c.id]: attempt === 1 }), prev));
-            setError(prev => chartsConfig.reduce((acc, c) => ({ ...acc, [c.id]: null }), prev));
+    const fetcher = async (attempt = 1) => {
+        const initialLoadingState = chartsConfig.reduce((acc, c) => ({ ...acc, [c.id]: attempt === 1 }), {});
+        setLoading(initialLoadingState);
+        setError({});
 
-            try {
-                const url = filter ? `${API_CHARTS_BASE_URL}/overview?filter=${filter}` : `${API_CHARTS_BASE_URL}/overview`;
-                const response = await fetch(url);
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP error! status: ${response.status} - ${errorText || response.statusText}`);
-                }
-                const overviewData = await response.json();
-                
-                const transformedData: Record<string, any[]> = {};
-                for (const chart of chartsConfig) {
-                    const apiData = overviewData[chart.id];
-                    const transformer = dataTransformers[chart.id];
-                    if (apiData && transformer) {
-                        transformedData[chart.id] = transformer(apiData);
-                    } else {
-                        transformedData[chart.id] = [];
-                    }
-                }
-                
-                setData(transformedData);
-                setRetrying(prev => chartsConfig.reduce((acc, c) => ({ ...acc, [c.id]: false }), prev));
-
-            } catch (e) {
-                const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred while fetching overview data.';
-                setError(prev => chartsConfig.reduce((acc, c) => ({ ...acc, [c.id]: errorMessage }), prev));
-                
-                if (attempt < 5) {
-                    setRetrying(prev => chartsConfig.reduce((acc, c) => ({ ...acc, [c.id]: true }), prev));
-                    const delay = Math.pow(2, attempt) * 1000;
-                    retryTimeouts.current['overview'] = setTimeout(() => fetchOverview(attempt + 1), delay);
-                } else {
-                    setRetrying(prev => chartsConfig.reduce((acc, c) => ({ ...acc, [c.id]: false }), prev));
-                }
-            } finally {
-                if (attempt === 1) {
-                    setLoading(prev => chartsConfig.reduce((acc, c) => ({ ...acc, [c.id]: false }), prev));
-                }
-            }
-        };
-
-        if (retryTimeouts.current['overview']) {
-            clearTimeout(retryTimeouts.current['overview']);
-        }
-        fetchOverview();
-
-    } else {
-        // Individual fetches for each chart
-        const fetchDataWithRetry = async (id: string, endpoint: string, attempt = 1) => {
-          setLoading(prev => ({ ...prev, [id]: attempt === 1 }));
-          setError(prev => ({ ...prev, [id]: null }));
-
-          const dummyData = getDummyData(endpoint);
-          if (dummyData && endpoint === 'dummy-intent-distribution') {
-            setData(prev => ({ ...prev, [id]: dummyData }));
-            setLoading(prev => ({ ...prev, [id]: false }));
-            setRetrying(prev => ({ ...prev, [id]: false }));
-            return;
-          }
-          
-          try {
-            const url = filter ? `${API_CHARTS_BASE_URL}/${endpoint}?filter=${filter}` : `${API_CHARTS_BASE_URL}/${endpoint}`;
+        try {
+            const url = filter ? `${API_CHARTS_BASE_URL}/overview?filter=${filter}` : `${API_CHARTS_BASE_URL}/overview`;
             const response = await fetch(url);
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(`HTTP error! status: ${response.status} - ${errorText || response.statusText}`);
             }
-            const result = await response.json();
+            const overviewData = await response.json();
             
-            if (result.message && result.message.includes("No data available")) {
-                setData(prev => ({...prev, [id]: []}));
-            } else {
-                const transformer = dataTransformers[id];
-                const transformedData = transformer ? transformer(result) : (result.charts || result || []);
-                setData(prev => ({ ...prev, [id]: Array.isArray(transformedData) ? transformedData : [] }));
+            const transformedData: Record<string, any[]> = {};
+            for (const chart of chartsConfig) {
+                const apiData = overviewData[chart.id];
+                const transformer = dataTransformers[chart.id];
+                if (apiData && transformer) {
+                    transformedData[chart.id] = transformer(apiData);
+                } else if (apiData) {
+                    transformedData[chart.id] = Array.isArray(apiData) ? apiData : Object.entries(apiData).map(([name, value]) => ({ name, value }));
+                } else {
+                    transformedData[chart.id] = [];
+                }
             }
             
-            setError(prev => ({ ...prev, [id]: null }));
-            setRetrying(prev => ({ ...prev, [id]: false }));
+            setData(transformedData);
+            setRetrying({});
 
-          } catch (e) {
-            const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred while fetching analytics data.';
-            setError(prev => ({ ...prev, [id]: errorMessage }));
+        } catch (e) {
+            const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred while fetching overview data.';
+            const errorState = chartsConfig.reduce((acc, c) => ({ ...acc, [c.id]: errorMessage }), {});
+            setError(errorState);
             
-            if (attempt < 5) { // Retry up to 5 times
-                setRetrying(prev => ({ ...prev, [id]: true }));
-                const delay = Math.pow(2, attempt) * 1000; // Exponential backoff
-                retryTimeouts.current[id] = setTimeout(() => {
-                    fetchDataWithRetry(id, endpoint, attempt + 1);
-                }, delay);
+            if (attempt < 5) {
+                const retryState = chartsConfig.reduce((acc, c) => ({ ...acc, [c.id]: true }), {});
+                setRetrying(retryState);
+                const delay = Math.pow(2, attempt) * 1000;
+                retryTimeouts.current['overview'] = setTimeout(() => fetcher(attempt + 1), delay);
             } else {
-                setRetrying(prev => ({ ...prev, [id]: false })); // Max retries reached
+                setRetrying({});
             }
-          } finally {
-             if (attempt === 1) {
-                setLoading(prev => ({ ...prev, [id]: false }));
+        } finally {
+            if (attempt === 1) {
+                setLoading({});
             }
-          }
-        };
-
-        chartsConfig.forEach(chart => {
-            if (retryTimeouts.current[chart.id]) {
-                clearTimeout(retryTimeouts.current[chart.id]);
-            }
-            fetchDataWithRetry(chart.id, chart.endpoint);
-        });
+        }
+    };
+    
+    // This hook is now optimized for the overview case.
+    // If a non-overview usage is needed later, this hook would need further generalization.
+    if (isOverview) {
+        if (retryTimeouts.current['overview']) {
+            clearTimeout(retryTimeouts.current['overview']);
+        }
+        fetcher();
     }
+
 
     // Cleanup timeouts on unmount or when dependencies change
     return () => {
