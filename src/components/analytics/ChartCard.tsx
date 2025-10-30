@@ -90,7 +90,7 @@ export const ChartCard: React.FC<ChartCardProps> = ({
       </div>
     );
 
-  if ((!data || data.length === 0)) {
+  if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item === null || typeof item !== 'object')) {
     return (
       <div className={`${chartContainer} bg-gray-50 text-gray-500`}>
         No data to display
@@ -100,7 +100,7 @@ export const ChartCard: React.FC<ChartCardProps> = ({
 
   const renderChart = () => {
     // Check for required keys to prevent crashes
-    const firstItem = data[0] || {};
+    const firstItem = data.find(item => item && typeof item === 'object') || {};
     const has = (key: string) => Object.prototype.hasOwnProperty.call(firstItem, key);
 
     switch (chartType) {
