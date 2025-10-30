@@ -73,14 +73,14 @@ export const ChartCard: React.FC<ChartCardProps> = ({
 }) => {
   const chartContainer = "p-6 bg-gray-100 rounded-xl shadow-md h-72 flex items-center justify-center text-center";
 
-  if (isLoading)
+  if (isLoading || isRetrying)
     return (
       <div className="animate-pulse p-6 bg-white rounded-xl shadow-md h-72 flex items-center justify-center">
         Loading...
       </div>
     );
   
-  if (error && !isRetrying)
+  if (error)
     return (
       <div className={`${chartContainer} bg-red-50 text-red-700`}>
         <p>No Data to Show</p>
@@ -89,16 +89,6 @@ export const ChartCard: React.FC<ChartCardProps> = ({
     );
 
   if ((!data || data.length === 0)) {
-     if (isRetrying) {
-        return (
-            <div className={`${chartContainer} bg-amber-50 text-amber-800`}>
-                <div>
-                    <p>Temporarily unavailable.</p>
-                    <p className="text-xs mt-1">Retrying in background...</p>
-                </div>
-            </div>
-        )
-     }
     return (
       <div className={chartContainer}>
         No data

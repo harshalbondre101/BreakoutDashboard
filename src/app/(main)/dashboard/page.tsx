@@ -7,8 +7,6 @@ import { RecentBookings } from '@/components/dashboard/RecentBookings';
 import { SystemAlerts } from '@/components/dashboard/SystemAlerts';
 import { AnalyticsOverview } from '@/components/analytics-overview';
 import { useDashboardFilter } from '@/context/DashboardFilterContext';
-import { CallVolume } from '@/components/dashboard/CallVolume';
-import { SentimentDistribution } from '@/components/dashboard/SentimentDistribution';
 
 function DashboardContent() {
   const { dateRange } = useDashboardFilter();
@@ -25,12 +23,14 @@ function DashboardContent() {
     bookingsError, 
     callsError 
   } = useDashboardData(dateRange);
+  
+  const primaryDataLoaded = !kpiLoading && !bookingsLoading && !callsLoading;
 
   return (
     <div className="space-y-6">
       <KpiGrid kpiMetrics={kpiMetrics} kpiLoading={kpiLoading} kpiError={kpiError} />
       
-      {!kpiLoading && <AnalyticsOverview />}
+      {primaryDataLoaded && <AnalyticsOverview />}
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
