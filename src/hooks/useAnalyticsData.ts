@@ -43,7 +43,10 @@ const transformIntentDistribution = (data: any) => {
     if (combined.length > 5) {
         const top5 = combined.slice(0, 5);
         const otherSum = combined.slice(5).reduce((acc: number, curr: { value: number }) => acc + curr.value, 0);
-        return [...top5, { name: 'Other', value: otherSum }];
+        if (otherSum > 0) {
+            return [...top5, { name: 'Other', value: otherSum }];
+        }
+        return top5;
     }
 
     return combined;
@@ -79,18 +82,19 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
     }
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
+    
+    // Clear old data immediately on filter change
+    setData({});
+    setError({});
+    setRetrying({});
+    
+    // Set initial loading state
+    const initialLoadingState = chartsConfig.reduce((acc, c) => ({ ...acc, [c.id]: true }), {});
+    setLoading(initialLoadingState);
       
     const isOverview = chartsConfig.some(c => c.endpoint === 'overview');
 
     const fetcher = async (attempt = 1) => {
-        // Only set initial loading on the first attempt
-        const initialLoadingState = chartsConfig.reduce((acc, c) => ({ ...acc, [c.id]: attempt === 1 }), {});
-        if (attempt === 1) {
-            setLoading(initialLoadingState);
-            setData({}); // Clear previous data
-        }
-        setError({});
-
         try {
             const url = filter ? `${API_CHARTS_BASE_URL}/overview?filter=${filter}` : `${API_CHARTS_BASE_URL}/overview`;
             const response = await fetch(url, { signal });
@@ -107,6 +111,7 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
                 if (apiData && transformer) {
                     transformedData[chart.id] = transformer(apiData);
                 } else if (apiData) {
+                    // Basic transformation if no specific transformer exists
                     transformedData[chart.id] = Array.isArray(apiData) ? apiData : Object.entries(apiData).map(([name, value]) => ({ name, value }));
                 } else {
                     transformedData[chart.id] = [];
@@ -114,6 +119,7 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
             }
             
             setData(transformedData);
+            setError({}); // Clear errors on success
             setRetrying({});
 
         } catch (e) {
@@ -132,7 +138,7 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
                 const delay = Math.pow(2, attempt) * 1000;
                 retryTimeouts.current['overview'] = setTimeout(() => fetcher(attempt + 1), delay);
             } else {
-                setRetrying({});
+                setRetrying({}); // Stop retrying after 5 attempts
             }
         } finally {
             // After all retries or on success, ensure loading is false.

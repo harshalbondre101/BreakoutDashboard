@@ -90,6 +90,7 @@ export const ChartCard: React.FC<ChartCardProps> = ({
       </div>
     );
 
+  // Stricter data validation: ensure data is a non-empty array with actual content.
   if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item === null || typeof item !== 'object')) {
     return (
       <div className={`${chartContainer} bg-gray-50 text-gray-500`}>
