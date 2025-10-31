@@ -77,6 +77,19 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
 
     const controller = new AbortController();
     const signal = controller.signal;
+    
+    // Reset all states at the beginning of the effect
+    setKpiMetrics([]);
+    setRecentBookings([]);
+    setActiveCalls([]);
+    setCallVolume(Array(24).fill(0));
+    setAlerts([]);
+    setKpiLoading(true);
+    setBookingsLoading(true);
+    setCallsLoading(true);
+    setKpiError(null);
+    setBookingsError(null);
+    setCallsError(null);
 
     const getUrlWithFilter = (baseUrl: string, otherParams: string = '') => {
         let url = baseUrl;

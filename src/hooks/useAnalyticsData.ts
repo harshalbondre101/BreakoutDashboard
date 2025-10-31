@@ -71,7 +71,6 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
   const [error, setError] = useState<Record<string, string | null>>({});
   const [retrying, setRetrying] = useState<Record<string, boolean>>({});
 
-  const retryTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
   const abortControllerRef = useRef<AbortController | null>(null);
 
 
@@ -131,15 +130,6 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
             const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred while fetching overview data.';
             const errorState = chartsConfig.reduce((acc, c) => ({ ...acc, [c.id]: errorMessage }), {});
             setError(errorState);
-            
-            if (attempt < 5) {
-                const retryState = chartsConfig.reduce((acc, c) => ({ ...acc, [c.id]: true }), {});
-                setRetrying(retryState);
-                const delay = Math.pow(2, attempt) * 1000;
-                retryTimeouts.current['overview'] = setTimeout(() => fetcher(attempt + 1), delay);
-            } else {
-                setRetrying({}); // Stop retrying after 5 attempts
-            }
         } finally {
             // After all retries or on success, ensure loading is false.
              const finalLoadingState = chartsConfig.reduce((acc, c) => ({ ...acc, [c.id]: false }), {});
@@ -157,7 +147,6 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
-      Object.values(retryTimeouts.current).forEach(clearTimeout);
     };
   }, [JSON.stringify(chartsConfig), filter]);
 
