@@ -69,18 +69,31 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
   const [retrying, setRetrying] = useState<Record<string, boolean>>({});
 
   const retryTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
+  const abortControllerRef = useRef<AbortController | null>(null);
+
 
   useEffect(() => {
+    // Abort previous fetch if a new one starts
+    if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+      
     const isOverview = chartsConfig.some(c => c.endpoint === 'overview');
 
     const fetcher = async (attempt = 1) => {
+        // Only set initial loading on the first attempt
         const initialLoadingState = chartsConfig.reduce((acc, c) => ({ ...acc, [c.id]: attempt === 1 }), {});
-        setLoading(initialLoadingState);
+        if (attempt === 1) {
+            setLoading(initialLoadingState);
+            setData({}); // Clear previous data
+        }
         setError({});
 
         try {
             const url = filter ? `${API_CHARTS_BASE_URL}/overview?filter=${filter}` : `${API_CHARTS_BASE_URL}/overview`;
-            const response = await fetch(url);
+            const response = await fetch(url, { signal });
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(`HTTP error! status: ${response.status} - ${errorText || response.statusText}`);
@@ -104,6 +117,11 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
             setRetrying({});
 
         } catch (e) {
+            if ((e as Error).name === 'AbortError') {
+                console.log('Fetch aborted');
+                return;
+            }
+
             const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred while fetching overview data.';
             const errorState = chartsConfig.reduce((acc, c) => ({ ...acc, [c.id]: errorMessage }), {});
             setError(errorState);
@@ -117,25 +135,23 @@ export const useAnalyticsData = (chartsConfig: ChartConfigItem[] = defaultCharts
                 setRetrying({});
             }
         } finally {
-            if (attempt === 1) {
-                setLoading({});
-            }
+            // After all retries or on success, ensure loading is false.
+             const finalLoadingState = chartsConfig.reduce((acc, c) => ({ ...acc, [c.id]: false }), {});
+            setLoading(finalLoadingState);
         }
     };
     
-    // This hook is now optimized for the overview case.
-    // If a non-overview usage is needed later, this hook would need further generalization.
     if (isOverview) {
-        if (retryTimeouts.current['overview']) {
-            clearTimeout(retryTimeouts.current['overview']);
-        }
-        fetcher();
+      fetcher();
     }
 
 
-    // Cleanup timeouts on unmount or when dependencies change
+    // Cleanup timeouts and abort fetch on unmount or when dependencies change
     return () => {
-        Object.values(retryTimeouts.current).forEach(clearTimeout);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      Object.values(retryTimeouts.current).forEach(clearTimeout);
     };
   }, [JSON.stringify(chartsConfig), filter]);
 

@@ -97,6 +97,9 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
     const fetchKpis = async () => {
       setKpiLoading(true);
       setKpiError(null);
+      setKpiMetrics([]); // Reset on new fetch
+      setAlerts([]);
+
       try {
         const url = getUrlWithFilter(`${API_BASE_URL}/compute/kpis`);
         const response = await fetch(url, { signal });
@@ -214,6 +217,7 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
     const fetchBookings = async () => {
       setBookingsLoading(true);
       setBookingsError(null);
+      setRecentBookings([]); // Reset on new fetch
       try {
         const url = getUrlWithFilter(`${API_BASE_URL}/bookings/`, 'skip=0&limit=100');
         const response = await fetch(url, { signal });
@@ -238,6 +242,9 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
     const fetchCalls = async () => {
       setCallsLoading(true);
       setCallsError(null);
+      setActiveCalls([]); // Reset on new fetch
+      setCallVolume(Array(24).fill(0)); // Reset call volume
+
       try {
         const url = getUrlWithFilter(`${API_BASE_URL}/calls/`);
         const response = await fetch(url, { signal });
