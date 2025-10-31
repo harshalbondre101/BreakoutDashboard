@@ -1,5 +1,6 @@
 
 'use client';
+import { useState } from 'react';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { KpiGrid } from '@/components/dashboard/KpiGrid';
 import { ActiveCalls } from '@/components/dashboard/ActiveCalls';
@@ -13,7 +14,6 @@ function DashboardContent() {
     kpiMetrics, 
     recentBookings, 
     activeCalls, 
-    callVolume, 
     alerts, 
     kpiLoading, 
     bookingsLoading, 
