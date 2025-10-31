@@ -47,8 +47,10 @@ export default function AnalysisPage() {
         setAllOtherKpis({ customers: [], leads: [], bookings: [], llmkpi: [], charts: [] });
 
         try {
+            const filterQuery = dateRange ? `?filter=${dateRange}` : '';
+            
             // Fetch executive KPIs
-            const execUrl = `${API_BASE_URL}/compute/kpis?filter=${dateRange}`;
+            const execUrl = `${API_BASE_URL}/compute/kpis${filterQuery}`;
             const execResponse = await fetch(execUrl, { signal });
             if (!execResponse.ok) {
                 throw new Error(`Failed to fetch executive KPIs: ${execResponse.statusText}`);
@@ -69,14 +71,15 @@ export default function AnalysisPage() {
                     const value = kpis[conf.id];
                     if (value === undefined || value === null) return null;
                     const displayValue = conf.unit === 'percentage' ? `${Number(value).toFixed(2)}%` : conf.unit === 'seconds' ? formatDurationFromSeconds(Number(value)) : String(value);
-                    return { id: conf.id, label: conf.label, value: displayValue, target: conf.target, status: 'good', trend: 'stable', sparklineData: [] };
+                    const sparklineData = Array.from({length: 8}, () => Math.random() * 100);
+                    return { id: conf.id, label: conf.label, value: displayValue, target: conf.target, status: 'good', trend: 'stable', sparklineData };
                 }).filter(Boolean) as KPIMetric[];
             };
 
             setExecutiveMetrics(processKpis(execData.kpis, executiveKpiConfig));
 
             // Fetch all other KPIs
-            const allKpisUrl = `${API_BASE_URL}/kpis/all?filter=${dateRange}`;
+            const allKpisUrl = `${API_BASE_URL}/kpis/all${filterQuery}`;
             const allKpisResponse = await fetch(allKpisUrl, { signal });
             if (!allKpisResponse.ok) {
                 throw new Error(`Failed to fetch all KPIs: ${allKpisResponse.statusText}`);
