@@ -1,11 +1,6 @@
 
 'use client';
-import { useAnalyticsData } from '@/hooks/useAnalyticsData';
 import { ChartCard } from '@/components/analytics/ChartCard';
-import { useState, useEffect } from 'react';
-import { KPICard } from '@/components/kpi-card';
-import { KPIMetric } from '@/lib/types';
-import { API_BASE_URL, API_CHARTS_BASE_URL } from '@/lib/config';
 
 const chartComponents = {
   line: "line",
@@ -22,106 +17,36 @@ const chartComponents = {
 
 interface ApiChart {
     title: string;
-    x_axis: (string | number)[];
-    y_axis: (string | number)[];
+    x_axis?: (string | number)[];
+    y_axis?: (string | number)[];
+    data?: {
+      labels: (string | number)[];
+      values: (string | number)[];
+    };
     chart_type: keyof typeof chartComponents;
 }
 
-interface RevenueSummary {
-    total_revenue: number;
-    total_received: number;
-    total_dues: number;
+interface AdditionalAnalyticsProps {
+  charts: ApiChart[];
+  loading: boolean;
 }
 
-
-const movedChartsConfig = [
-  { id: 'payments-status', title: 'Payments Status Breakdown', chartType: 'donut', endpoint: 'payments-status' },
-  { id: 'lead-funnel', title: 'Lead Conversion Funnel', chartType: 'horizontal-bar', endpoint: 'lead-funnel' },
-];
-
-export const AdditionalAnalytics = ({ filter }: { filter: string }) => {
-  const { data, loading, error, isRetrying } = useAnalyticsData(movedChartsConfig, filter);
-
-  const [apiCharts, setApiCharts] = useState<ApiChart[]>([]);
-  const [apiLoading, setApiLoading] = useState(true);
-  const [apiError, setApiError] = useState<string | null>(null);
-  
-  const [revenueSummary, setRevenueSummary] = useState<any[]>([]);
-  const [revenueLoading, setRevenueLoading] = useState(true);
-  const [revenueError, setRevenueError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const signal = controller.signal;
-
-    const fetchCharts = async () => {
-      setApiLoading(true);
-      setApiError(null);
-      try {
-        const url = `${API_BASE_URL}/kpis/charts?filter=${filter}`;
-        const response = await fetch(url, { signal });
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Failed to fetch charts: ${response.status} ${errorText || response.statusText}`);
-        }
-        const data = await response.json();
-        setApiCharts(data.charts || []);
-      } catch (err) {
-        if ((err as Error).name === 'AbortError') {
-            console.log('Fetch additional charts aborted');
-            return;
-        }
-        setApiError(err instanceof Error ? err.message : 'An unknown error occurred while fetching additional charts.');
-      } finally {
-        setApiLoading(false);
-      }
-    };
-    
-    const fetchRevenueSummary = async () => {
-        setRevenueLoading(true);
-        setRevenueError(null);
-        try {
-            const url = `${API_CHARTS_BASE_URL}/revenue-summary?filter=${filter}`;
-            const response = await fetch(url, { signal });
-            if (!response.ok) {
-                 const errorText = await response.text();
-                throw new Error(`Failed to fetch revenue summary: ${response.status} ${errorText || response.statusText}`);
-            }
-            const data: RevenueSummary = await response.json();
-            const transformedData = [
-                { name: 'Total Revenue', value: data.total_revenue },
-                { name: 'Total Received', value: data.total_received },
-                { name: 'Total Dues', value: data.total_dues },
-            ];
-            setRevenueSummary(transformedData);
-        } catch (err) {
-            if ((err as Error).name === 'AbortError') {
-                console.log('Fetch revenue summary aborted');
-                return;
-            }
-            setRevenueError(err instanceof Error ? err.message : 'An unknown error occurred while fetching revenue summary.');
-        } finally {
-            setRevenueLoading(false);
-        }
-    }
-    
-    fetchCharts();
-    fetchRevenueSummary();
-
-    return () => {
-      controller.abort();
-    };
-  }, [filter]);
-
+export const AdditionalAnalytics = ({ charts, loading }: AdditionalAnalyticsProps) => {
   const transformData = (chart: ApiChart) => {
-    return chart.x_axis.map((x, index) => ({
-      name: x,
-      value: chart.y_axis[index],
-    }));
+    if (chart.data) {
+      return chart.data.labels.map((label, index) => ({
+        name: label,
+        value: chart.data.values[index],
+      }));
+    }
+    if (chart.x_axis && chart.y_axis) {
+      return chart.x_axis.map((x, index) => ({
+        name: x,
+        value: chart.y_axis[index],
+      }));
+    }
+    return [];
   };
-
-  const allChartsLoading = Object.values(loading).some(Boolean) || apiLoading || revenueLoading;
-  const anyChartError = Object.values(error).some(Boolean) || apiError || revenueError;
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
@@ -129,53 +54,22 @@ export const AdditionalAnalytics = ({ filter }: { filter: string }) => {
         <h2 className="text-xl font-bold text-gray-900">Additional Analytics</h2>
       </div>
       
-      {anyChartError && (
-        <div className="bg-red-50 text-red-700 p-4 rounded-lg text-center mb-6">
-            <p>Failed to load some charts.</p>
-            {Object.entries(error).map(([key, value]) => value && <p key={key} className="text-sm">{value}</p>)}
-            {apiError && <p className="text-sm">{apiError}</p>}
-            {revenueError && <p className="text-sm">{revenueError}</p>}
-        </div>
-      )}
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <ChartCard
-            key="revenue-summary"
-            title="Revenue Summary"
-            chartType="bar"
-            data={revenueSummary}
-            isLoading={revenueLoading}
-          />
-
-        {movedChartsConfig.map((chart) => (
-          <ChartCard
-            key={chart.id}
-            title={chart.title}
-            chartType={chart.chartType as keyof typeof chartComponents}
-            data={data[chart.id] || []}
-            isLoading={loading[chart.id]}
-            error={!loading[chart.id] ? error[chart.id] : undefined}
-            isRetrying={isRetrying[chart.id]}
-          />
-        ))}
-
-        {apiCharts.map((chart) => (
-          <ChartCard
-            key={chart.title}
-            title={chart.title}
-            chartType={chart.chart_type}
-            data={transformData(chart)}
-            isLoading={apiLoading}
-          />
-        ))}
-
-        {allChartsLoading && movedChartsConfig.map((chart) => (
-            !data[chart.id] && loading[chart.id] && <div key={`pulse-${chart.id}`} className="p-6 bg-gray-100 rounded-xl shadow-md h-72 animate-pulse" />
-        ))}
-         {apiLoading && apiCharts.length === 0 && Array.from({ length: 2 }).map((_, index) => (
+        {loading && charts.length === 0 ? (
+          Array.from({ length: 6 }).map((_, index) => (
             <div key={`pulse-api-${index}`} className="p-6 bg-gray-100 rounded-xl shadow-md h-72 animate-pulse" />
-        ))}
-        {revenueLoading && <div key="pulse-revenue" className="p-6 bg-gray-100 rounded-xl shadow-md h-72 animate-pulse" />}
+          ))
+        ) : (
+          charts.map((chart) => (
+            <ChartCard
+              key={chart.title}
+              title={chart.title}
+              chartType={chart.chart_type}
+              data={transformData(chart)}
+              isLoading={loading}
+            />
+          ))
+        )}
       </div>
     </div>
   );
