@@ -77,30 +77,29 @@ export const ChartCard: React.FC<ChartCardProps> = ({
 
   if (isLoading || isRetrying)
     return (
-      <div className={`${chartContainer} animate-pulse bg-gray-50`}>
-        <p className="text-gray-500">Loading Chart...</p>
+      <div className="bg-white rounded-xl shadow-md p-6 flex flex-col h-full">
+        <h3 className="text-lg font-semibold mb-4 text-gray-800">{title}</h3>
+        <div className="flex-1 flex items-center justify-center animate-pulse bg-gray-50 rounded-md">
+            <p className="text-gray-500">Loading Chart...</p>
+        </div>
       </div>
     );
   
   if (error)
     return (
-      <div className={`${chartContainer} bg-red-50 text-red-700`}>
-        <div>
-            <p>Failed to load chart data.</p>
-            <p className="text-xs mt-1">{error}</p>
+      <div className="bg-white rounded-xl shadow-md p-6 flex flex-col h-full">
+        <h3 className="text-lg font-semibold mb-4 text-gray-800">{title}</h3>
+        <div className="flex-1 flex items-center justify-center bg-red-50 text-red-700 rounded-md">
+            <div>
+                <p>Failed to load chart data.</p>
+                <p className="text-xs mt-1">{error}</p>
+            </div>
         </div>
       </div>
     );
 
-  // Stricter data validation: ensure data is a non-empty array with actual content.
-  if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item === null || typeof item !== 'object')) {
-    return (
-      <div className={`${chartContainer} bg-gray-50 text-gray-500`}>
-        No data to display
-      </div>
-    );
-  }
-
+  const isDataValid = data && Array.isArray(data) && data.length > 0 && data.some(item => item !== null && typeof item === 'object');
+  
   const renderChart = () => {
     // Check for required keys to prevent crashes
     const firstItem = data.find(item => item && typeof item === 'object') || {};
@@ -247,9 +246,15 @@ export const ChartCard: React.FC<ChartCardProps> = ({
     <div className="bg-white rounded-xl shadow-md p-6 flex flex-col h-full">
       <h3 className="text-lg font-semibold mb-4 text-gray-800">{title}</h3>
       <div className="flex-1 -mx-4">
-        <ResponsiveContainer width="100%" height={250}>
-          {renderChart()}
-        </ResponsiveContainer>
+        {isDataValid ? (
+            <ResponsiveContainer width="100%" height={250}>
+            {renderChart()}
+            </ResponsiveContainer>
+        ) : (
+            <div className="h-[250px] flex items-center justify-center text-center text-gray-500">
+                No data to display
+            </div>
+        )}
       </div>
     </div>
   );
