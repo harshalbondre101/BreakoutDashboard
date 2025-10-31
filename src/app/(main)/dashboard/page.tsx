@@ -7,6 +7,7 @@ import { ActiveCalls } from '@/components/dashboard/ActiveCalls';
 import { RecentBookings } from '@/components/dashboard/RecentBookings';
 import { SystemAlerts } from '@/components/dashboard/SystemAlerts';
 import { useDashboardFilter } from '@/context/DashboardFilterContext';
+import { DashboardCharts } from '@/components/dashboard/DashboardCharts';
 
 function DashboardContent() {
   const { dateRange } = useDashboardFilter();
@@ -47,6 +48,9 @@ function DashboardContent() {
           <SystemAlerts alerts={alerts} kpiLoading={kpiLoading} />
         </div>
       </div>
+      
+      <DashboardCharts canLoad={primaryDataLoaded} />
+
     </div>
   );
 }
