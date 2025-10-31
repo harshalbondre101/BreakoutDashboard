@@ -35,11 +35,11 @@ type ChartCardProps = {
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28CFE', '#FF6F91'];
 
 const renderFunnel = (data: any[]) => {
-  const total = data.reduce((sum, item) => sum + item.count, 0);
+  const total = data.reduce((sum, item) => sum + (item.count || 0), 0);
   return (
     <div className="w-full flex flex-col items-center gap-0">
       {data.map((item, index) => {
-        const percentage = total > 0 ? (item.count / data[0].count) * 100 : 0;
+        const percentage = total > 0 && data[0]?.count > 0 ? (item.count / data[0].count) * 100 : 0;
         return (
           <div
             key={item.stage}
@@ -54,7 +54,9 @@ const renderFunnel = (data: any[]) => {
           >
             <div className="px-2 py-1">
               <div className="text-sm font-semibold text-primary-foreground">{item.stage}</div>
-              <div className="text-xs font-bold text-primary-foreground/90">{item.count.toLocaleString()}</div>
+              <div className="text-xs font-bold text-primary-foreground/90">
+                {typeof item.count === 'number' ? item.count.toLocaleString() : 'N/A'}
+              </div>
             </div>
           </div>
         );

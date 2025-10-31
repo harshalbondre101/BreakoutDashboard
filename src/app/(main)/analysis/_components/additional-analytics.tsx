@@ -33,6 +33,12 @@ interface AdditionalAnalyticsProps {
 
 export const AdditionalAnalytics = ({ charts, loading }: AdditionalAnalyticsProps) => {
   const transformData = (chart: ApiChart) => {
+    if (chart.chart_type === 'funnel' && chart.data) {
+      return chart.data.labels.map((label, index) => ({
+        stage: label,
+        count: chart.data.values[index],
+      }));
+    }
     if (chart.data) {
       return chart.data.labels.map((label, index) => ({
         name: label,
