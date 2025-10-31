@@ -5,7 +5,6 @@ import { KpiGrid } from '@/components/dashboard/KpiGrid';
 import { ActiveCalls } from '@/components/dashboard/ActiveCalls';
 import { RecentBookings } from '@/components/dashboard/RecentBookings';
 import { SystemAlerts } from '@/components/dashboard/SystemAlerts';
-import { AnalyticsOverview } from '@/components/analytics-overview';
 import { useDashboardFilter } from '@/context/DashboardFilterContext';
 
 function DashboardContent() {
@@ -29,8 +28,6 @@ function DashboardContent() {
   return (
     <div className="space-y-6">
       <KpiGrid kpiMetrics={kpiMetrics} kpiLoading={kpiLoading} kpiError={kpiError} />
-      
-      {primaryDataLoaded && <AnalyticsOverview />}
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
