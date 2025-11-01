@@ -53,7 +53,9 @@ export function CallDetails({ selectedCall }: CallDetailsProps) {
         </div>
         <div className="pt-4 border-t border-gray-200">
           <p className="text-sm text-gray-600 mb-1">Credits Consumed</p>
-          <p className="font-bold text-gray-900">{selectedCall.credits_consumed.toFixed(2)}</p>
+          <p className="font-bold text-gray-900">
+            {typeof selectedCall.credits_consumed === 'number' ? selectedCall.credits_consumed.toFixed(2) : 'N/A'}
+          </p>
         </div>
       </div>
     </div>
