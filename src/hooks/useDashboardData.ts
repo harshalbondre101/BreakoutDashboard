@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { KPIMetric, KpiApiResponse, Booking, ApiCall as Call, Alert } from '@/lib/types';
 import { API_BASE_URL } from '@/lib/config';
 import { useAuth } from '@/context/AuthContext';
@@ -71,237 +71,224 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
   const [kpiError, setKpiError] = useState<string | null>(null);
   const [bookingsError, setBookingsError] = useState<string | null>(null);
   const [callsError, setCallsError] = useState<string | null>(null);
+  
+  const getUrlWithFilter = useCallback((baseUrl: string, otherParams: string = '') => {
+      let url = baseUrl;
+      const params = new URLSearchParams(otherParams);
+      
+      if (dateRange !== 'all_time') {
+          params.append('filter', dateRange);
+      }
+
+      const paramString = params.toString();
+      if (paramString) {
+          url += `?${paramString}`;
+      }
+      return url;
+  }, [dateRange]);
+
+
+  const fetchKpis = useCallback(async (signal: AbortSignal) => {
+    setKpiLoading(true);
+    setKpiError(null);
+    setKpiMetrics([]); // Reset on new fetch
+    setAlerts([]);
+
+    try {
+      const url = getUrlWithFilter(`${API_BASE_URL}/compute/kpis`);
+      const response = await fetch(url, { signal });
+      if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to fetch KPIs: ${response.status} ${errorText || response.statusText}`);
+      }
+      const data: KpiApiResponse = await response.json();
+      const kpis = data.kpis;
+
+      const kpiConfig: { id: 'first_call_resolution_pct' | 'avg_call_duration_sec' | 'call_abandon_rate_pct' | 'customer_satisfaction_avg_rating' | 'missed_calls' | 'customer_conversion_rate_pct' | 'overall_quality_score' | 'positive_sentiment_rate_pct'; label: string; target: string; higherIsBetter: boolean, unit: 'percentage' | 'seconds' | 'number' | 'rating' }[] = [
+          { id: 'first_call_resolution_pct', label: 'First Call Resolution', target: '>90%', higherIsBetter: true, unit: 'percentage' },
+          { id: 'avg_call_duration_sec', label: 'Avg Call Duration', target: '<300s', higherIsBetter: false, unit: 'seconds' },
+          { id: 'call_abandon_rate_pct', label: 'Call Abandon Rate', target: '<5%', higherIsBetter: false, unit: 'percentage' },
+          { id: 'customer_satisfaction_avg_rating', label: 'Customer Satisfaction', target: '>4.0', higherIsBetter: true, unit: 'rating' },
+          { id: 'missed_calls', label: 'Missed Calls', target: '0', higherIsBetter: false, unit: 'number' },
+          { id: 'customer_conversion_rate_pct', label: 'Customer Conversion Rate', target: '>10%', higherIsBetter: true, unit: 'percentage' },
+          { id: 'overall_quality_score', label: 'Overall Quality Score', target: '>85', higherIsBetter: true, unit: 'number' },
+          { id: 'positive_sentiment_rate_pct', label: 'Positive Sentiment Rate', target: '>80%', higherIsBetter: true, unit: 'percentage' },
+      ];
+      
+      const mappedKpis: KPIMetric[] = kpiConfig.map(config => {
+          const value = kpis[config.id];
+          const sparklineData = generateSparklineData(value);
+          const trend = getTrend(sparklineData);
+
+          const status = getKpiStatus(value, config.target, config.higherIsBetter, config.unit);
+
+          let displayValue: string;
+
+          switch (config.unit) {
+              case 'percentage':
+                  displayValue = `${value.toFixed(1)}%`;
+                  break;
+              case 'seconds':
+                  displayValue = formatDurationFromSeconds(value);
+                  break;
+              case 'rating':
+                  displayValue = `${value.toFixed(1)}/5`;
+                  break;
+              default: // number
+                  displayValue = value.toString();
+          }
+
+          return {
+              id: config.id,
+              label: config.label,
+              value: displayValue,
+              target: config.target,
+              trend: trend,
+              status: status,
+              sparklineData: sparklineData,
+          };
+      });
+      
+    
+      setKpiMetrics(mappedKpis);
+
+      // Generate dynamic alerts
+      const newAlerts: Alert[] = [];
+      if (kpis.missed_calls > 0) {
+          newAlerts.push({
+              id: 'alert-missed-calls',
+              type: 'critical',
+              title: 'Missed Calls Detected',
+              message: `${kpis.missed_calls} call(s) were missed. Review agent availability.`,
+              timestamp: new Date(),
+              read: false,
+          });
+      }
+      if (kpis.call_abandon_rate_pct > 5) {
+          newAlerts.push({
+              id: 'alert-abandon-rate',
+              type: 'warning',
+              title: 'High Abandonment Rate',
+              message: `Call abandonment is at ${kpis.call_abandon_rate_pct.toFixed(1)}%, exceeding the 5% target.`,
+              timestamp: new Date(),
+              read: false,
+          });
+      }
+      if (kpis.first_call_resolution_pct < 90) {
+           newAlerts.push({
+              id: 'alert-fcr',
+              type: 'warning',
+              title: 'Low First Call Resolution',
+              message: `FCR is at ${kpis.first_call_resolution_pct.toFixed(1)}%, below the 90% target.`,
+              timestamp: new Date(),
+              read: false,
+          });
+      }
+       if (newAlerts.length === 0) {
+          newAlerts.push({
+              id: 'alert-all-good',
+              type: 'info',
+              title: 'System Nominal',
+              message: 'All key performance indicators are within their target ranges.',
+              timestamp: new Date(),
+              read: true,
+          });
+      }
+      setAlerts(newAlerts);
+
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') return;
+      if (err instanceof Error) {
+        setKpiError(err.message);
+      } else {
+        setKpiError('An unexpected error occurred while fetching KPIs.');
+      }
+    } finally {
+      setKpiLoading(false);
+    }
+  }, [getUrlWithFilter]);
+  
+  const fetchBookings = useCallback(async (signal: AbortSignal) => {
+    setBookingsLoading(true);
+    setBookingsError(null);
+    setRecentBookings([]); // Reset on new fetch
+    try {
+      const url = getUrlWithFilter(`${API_BASE_URL}/bookings/`, 'skip=0&limit=100');
+      const response = await fetch(url, { signal });
+      if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to fetch bookings: ${response.status} ${errorText || response.statusText}`);
+      }
+      const data: Booking[] = await response.json();
+      setRecentBookings(data);
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') return;
+      if (err instanceof Error) {
+        setBookingsError(err.message);
+      } else {
+        setBookingsError('An unexpected error occurred while fetching bookings.');
+      }
+    } finally {
+      setBookingsLoading(false);
+    }
+  }, [getUrlWithFilter]);
+  
+  const fetchCalls = useCallback(async (signal: AbortSignal) => {
+    setCallsLoading(true);
+    setCallsError(null);
+    setActiveCalls([]); // Reset on new fetch
+    setCallVolume(Array(24).fill(0)); // Reset call volume
+
+    try {
+      const url = getUrlWithFilter(`${API_BASE_URL}/calls/`);
+      const response = await fetch(url, { signal });
+      if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to fetch calls: ${response.status} ${errorText || response.statusText}`);
+      }
+      const data: Call[] = await response.json();
+      setActiveCalls(data.slice(-5));
+      
+      const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const hourlyCounts = Array(24).fill(0);
+
+      data.forEach(call => {
+        const callDate = new Date(call.date_time);
+        if (callDate >= twentyFourHoursAgo) {
+          const hour = callDate.getHours();
+          hourlyCounts[hour]++;
+        }
+      });
+
+      setCallVolume(hourlyCounts);
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') return;
+      if (err instanceof Error) {
+        setCallsError(err.message);
+      } else {
+        setCallsError('An unexpected error occurred while fetching calls.');
+      }
+    } finally {
+      setCallsLoading(false);
+    }
+  }, [getUrlWithFilter]);
+
 
   useEffect(() => {
     if (!isAuthenticated) return;
 
     const controller = new AbortController();
     const signal = controller.signal;
-    
-    // Reset all states at the beginning of the effect
-    setKpiMetrics([]);
-    setRecentBookings([]);
-    setActiveCalls([]);
-    setCallVolume(Array(24).fill(0));
-    setAlerts([]);
-    setKpiLoading(true);
-    setBookingsLoading(true);
-    setCallsLoading(true);
-    setKpiError(null);
-    setBookingsError(null);
-    setCallsError(null);
 
-    const getUrlWithFilter = (baseUrl: string, otherParams: string = '') => {
-        let url = baseUrl;
-        const params = new URLSearchParams(otherParams);
-        
-        if (dateRange !== 'all_time') {
-            params.append('filter', dateRange);
-        }
-
-        const paramString = params.toString();
-        if (paramString) {
-            url += `?${paramString}`;
-        }
-        return url;
-    }
-
-
-    const fetchKpis = async () => {
-      setKpiLoading(true);
-      setKpiError(null);
-      setKpiMetrics([]); // Reset on new fetch
-      setAlerts([]);
-
-      try {
-        const url = getUrlWithFilter(`${API_BASE_URL}/compute/kpis`);
-        const response = await fetch(url, { signal });
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Failed to fetch KPIs: ${response.status} ${errorText || response.statusText}`);
-        }
-        const data: KpiApiResponse = await response.json();
-        const kpis = data.kpis;
-
-        const kpiConfig: { id: 'first_call_resolution_pct' | 'avg_call_duration_sec' | 'call_abandon_rate_pct' | 'customer_satisfaction_avg_rating' | 'missed_calls' | 'customer_conversion_rate_pct' | 'overall_quality_score' | 'positive_sentiment_rate_pct'; label: string; target: string; higherIsBetter: boolean, unit: 'percentage' | 'seconds' | 'number' | 'rating' }[] = [
-            { id: 'first_call_resolution_pct', label: 'First Call Resolution', target: '>90%', higherIsBetter: true, unit: 'percentage' },
-            { id: 'avg_call_duration_sec', label: 'Avg Call Duration', target: '<300s', higherIsBetter: false, unit: 'seconds' },
-            { id: 'call_abandon_rate_pct', label: 'Call Abandon Rate', target: '<5%', higherIsBetter: false, unit: 'percentage' },
-            { id: 'customer_satisfaction_avg_rating', label: 'Customer Satisfaction', target: '>4.0', higherIsBetter: true, unit: 'rating' },
-            { id: 'missed_calls', label: 'Missed Calls', target: '0', higherIsBetter: false, unit: 'number' },
-            { id: 'customer_conversion_rate_pct', label: 'Customer Conversion Rate', target: '>10%', higherIsBetter: true, unit: 'percentage' },
-            { id: 'overall_quality_score', label: 'Overall Quality Score', target: '>85', higherIsBetter: true, unit: 'number' },
-            { id: 'positive_sentiment_rate_pct', label: 'Positive Sentiment Rate', target: '>80%', higherIsBetter: true, unit: 'percentage' },
-        ];
-        
-        const mappedKpis: KPIMetric[] = kpiConfig.map(config => {
-            const value = kpis[config.id];
-            const sparklineData = generateSparklineData(value);
-            const trend = getTrend(sparklineData);
-
-            const status = getKpiStatus(value, config.target, config.higherIsBetter, config.unit);
-
-            let displayValue: string;
-
-            switch (config.unit) {
-                case 'percentage':
-                    displayValue = `${value.toFixed(1)}%`;
-                    break;
-                case 'seconds':
-                    displayValue = formatDurationFromSeconds(value);
-                    break;
-                case 'rating':
-                    displayValue = `${value.toFixed(1)}/5`;
-                    break;
-                default: // number
-                    displayValue = value.toString();
-            }
-
-            return {
-                id: config.id,
-                label: config.label,
-                value: displayValue,
-                target: config.target,
-                trend: trend,
-                status: status,
-                sparklineData: sparklineData,
-            };
-        });
-        
-      
-        setKpiMetrics(mappedKpis);
-
-        // Generate dynamic alerts
-        const newAlerts: Alert[] = [];
-        if (kpis.missed_calls > 0) {
-            newAlerts.push({
-                id: 'alert-missed-calls',
-                type: 'critical',
-                title: 'Missed Calls Detected',
-                message: `${kpis.missed_calls} call(s) were missed. Review agent availability.`,
-                timestamp: new Date(),
-                read: false,
-            });
-        }
-        if (kpis.call_abandon_rate_pct > 5) {
-            newAlerts.push({
-                id: 'alert-abandon-rate',
-                type: 'warning',
-                title: 'High Abandonment Rate',
-                message: `Call abandonment is at ${kpis.call_abandon_rate_pct.toFixed(1)}%, exceeding the 5% target.`,
-                timestamp: new Date(),
-                read: false,
-            });
-        }
-        if (kpis.first_call_resolution_pct < 90) {
-             newAlerts.push({
-                id: 'alert-fcr',
-                type: 'warning',
-                title: 'Low First Call Resolution',
-                message: `FCR is at ${kpis.first_call_resolution_pct.toFixed(1)}%, below the 90% target.`,
-                timestamp: new Date(),
-                read: false,
-            });
-        }
-         if (newAlerts.length === 0) {
-            newAlerts.push({
-                id: 'alert-all-good',
-                type: 'info',
-                title: 'System Nominal',
-                message: 'All key performance indicators are within their target ranges.',
-                timestamp: new Date(),
-                read: true,
-            });
-        }
-        setAlerts(newAlerts);
-
-      } catch (err) {
-        if ((err as Error).name === 'AbortError') return;
-        if (err instanceof Error) {
-          setKpiError(err.message);
-        } else {
-          setKpiError('An unexpected error occurred while fetching KPIs.');
-        }
-      } finally {
-        setKpiLoading(false);
-      }
-    };
-    
-    const fetchBookings = async () => {
-      setBookingsLoading(true);
-      setBookingsError(null);
-      setRecentBookings([]); // Reset on new fetch
-      try {
-        const url = getUrlWithFilter(`${API_BASE_URL}/bookings/`, 'skip=0&limit=100');
-        const response = await fetch(url, { signal });
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Failed to fetch bookings: ${response.status} ${errorText || response.statusText}`);
-        }
-        const data: Booking[] = await response.json();
-        setRecentBookings(data);
-      } catch (err) {
-        if ((err as Error).name === 'AbortError') return;
-        if (err instanceof Error) {
-          setBookingsError(err.message);
-        } else {
-          setBookingsError('An unexpected error occurred while fetching bookings.');
-        }
-      } finally {
-        setBookingsLoading(false);
-      }
-    };
-    
-    const fetchCalls = async () => {
-      setCallsLoading(true);
-      setCallsError(null);
-      setActiveCalls([]); // Reset on new fetch
-      setCallVolume(Array(24).fill(0)); // Reset call volume
-
-      try {
-        const url = getUrlWithFilter(`${API_BASE_URL}/calls/`);
-        const response = await fetch(url, { signal });
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Failed to fetch calls: ${response.status} ${errorText || response.statusText}`);
-        }
-        const data: Call[] = await response.json();
-        setActiveCalls(data.slice(-5));
-        
-        const now = new Date();
-        const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        const hourlyCounts = Array(24).fill(0);
-
-        data.forEach(call => {
-          const callDate = new Date(call.date_time);
-          if (callDate >= twentyFourHoursAgo) {
-            const hour = callDate.getHours();
-            hourlyCounts[hour]++;
-          }
-        });
-
-        setCallVolume(hourlyCounts);
-      } catch (err) {
-        if ((err as Error).name === 'AbortError') return;
-        if (err instanceof Error) {
-          setCallsError(err.message);
-        } else {
-          setCallsError('An unexpected error occurred while fetching calls.');
-        }
-      } finally {
-        setCallsLoading(false);
-      }
-    };
-
-
-    fetchKpis();
-    fetchBookings();
-    fetchCalls();
+    fetchKpis(signal);
+    fetchBookings(signal);
+    fetchCalls(signal);
 
     return () => {
       controller.abort();
     }
-  }, [isAuthenticated, dateRange]);
+  }, [isAuthenticated, dateRange, fetchKpis, fetchBookings, fetchCalls]);
 
   return { kpiMetrics, recentBookings, activeCalls, callVolume, alerts, kpiLoading, bookingsLoading, callsLoading, kpiError, bookingsError, callsError };
 };
