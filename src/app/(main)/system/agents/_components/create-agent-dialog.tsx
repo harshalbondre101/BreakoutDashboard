@@ -93,7 +93,7 @@ export function CreateAgentDialog({ open, onOpenChange, agent, onSuccess }: Crea
             };
         } else {
             method = 'POST';
-            url = `${XI_BASE_URL}/agents/create`;
+            url = `${XI_BASE_URL}/agents`;
             payload = {
               "conversation_config": {
                 "agent": {

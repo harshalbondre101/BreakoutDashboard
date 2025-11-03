@@ -76,10 +76,33 @@ export function AgentsTab({ onAgentCreated }: { onAgentCreated: () => void }) {
     
     const handleDelete = async () => {
         if (!selectedAgent) return;
-        setAgents(prev => prev.filter(a => a.agent_id !== selectedAgent.agent_id));
-        toast({ title: "Success", description: "Voice agent deleted successfully." });
-        setDeleteOpen(false);
-        setSelectedAgent(null);
+
+        try {
+            const response = await fetch(`${XI_BASE_URL}/agents/${selectedAgent.agent_id}`, {
+                method: 'DELETE',
+                headers: {
+                    'xi-api-key': apiKey,
+                },
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to delete agent: ${response.status} ${errorText || response.statusText}`);
+            }
+            
+            toast({ title: "Success", description: "Voice agent deleted successfully." });
+            fetchAgents(); // Refresh list
+
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: 'Error Deleting Agent',
+                description: (error as Error).message,
+            });
+        } finally {
+            setDeleteOpen(false);
+            setSelectedAgent(null);
+        }
     }
 
     const filteredAgents = agents.filter(agent =>
