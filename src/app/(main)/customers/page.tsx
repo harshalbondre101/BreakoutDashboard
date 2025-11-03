@@ -467,7 +467,7 @@ export default function CustomersHubPage() {
     if (activeTab === 'events') {
       return (
         <div className="overflow-x-auto">
-          <table className="w-full table-auto">
+          <table className="w-full table-fixed">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <SortableHeader sortKey="Customer_ID">Customer ID</SortableHeader>
@@ -534,7 +534,7 @@ export default function CustomersHubPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm">
+      <div className="bg-white rounded-lg shadow-sm w-full">
         <div className="border-b border-gray-200">
           <nav className="flex">
             <button
