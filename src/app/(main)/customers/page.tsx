@@ -363,7 +363,7 @@ export default function CustomersHubPage() {
     if (activeTab === 'customers') {
       return (
         <div className="overflow-x-auto">
-          <table className="w-full table-auto">
+          <table className="w-full table-fixed">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <SortableHeader sortKey="Name">Name</SortableHeader>
@@ -416,7 +416,7 @@ export default function CustomersHubPage() {
             ))}
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full table-auto">
+            <table className="w-full table-fixed">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <SortableHeader sortKey="Name">Name</SortableHeader>
