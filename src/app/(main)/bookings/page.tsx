@@ -223,9 +223,6 @@ export default function BookingsPage() {
           <h1 className="text-3xl font-bold text-gray-900">Booking Management</h1>
           <p className="text-gray-500 mt-1">Track bookings, payments, and analytics</p>
         </div>
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-          + New Booking
-        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
