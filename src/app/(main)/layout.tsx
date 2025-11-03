@@ -99,7 +99,7 @@ export default function MainLayout({
                   sidebarOpen ? 'ml-64' : 'ml-20'
                 }`}
               >
-                <div className="p-6">
+                <div className="py-6 px-6">
                   {children}
                 </div>
               </main>
