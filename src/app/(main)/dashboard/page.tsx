@@ -68,7 +68,7 @@ function DashboardContent() {
   const primaryDataLoaded = !kpiLoading && !bookingsLoading && !callsLoading;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full">
       <DashboardHeader />
 
       <KpiGrid kpiMetrics={kpiMetrics} kpiLoading={kpiLoading} kpiError={kpiError} />

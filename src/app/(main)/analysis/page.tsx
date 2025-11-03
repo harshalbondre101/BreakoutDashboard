@@ -157,7 +157,7 @@ export default function AnalysisPage() {
   const bookingKpiIds = ['total_bookings', 'booking_conversion_rate', 'avg_booking_value', 'cancellation_rate', 'repeat_booking_rate'];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full">
       <AnalysisHeader />
 
       <div className="grid grid-cols-1 lg:grid-cols gap-6">
