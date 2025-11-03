@@ -101,6 +101,8 @@ function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <DashboardContent />
+    <div className="w-full">
+      <DashboardContent />
+    </div>
   )
 }
