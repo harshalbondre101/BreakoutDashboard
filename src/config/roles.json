@@ -31,8 +31,6 @@
   "settings": [
     { "id": "profile", "label": "Profile", "icon": "User", "roles": ["admin", "employee"] },
     { "id": "language", "label": "Language", "icon": "Globe", "roles": ["admin", "employee"] },
-    { "id": "integrations", "label": "Integrations", "icon": "Package", "roles": ["admin"] },
-    { "id": "notifications", "label": "Notifications", "icon": "Bell", "roles": ["admin", "employee"] },
     { "id": "access", "label": "Access Control", "icon": "Key", "roles": ["admin"] },
     { "id": "logout", "label": "Logout", "icon": "LogOut", "roles": ["admin", "employee"] }
   ]
