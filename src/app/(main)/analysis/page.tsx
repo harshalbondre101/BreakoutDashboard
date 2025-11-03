@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExecutiveOverview } from './_components/executive-overview';
 import { KpiSection } from './_components/kpi-section';
 import { AiPerformance } from './_components/ai-performance';
-import { Alerts } from './_components/alerts';
 import { AdditionalAnalytics } from './_components/additional-analytics';
 import { useAuth } from '@/context/AuthContext';
 import { useDashboardFilter } from '@/context/DashboardFilterContext';
@@ -47,7 +46,7 @@ export default function AnalysisPage() {
         setAllOtherKpis({ customers: [], leads: [], bookings: [], llmkpi: [], charts: [] });
 
         try {
-            const filterQuery = dateRange ? `?filter=${dateRange}` : '';
+            const filterQuery = dateRange !== 'all_time' ? `?filter=${dateRange}` : '';
             
             // Fetch executive KPIs
             const execUrl = `${API_BASE_URL}/compute/kpis${filterQuery}`;
@@ -111,10 +110,6 @@ export default function AnalysisPage() {
     };
   }, [isAuthenticated, dateRange]);
 
-  const allMetricsForAlerts = [
-      ...executiveMetrics, 
-  ];
-  
   const customerKpiIds = ['total_customers', 'new_customers', 'avg_spend_per_customer', 'customer_satisfaction_avg_rating', 'customer_conversion_rate'];
   const leadKpiIds = ['total_leads_generated', 'lead_conversion_rate', 'avg_lead_response_time', 'best_lead_source', 'qualified_lead_ratio'];
   const bookingKpiIds = ['total_bookings', 'booking_conversion_rate', 'avg_booking_value', 'cancellation_rate', 'repeat_booking_rate'];
@@ -172,7 +167,6 @@ export default function AnalysisPage() {
           
           <AdditionalAnalytics charts={allOtherKpis.charts} loading={loading} />
           <AiPerformance metrics={allOtherKpis.llmkpi} loading={loading} />
-          <Alerts metrics={allMetricsForAlerts} loading={loading} />
         </div>
       </div>
     </div>
