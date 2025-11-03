@@ -5,8 +5,7 @@
       "section": "Analytics",
       "items": [
         { "href": "/dashboard", "label": "Dashboard", "icon": "LayoutDashboard", "roles": ["admin", "employee"] },
-        { "href": "/analysis", "label": "Analysis", "icon": "BarChart3", "roles": ["admin", "employee"] },
-        { "href": "/live-monitoring", "label": "Live Monitoring", "icon": "Radio", "roles": ["admin"] }
+        { "href": "/analysis", "label": "Analysis", "icon": "BarChart3", "roles": ["admin", "employee"] }
       ]
     },
     {
