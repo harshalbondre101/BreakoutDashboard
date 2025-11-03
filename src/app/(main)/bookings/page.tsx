@@ -240,87 +240,56 @@ export default function BookingsPage() {
         </div>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-6">
-          <div className="flex flex-wrap gap-4 items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Recent Bookings</h2>
-              <div className="flex flex-wrap gap-4">
-                  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                      {uniqueStatuses.map(s => <option key={s} value={s}>{s === 'all' ? 'All Statuses' : s}</option>)}
-                  </select>
-                  <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                      <option value="all">All Dates</option>
-                      <option value="today">Today</option>
-                      <option value="7d">Last 7 Days</option>
-                      <option value="30d">Last 30 Days</option>
-                      <option value="custom">Custom Range</option>
-                  </select>
-                  {dateFilter === 'custom' && (
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                                id="date"
-                                variant={"outline"}
-                                className="w-[240px] justify-start text-left font-normal"
-                            >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {customDateRange?.from ? (
-                                    customDateRange.to ? (
-                                        `${format(customDateRange.from, 'LLL dd, y')} - ${format(customDateRange.to, 'LLL dd, y')}`
-                                    ) : (
-                                        format(customDateRange.from, 'LLL dd, y')
-                                    )
-                                 ) : (
-                                    <span>Pick a date range</span>
-                                )}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                            <CalendarPicker
-                                initialFocus
-                                mode="range"
-                                defaultMonth={customDateRange?.from}
-                                selected={customDateRange}
-                                onSelect={setCustomDateRange}
-                                numberOfMonths={2}
-                            />
-                        </PopoverContent>
-                    </Popover>
-                  )}
-              </div>
-          </div>
-          {renderBookingsTable()}
-          {renderPagination()}
-        </div>
-
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-blue-600" />
-              Payment Analytics (mock)
-            </h3>
-
-            <div className="space-y-4">
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-2">Payment Success Rate</p>
-                <p className="text-3xl font-bold text-emerald-600">97.8%</p>
-                <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500" style={{ width: '97.8%' }} />
-                </div>
-              </div>
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="flex flex-wrap gap-4 items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-gray-900">Recent Bookings</h2>
+            <div className="flex flex-wrap gap-4">
+                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    {uniqueStatuses.map(s => <option key={s} value={s}>{s === 'all' ? 'All Statuses' : s}</option>)}
+                </select>
+                <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    <option value="all">All Dates</option>
+                    <option value="today">Today</option>
+                    <option value="7d">Last 7 Days</option>
+                    <option value="30d">Last 30 Days</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+                {dateFilter === 'custom' && (
+                  <Popover>
+                      <PopoverTrigger asChild>
+                          <Button
+                              id="date"
+                              variant={"outline"}
+                              className="w-[240px] justify-start text-left font-normal"
+                          >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {customDateRange?.from ? (
+                                  customDateRange.to ? (
+                                      `${format(customDateRange.from, 'LLL dd, y')} - ${format(customDateRange.to, 'LLL dd, y')}`
+                                  ) : (
+                                      format(customDateRange.from, 'LLL dd, y')
+                                  )
+                               ) : (
+                                  <span>Pick a date range</span>
+                              )}
+                          </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarPicker
+                              initialFocus
+                              mode="range"
+                              defaultMonth={customDateRange?.from}
+                              selected={customDateRange}
+                              onSelect={setCustomDateRange}
+                              numberOfMonths={2}
+                          />
+                      </PopoverContent>
+                  </Popover>
+                )}
             </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Key Metrics (mock)</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                <span className="text-sm text-gray-600">Cancellation Rate</span>
-                <span className="font-bold text-gray-900">{bookings.length > 0 ? ((bookings.filter(b => b.status === 'cancelled').length / bookings.length) * 100).toFixed(1) : '0.0'}%</span>
-              </div>
-            </div>
-          </div>
         </div>
+        {renderBookingsTable()}
+        {renderPagination()}
       </div>
     </div>
   );
