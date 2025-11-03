@@ -567,8 +567,8 @@ export default function CustomersHubPage() {
           </nav>
         </div>
 
-        <div className="p-6">
-          <div className="flex flex-wrap gap-4 mb-6">
+        <div className="px-0 sm:px-6 py-6">
+          <div className="flex flex-wrap gap-4 mb-6 px-6 sm:px-0">
             <div className="flex-1 relative min-w-[250px]">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
@@ -628,5 +628,3 @@ export default function CustomersHubPage() {
     </div>
   );
 }
-
-    
