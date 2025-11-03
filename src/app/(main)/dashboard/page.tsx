@@ -7,7 +7,6 @@ import { ActiveCalls } from '@/components/dashboard/ActiveCalls';
 import { RecentBookings } from '@/components/dashboard/RecentBookings';
 import { SystemAlerts } from '@/components/dashboard/SystemAlerts';
 import { useDashboardFilter } from '@/context/DashboardFilterContext';
-import { DashboardCharts } from '@/components/dashboard/DashboardCharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 function DashboardHeader() {
@@ -93,7 +92,7 @@ function DashboardContent() {
         </div>
       </div>
       
-      <DashboardCharts canLoad={primaryDataLoaded} />
+      
 
     </div>
   );
