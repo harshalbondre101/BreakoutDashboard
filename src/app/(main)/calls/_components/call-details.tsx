@@ -21,9 +21,6 @@ export function CallDetails({ selectedCall }: CallDetailsProps) {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-bold text-gray-900">Call Details</h3>
-        <button className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-          <Play className="w-4 h-4 fill-white" />
-        </button>
       </div>
 
       <div className="space-y-4">
