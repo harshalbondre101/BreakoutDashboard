@@ -316,20 +316,53 @@ export const alerts: Alert[] = [
 ];
 
 export const callVolumeData = [
-    { name: '12am', calls: 30 },
-    { name: '3am', calls: 45 },
-    { name: '6am', calls: 60 },
-    { name: '9am', calls: 80 },
-    { name: '12pm', calls: 100 },
-    { name: '3pm', calls: 85 },
-    { name: '6pm', calls: 65 },
-    { name: '9pm', calls: 40 },
+    { name: '12am', value: 30 },
+    { name: '3am', value: 45 },
+    { name: '6am', value: 60 },
+    { name: '9am', value: 80 },
+    { name: '12pm', value: 100 },
+    { name: '3pm', value: 85 },
+    { name: '6pm', value: 65 },
+    { name: '9pm', value: 40 },
 ];
   
 export const sentimentDistributionData = [
-    { name: 'Positive', value: 68, fill: 'hsl(var(--color-emerald))' },
-    { name: 'Neutral', value: 22, fill: 'hsl(var(--color-gray))' },
-    { name: 'Negative', value: 10, fill: 'hsl(var(--color-red))' },
+    { name: 'Positive', value: 68, fill: '#10b981' },
+    { name: 'Neutral', value: 22, fill: '#6b7280' },
+    { name: 'Negative', value: 10, fill: '#ef4444' },
+];
+
+export const callResolutionData = [
+  { name: 'Jan', value: 85 },
+  { name: 'Feb', value: 88 },
+  { name: 'Mar', value: 86 },
+  { name: 'Apr', value: 90 },
+  { name: 'May', value: 91 },
+  { name: 'Jun', value: 92 },
+];
+
+export const callDurationData = [
+  { name: 'Jan', value: 5.5 },
+  { name: 'Feb', value: 5.2 },
+  { name: 'Mar', value: 5.8 },
+  { name: 'Apr', value: 5.1 },
+  { name: 'May', value: 4.9 },
+  { name: 'Jun', value: 4.8 },
+];
+
+export const callIntentData = [
+  { name: 'Booking', value: 400 },
+  { name: 'Inquiry', value: 300 },
+  { name: 'Support', value: 200 },
+  { name: 'Complaint', value: 100 },
+];
+
+export const csatData = [
+    { name: '5 Stars', value: 60 },
+    { name: '4 Stars', value: 25 },
+    { name: '3 Stars', value: 10 },
+    { name: '2 Stars', value: 3 },
+    { name: '1 Star', value: 2 },
 ];
 
 export const agentData = [

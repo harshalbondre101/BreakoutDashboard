@@ -110,21 +110,21 @@ export const ChartCard: React.FC<ChartCardProps> = ({
         return (
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey={has('date') ? "date" : "name"} />
+            <XAxis dataKey="name" />
             <YAxis />
             <Tooltip />
-            <Line type="monotone" dataKey={has('total_calls') ? "total_calls" : "value"} stroke="#8884d8" />
+            <Line type="monotone" dataKey="value" stroke="#8884d8" />
           </LineChart>
         );
        case 'bar':
         return (
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey={has('date') ? "date" : "name"} />
+            <XAxis dataKey="name" />
             <YAxis />
             <Tooltip />
             <Legend />
-            <Bar dataKey={has('bookings') ? "bookings" : "value"} fill="#8884d8" />
+            <Bar dataKey="value" fill="#8884d8" />
           </BarChart>
         );
       case 'bar-line':
@@ -149,13 +149,13 @@ export const ChartCard: React.FC<ChartCardProps> = ({
                 <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <XAxis dataKey="date" />
+            <XAxis dataKey="name" />
             <YAxis />
             <CartesianGrid strokeDasharray="3 3" />
             <Tooltip />
             <Area
               type="monotone"
-              dataKey="total_customers"
+              dataKey="value"
               stroke="#8884d8"
               fill="url(#colorArea)"
             />
@@ -190,9 +190,9 @@ export const ChartCard: React.FC<ChartCardProps> = ({
           <BarChart layout="vertical" data={data} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis type="number" />
-            <YAxis dataKey={has('stage') ? "stage" : "name"} type="category" width={80} interval={0} />
+            <YAxis dataKey="name" type="category" width={80} interval={0} />
             <Tooltip />
-            <Bar dataKey={has('count') ? "count" : "value"} fill="#8884d8" />
+            <Bar dataKey="value" fill="#8884d8" />
           </BarChart>
         );
       case 'dual-bar':
