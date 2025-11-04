@@ -11,7 +11,7 @@ interface DashboardChartsProps {
 
 export function DashboardCharts({ chartData, isLoading, error }: DashboardChartsProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
       <ChartCard
         title="Calls Trend"
         chartType="line"
@@ -26,24 +26,10 @@ export function DashboardCharts({ chartData, isLoading, error }: DashboardCharts
         isLoading={isLoading}
         error={error}
       />
-       <ChartCard
-        title="Lead Funnel"
-        chartType="funnel"
-        data={chartData.lead_funnel || []}
-        isLoading={isLoading}
-        error={error}
-      />
       <ChartCard
-        title="Lead Sources"
-        chartType="bubble"
-        data={chartData.lead_sources || []}
-        isLoading={isLoading}
-        error={error}
-      />
-      <ChartCard
-        title="Call Intents"
-        chartType="donut"
-        data={chartData.call_intent || []}
+        title="Customer Growth"
+        chartType="area"
+        data={chartData.customer_growth || []}
         isLoading={isLoading}
         error={error}
       />

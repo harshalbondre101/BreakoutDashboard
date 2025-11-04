@@ -277,30 +277,34 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
       const overview = rawData.overview;
       
       const transformedData: ChartData = {
-          calls_trend: overview.calls_trend.dates.map((date: string, i: number) => ({
+          calls_trend: overview.calls_trend?.dates.map((date: string, i: number) => ({
               name: new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric'}),
               value: overview.calls_trend.calls[i]
           })),
-          bookings_trend: overview.bookings_trend.dates.map((date: string, i: number) => ({
+          bookings_trend: overview.bookings_trend?.dates.map((date: string, i: number) => ({
               name: new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric'}),
               value: overview.bookings_trend.bookings[i]
           })),
-          lead_funnel: overview.lead_funnel.stages.map((stage: string, i: number) => ({
+          lead_funnel: overview.lead_funnel?.stages.map((stage: string, i: number) => ({
               stage,
               count: overview.lead_funnel.counts[i]
           })),
-          lead_sources: overview.lead_sources.sources.map((source: string, i: number) => ({
+          lead_sources: overview.lead_sources?.sources.map((source: string, i: number) => ({
               name: source,
               value: overview.lead_sources.conversions[i]
           })),
-          sentiment_summary: Object.entries(overview.sentiment_summary).map(([key, value]) => ({
+          sentiment_summary: overview.sentiment_summary ? Object.entries(overview.sentiment_summary).map(([key, value]) => ({
               name: key.charAt(0).toUpperCase() + key.slice(1),
               value,
-          })),
-          call_intent: overview.call_intent.intents.map((intent: string, i: number) => ({
+          })) : [],
+          call_intent: overview.call_intent?.intents.map((intent: string, i: number) => ({
               name: intent,
               value: overview.call_intent.counts[i]
-          }))
+          })),
+          customer_growth: overview.customer_growth?.dates.map((date: string, i: number) => ({
+              name: new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric'}),
+              value: overview.customer_growth.new_customers[i]
+          })),
       };
       setChartData(transformedData);
 

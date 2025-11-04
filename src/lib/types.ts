@@ -222,6 +222,7 @@ export interface ChartData {
   bookings_trend?: { name: string; value: number }[];
   lead_funnel?: { stage: string; count: number }[];
   lead_sources?: { name: string; value: number }[];
-  sentiment_summary?: { name: string; value: number }[];
+  sentiment_summary?: { name: string; value: any }[];
   call_intent?: { name: string; value: number }[];
+  customer_growth?: { name: string; value: number }[];
 }
