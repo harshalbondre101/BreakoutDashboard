@@ -1,8 +1,8 @@
 
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import { KPIMetric, KpiApiResponse, Booking, ApiCall as Call, Alert } from '@/lib/types';
-import { API_BASE_URL } from '@/lib/config';
+import { KPIMetric, KpiApiResponse, Booking, ApiCall as Call, Alert, ChartData } from '@/lib/types';
+import { API_BASE_URL, API_CHARTS_BASE_URL } from '@/lib/config';
 import { useAuth } from '@/context/AuthContext';
 
 const formatDurationFromSeconds = (seconds: number) => {
@@ -61,16 +61,18 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
   const [kpiMetrics, setKpiMetrics] = useState<KPIMetric[]>([]);
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
   const [activeCalls, setActiveCalls] = useState<Call[]>([]);
-  const [callVolume, setCallVolume] = useState<number[]>(Array(24).fill(0));
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [chartData, setChartData] = useState<ChartData>({});
   
   const [kpiLoading, setKpiLoading] = useState(true);
   const [bookingsLoading, setBookingsLoading] = useState(true);
   const [callsLoading, setCallsLoading] = useState(true);
+  const [chartsLoading, setChartsLoading] = useState(true);
 
   const [kpiError, setKpiError] = useState<string | null>(null);
   const [bookingsError, setBookingsError] = useState<string | null>(null);
   const [callsError, setCallsError] = useState<string | null>(null);
+  const [chartsError, setChartsError] = useState<string | null>(null);
   
   const getUrlWithFilter = useCallback((baseUrl: string, otherParams: string = '') => {
       let url = baseUrl;
@@ -237,7 +239,6 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
     setCallsLoading(true);
     setCallsError(null);
     setActiveCalls([]); // Reset on new fetch
-    setCallVolume(Array(24).fill(0)); // Reset call volume
 
     try {
       const url = getUrlWithFilter(`${API_BASE_URL}/calls/`);
@@ -248,20 +249,6 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
       }
       const data: Call[] = await response.json();
       setActiveCalls(data.slice(-5));
-      
-      const now = new Date();
-      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      const hourlyCounts = Array(24).fill(0);
-
-      data.forEach(call => {
-        const callDate = new Date(call.date_time);
-        if (callDate >= twentyFourHoursAgo) {
-          const hour = callDate.getHours();
-          hourlyCounts[hour]++;
-        }
-      });
-
-      setCallVolume(hourlyCounts);
     } catch (err) {
       if ((err as Error).name === 'AbortError') return;
       if (err instanceof Error) {
@@ -271,6 +258,61 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
       }
     } finally {
       setCallsLoading(false);
+    }
+  }, [getUrlWithFilter]);
+  
+  const fetchChartData = useCallback(async (signal: AbortSignal) => {
+    setChartsLoading(true);
+    setChartsError(null);
+    setChartData({});
+
+    try {
+      const url = getUrlWithFilter(`${API_CHARTS_BASE_URL}/overview`);
+      const response = await fetch(url, { signal });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Chart API Error: ${response.status} ${errorText}`);
+      }
+      const rawData = await response.json();
+      const overview = rawData.overview;
+      
+      const transformedData: ChartData = {
+          calls_trend: overview.calls_trend.dates.map((date: string, i: number) => ({
+              name: new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric'}),
+              value: overview.calls_trend.calls[i]
+          })),
+          bookings_trend: overview.bookings_trend.dates.map((date: string, i: number) => ({
+              name: new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric'}),
+              value: overview.bookings_trend.bookings[i]
+          })),
+          lead_funnel: overview.lead_funnel.stages.map((stage: string, i: number) => ({
+              stage,
+              count: overview.lead_funnel.counts[i]
+          })),
+          lead_sources: overview.lead_sources.sources.map((source: string, i: number) => ({
+              name: source,
+              value: overview.lead_sources.conversions[i]
+          })),
+          sentiment_summary: Object.entries(overview.sentiment_summary).map(([key, value]) => ({
+              name: key.charAt(0).toUpperCase() + key.slice(1),
+              value,
+          })),
+          call_intent: overview.call_intent.intents.map((intent: string, i: number) => ({
+              name: intent,
+              value: overview.call_intent.counts[i]
+          }))
+      };
+      setChartData(transformedData);
+
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') return;
+      if (err instanceof Error) {
+        setChartsError(err.message);
+      } else {
+        setChartsError('An unexpected error occurred fetching chart data.');
+      }
+    } finally {
+      setChartsLoading(false);
     }
   }, [getUrlWithFilter]);
 
@@ -284,11 +326,26 @@ export const useDashboardData = (dateRange: 'today' | 'last_week' | 'last_month'
     fetchKpis(signal);
     fetchBookings(signal);
     fetchCalls(signal);
+    fetchChartData(signal);
 
     return () => {
       controller.abort();
     }
-  }, [isAuthenticated, dateRange, fetchKpis, fetchBookings, fetchCalls]);
+  }, [isAuthenticated, dateRange, fetchKpis, fetchBookings, fetchCalls, fetchChartData]);
 
-  return { kpiMetrics, recentBookings, activeCalls, callVolume, alerts, kpiLoading, bookingsLoading, callsLoading, kpiError, bookingsError, callsError };
+  return { 
+    kpiMetrics, 
+    recentBookings, 
+    activeCalls, 
+    alerts,
+    chartData,
+    kpiLoading, 
+    bookingsLoading, 
+    callsLoading,
+    chartsLoading,
+    kpiError, 
+    bookingsError, 
+    callsError,
+    chartsError
+  };
 };

@@ -216,3 +216,12 @@ export interface Alert {
   timestamp: Date;
   read: boolean;
 }
+
+export interface ChartData {
+  calls_trend?: { name: string; value: number }[];
+  bookings_trend?: { name: string; value: number }[];
+  lead_funnel?: { stage: string; count: number }[];
+  lead_sources?: { name: string; value: number }[];
+  sentiment_summary?: { name: string; value: number }[];
+  call_intent?: { name: string; value: number }[];
+}

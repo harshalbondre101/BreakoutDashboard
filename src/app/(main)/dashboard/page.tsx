@@ -58,23 +58,28 @@ function DashboardContent() {
     recentBookings, 
     activeCalls, 
     alerts, 
+    chartData,
     kpiLoading, 
     bookingsLoading, 
     callsLoading, 
+    chartsLoading,
     kpiError, 
     bookingsError, 
-    callsError 
+    callsError,
+    chartsError
   } = useDashboardData(dateRange);
   
-  const primaryDataLoaded = !kpiLoading && !bookingsLoading && !callsLoading;
-
   return (
     <div className="space-y-6 w-full">
       <DashboardHeader />
 
       <KpiGrid kpiMetrics={kpiMetrics} kpiLoading={kpiLoading} kpiError={kpiError} />
 
-      <DashboardCharts />
+      <DashboardCharts 
+        chartData={chartData} 
+        isLoading={chartsLoading}
+        error={chartsError}
+      />
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -94,9 +99,6 @@ function DashboardContent() {
           <SystemAlerts alerts={alerts} kpiLoading={kpiLoading} />
         </div>
       </div>
-      
-      
-
     </div>
   );
 }
@@ -104,7 +106,7 @@ function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <div className="w-full">
+    <div className="w-full px-6">
       <DashboardContent />
     </div>
   )
