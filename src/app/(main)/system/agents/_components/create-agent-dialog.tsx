@@ -42,13 +42,15 @@ export function CreateAgentDialog({ open, onOpenChange, agent, onSuccess }: Crea
             // The list endpoint doesn't provide all config details.
             setFirstMessage('Hello! I’m your updated AI assistant.');
             setPrompt('You are an expert AI assistant focused on lead engagement.');
-        } else if (!agent) {
-             // Reset to default for creation
+        } else if (!open) {
+             // Reset to default for creation when dialog closes
             setName('Demo Agent');
             setFirstMessage('Hello! I’m your new AI assistant.');
             setPrompt('You are a helpful AI assistant specialized in customer engagement and sales support.');
             setTemperature(0.7);
             setLlm('gpt-4o');
+            setLanguage('en');
+            setInterruptionsDisabled(false);
         }
     }, [agent, open]);
 
@@ -62,53 +64,40 @@ export function CreateAgentDialog({ open, onOpenChange, agent, onSuccess }: Crea
         let url;
         let method;
 
+        const conversationConfig = {
+          "agent": {
+            "language": language,
+            "first_message": firstMessage,
+            "disable_first_message_interruptions": interruptionsDisabled,
+            "prompt": {
+              "prompt": prompt,
+              "temperature": temperature,
+              "max_tokens": 600,
+              "llm": llm
+            }
+          },
+          "tts": {
+            "model_id": "eleven_turbo_v2",
+            "voice_id": "cjVigY5qzO86Huf0OWal",
+            "speed": 1.0,
+            "similarity_boost": 0.8
+          }
+        };
+
         if (isEditMode) {
             method = 'PATCH';
             url = `${XI_BASE_URL}/agents/${agent.agent_id}`;
             payload = {
-              "name": name,
-              "conversation_config": {
-                "agent": {
-                  "language": language,
-                  "first_message": firstMessage,
-                  "disable_first_message_interruptions": interruptionsDisabled,
-                  "prompt": {
-                    "prompt": prompt,
-                    "temperature": temperature,
-                    "max_tokens": 600,
-                    "llm": llm
-                  }
-                },
-                "tts": {
-                  "model_id": "eleven_turbo_v2",
-                  "voice_id": "cjVigY5qzO86Huf0OWal",
-                  "speed": 1.0,
-                  "similarity_boost": 0.8
-                },
-                "conversation": {
-                  "text_only": false,
-                  "max_duration_seconds": 600
-                }
-              }
+              name: name,
+              conversation_config: conversationConfig,
             };
         } else {
             method = 'POST';
             url = `${XI_BASE_URL}/agents`;
             payload = {
-              "conversation_config": {
-                "agent": {
-                  "name": name,
-                  "language": language,
-                  "first_message": firstMessage,
-                  "disable_first_message_interruptions": interruptionsDisabled
-                },
-                "prompt": {
-                  "prompt": prompt,
-                  "temperature": temperature,
-                  "max_tokens": 500,
-                  "llm": llm
-                }
-              }
+              name: name,
+              conversation_config: conversationConfig,
+              tags: ["support", "customer-service"]
             };
         }
         
