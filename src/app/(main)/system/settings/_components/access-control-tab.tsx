@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { API_BASE_URL } from '@/lib/config';
@@ -62,7 +62,7 @@ export default function AccessControlTab() {
     fetchEmployees();
   }, []);
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<EmployeeFormValues>({
+  const { register, handleSubmit, formState: { errors, isSubmitting }, reset, control } = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeSchema),
     defaultValues: {
       role: 'employee',
@@ -205,6 +205,3 @@ export default function AccessControlTab() {
     </div>
   );
 }
-// Add react-hook-form and zod as dependencies if not already present
-// This component assumes they are.
-import { Controller, useForm, type UseFormReturn } from 'react-hook-form';
