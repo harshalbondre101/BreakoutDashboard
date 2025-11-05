@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import settingsConfig from '@/config/roles.json';
+import AccessControlTab from './_components/access-control-tab';
 
 type SettingsTabId = 'profile' | 'language' | 'integrations' | 'notifications' | 'access' | 'logout';
 
@@ -101,21 +102,7 @@ export default function SettingsPage() {
           </div>
         );
       case 'access':
-        return (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Access Control</h2>
-            <div className="space-y-3">
-              <button className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50">
-                <p className="font-medium text-gray-900">User Roles</p>
-                <p className="text-xs text-gray-500 mt-1">Manage user permissions</p>
-              </button>
-              <button className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50">
-                <p className="font-medium text-gray-900">API Keys</p>
-                <p className="text-xs text-gray-500 mt-1">Manage API access</p>
-              </button>
-            </div>
-          </div>
-        );
+        return <AccessControlTab />;
       case 'logout':
         return (
             <div className="bg-white rounded-lg shadow-sm p-6">
