@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Bot, Book, Phone, Settings, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,16 +13,13 @@ import { WorkspaceSettingsTab } from './_components/workspace-settings-tab';
 export default function AgentsPage() {
     const [isCreateAgentOpen, setCreateAgentOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('agents');
-    
-    // We use a ref to store a function that can imperatively trigger a refresh
-    const refreshAgentsRef = useRef<() => void | null>(null);
+    const [agentUpdateCount, setAgentUpdateCount] = useState(0);
 
-    const handleSuccess = () => {
-        // This could be used to refresh data across tabs if needed
-        if (activeTab === 'agents' && refreshAgentsRef.current) {
-            refreshAgentsRef.current();
+    const handleSuccess = useCallback(() => {
+        if (activeTab === 'agents') {
+            setAgentUpdateCount(c => c + 1);
         }
-    };
+    }, [activeTab]);
 
     return (
         <div className="space-y-6 w-full">
@@ -60,7 +57,7 @@ export default function AgentsPage() {
                 </TabsList>
                 
                 <TabsContent value="agents">
-                    <AgentsTab onAgentCreated={handleSuccess} />
+                    <AgentsTab key={agentUpdateCount} onAgentCreated={handleSuccess} />
                 </TabsContent>
                 <TabsContent value="knowledge-base">
                     <KnowledgeBaseTab />

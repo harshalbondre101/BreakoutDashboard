@@ -217,6 +217,7 @@ export function AgentsTab({ onAgentCreated }: { onAgentCreated: () => void }) {
                     setEditOpen(false);
                     setSelectedAgent(null);
                     fetchAgents();
+                    onAgentCreated();
                 }}
             />
 
