@@ -19,6 +19,7 @@
     {
       "section": "System",
       "items": [
+        { "href": "/system/whatsapp", "label": "WhatsApp", "icon": "MessageSquare", "roles": ["admin"] },
         { "href": "/system/themes", "label": "Themes", "icon": "Palette", "roles": ["admin", "employee"] },
         { "href": "/system/agents", "label": "Agents", "icon": "Bot", "roles": ["admin", "employee"] },
         { "href": "/system/settings", "label": "Settings", "icon": "SettingsIcon", "roles": ["admin", "employee"] }
