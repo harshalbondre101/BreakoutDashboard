@@ -10,35 +10,13 @@ export default function WhatsAppAutomationPage() {
         <p className="text-gray-500 mt-1">Messaging intelligence and campaign analytics</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <p className="text-sm text-gray-600 mb-2">Delivery Rate</p>
-          <p className="text-3xl font-bold text-emerald-600">96.2%</p>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <p className="text-sm text-gray-600 mb-2">Open Rate</p>
-          <p className="text-3xl font-bold text-blue-600">89.4%</p>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <p className="text-sm text-gray-600 mb-2">Click-Through Rate</p>
-          <p className="text-3xl font-bold text-purple-600">12.8%</p>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <p className="text-sm text-gray-600 mb-2">Conversion Rate</p>
-          <p className="text-3xl font-bold text-emerald-600">4.2%</p>
-        </div>
-      </div>
-
       <div className="bg-white rounded-lg shadow-sm p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900">Message Templates</h2>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-            + New Template
-          </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {whatsappTemplates.slice(0, 8).map((template) => (
+          {whatsappTemplates.slice(0, 3).map((template) => (
             <div key={template.id} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
               <div className="flex items-start justify-between mb-3">
                 <div>
