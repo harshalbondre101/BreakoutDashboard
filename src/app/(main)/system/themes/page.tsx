@@ -5,7 +5,7 @@ import { Theme } from '@/lib/types';
 import { API_BASE_URL } from '@/lib/config';
 import { CreateThemeDialog } from './_components/create-theme-dialog';
 import { Button } from '@/components/ui/button';
-import { MoreVertical, Trash2 } from 'lucide-react';
+import { MoreVertical, Trash2, Edit } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -15,6 +15,7 @@ export default function ThemesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreateOpen, setCreateOpen] = useState(false);
+  const [isEditOpen, setEditOpen] = useState(false);
   const [isDeleteOpen, setDeleteOpen] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState<Theme | null>(null);
   const { toast } = useToast();
@@ -74,6 +75,11 @@ export default function ThemesPage() {
       setSelectedTheme(null);
     }
   };
+  
+  const openEditDialog = (theme: Theme) => {
+    setSelectedTheme(theme);
+    setEditOpen(true);
+  }
 
   const renderThemes = () => {
     if (loading && themes.length === 0) {
@@ -108,6 +114,10 @@ export default function ThemesPage() {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openEditDialog(theme)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            <span>Edit</span>
+                        </DropdownMenuItem>
                         <DropdownMenuItem className="text-red-600" onClick={() => { setSelectedTheme(theme); setDeleteOpen(true); }}>
                             <Trash2 className="mr-2 h-4 w-4" />
                             <span>Delete</span>
@@ -150,11 +160,23 @@ export default function ThemesPage() {
         </button>
       </div>
       {renderThemes()}
+
       <CreateThemeDialog
         open={isCreateOpen}
         onOpenChange={setCreateOpen}
         onSuccess={fetchThemes}
       />
+      
+      <CreateThemeDialog
+        open={isEditOpen}
+        onOpenChange={setEditOpen}
+        onSuccess={() => {
+            fetchThemes();
+            setSelectedTheme(null);
+        }}
+        theme={selectedTheme}
+      />
+
       <AlertDialog open={isDeleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

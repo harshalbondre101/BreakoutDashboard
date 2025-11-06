@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { API_BASE_URL } from '@/lib/config';
+import { Theme } from '@/lib/types';
 
 const themeSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -29,30 +30,47 @@ interface CreateThemeDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSuccess: () => void;
+    theme?: Theme | null;
 }
 
-export function CreateThemeDialog({ open, onOpenChange, onSuccess }: CreateThemeDialogProps) {
-    const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<ThemeFormValues>({
+export function CreateThemeDialog({ open, onOpenChange, onSuccess, theme }: CreateThemeDialogProps) {
+    const { register, handleSubmit, formState: { errors, isSubmitting }, reset, setValue } = useForm<ThemeFormValues>({
         resolver: zodResolver(themeSchema),
     });
     const { toast } = useToast();
 
+    const isEditMode = !!theme;
+
     useEffect(() => {
-        if (!open) {
-            reset();
+        if (open) {
+            if (isEditMode && theme) {
+                setValue('name', theme.name);
+                setValue('description', theme.description);
+                setValue('duration_minutes', theme.duration_minutes);
+                setValue('booking_limit_min', theme.booking_limit_min);
+                setValue('booking_limit_max', theme.booking_limit_max);
+            } else {
+                reset();
+            }
         }
-    }, [open, reset]);
+    }, [open, theme, isEditMode, setValue, reset]);
+
 
     const onSubmit: SubmitHandler<ThemeFormValues> = async (data) => {
         try {
-            const payload = {
-                ...data,
-                description: data.description || "",
-                theme_id: Math.random().toString(36).substring(2, 15).toUpperCase(), // Generate a random theme_id
-            };
+            const url = isEditMode 
+                ? `${API_BASE_URL}/themes/${theme.theme_id}`
+                : `${API_BASE_URL}/themes/`;
 
-            const response = await fetch(`${API_BASE_URL}/themes/`, {
-                method: 'POST',
+            const method = isEditMode ? 'PUT' : 'POST';
+            
+            const payload = isEditMode 
+                ? data 
+                : { ...data, theme_id: Math.random().toString(36).substring(2, 15).toUpperCase() };
+
+
+            const response = await fetch(url, {
+                method: method,
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -61,12 +79,12 @@ export function CreateThemeDialog({ open, onOpenChange, onSuccess }: CreateTheme
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ detail: `HTTP Error: ${response.status}` }));
-                throw new Error(errorData.detail || 'Failed to create theme.');
+                throw new Error(errorData.detail || `Failed to ${isEditMode ? 'update' : 'create'} theme.`);
             }
 
             toast({
                 title: 'Success!',
-                description: `Theme "${data.name}" has been created.`,
+                description: `Theme "${data.name}" has been ${isEditMode ? 'updated' : 'created'}.`,
             });
 
             onSuccess();
@@ -85,9 +103,9 @@ export function CreateThemeDialog({ open, onOpenChange, onSuccess }: CreateTheme
             <DialogContent className="sm:max-w-lg">
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <DialogHeader>
-                        <DialogTitle>Create New Theme</DialogTitle>
+                        <DialogTitle>{isEditMode ? 'Edit Theme' : 'Create New Theme'}</DialogTitle>
                         <DialogDescription>
-                            Configure the details for a new event theme.
+                           {isEditMode ? 'Update the details of your event theme.' : 'Configure the details for a new event theme.'}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-6">
@@ -122,7 +140,7 @@ export function CreateThemeDialog({ open, onOpenChange, onSuccess }: CreateTheme
                     <DialogFooter>
                         <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
                         <Button type="submit" disabled={isSubmitting}>
-                            {isSubmitting ? 'Creating...' : 'Create Theme'}
+                            {isSubmitting ? (isEditMode ? 'Saving...' : 'Creating...') : (isEditMode ? 'Save Changes' : 'Create Theme')}
                         </Button>
                     </DialogFooter>
                 </form>
