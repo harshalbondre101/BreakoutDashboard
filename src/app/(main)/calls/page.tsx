@@ -187,9 +187,9 @@ export default function CallsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
                <div>
-                  <label className="text-sm font-medium text-gray-700">Intent</label>
+                  <label className="text-sm font-medium text-gray-700">Call Type</label>
                   <select value={intentFilter} onChange={e => setIntentFilter(e.target.value)} className="w-full mt-1 pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      {uniqueIntents.map(intent => <option key={intent} value={intent}>{intent === 'all' ? 'All Intents' : intent}</option>)}
+                      {uniqueIntents.map(intent => <option key={intent} value={intent}>{intent === 'all' ? 'All Call Types' : intent}</option>)}
                   </select>
               </div>
                <div>
@@ -206,7 +206,7 @@ export default function CallsPage() {
                 <span className="text-gray-600">Sort by:</span>
                 <button onClick={() => requestSort('date_time')} className="flex items-center font-medium">Date {getSortIcon('date_time')}</button>
                 <button onClick={() => requestSort('duration')} className="flex items-center font-medium">Duration {getSortIcon('duration')}</button>
-                <button onClick={() => requestSort('call_intent')} className="flex items-center font-medium">Intent {getSortIcon('call_intent')}</button>
+                <button onClick={() => requestSort('call_intent')} className="flex items-center font-medium">Call Type {getSortIcon('call_intent')}</button>
             </div>
           </div>
 
@@ -232,3 +232,5 @@ export default function CallsPage() {
     </div>
   );
 }
+
+    

@@ -33,7 +33,7 @@ export function CallDetails({ selectedCall }: CallDetailsProps) {
           <p className="font-semibold text-gray-900">{selectedCall.conv_id}</p>
         </div>
         <div>
-          <p className="text-sm text-gray-600 mb-1">Intent</p>
+          <p className="text-sm text-gray-600 mb-1">Call Type</p>
           <p className="font-semibold text-gray-900">{selectedCall.call_intent}</p>
         </div>
         <div>
@@ -58,3 +58,5 @@ export function CallDetails({ selectedCall }: CallDetailsProps) {
     </div>
   );
 }
+
+    
